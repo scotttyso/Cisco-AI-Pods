@@ -10,13 +10,13 @@ intersight:
           - action: Deploy
             attach_template: false
             bios_policy: MLPerf-Inference-C885A-M8-AMD
-            certificate_management_policy: C885A
-            ipmi_over_lan_policy: C885A
-            local_user_policy: C885A
-            ntp_policy: C885A
-            power_policy: C885A
+            certificate_management_policy: LDAP-Certificates
+            ipmi_over_lan_policy: IPMI    # Not Really Necessary unless you want to disable IPMI over LAN
+            local_user_policy: LocalUsers # Don't Include the user defined below as this could lockout the script
+            ntp_policy: NTP
+            power_policy: Power
             server_family: UCSC885A
-            ssh_policy: C885A             # Not Really Necessary unless you want to disable SSH
+            ssh_policy: SSH               # Not Really Necessary unless you want to disable SSH
             target_platform: Standalone
             targets:
               - name: hgxnode5001.ciscolabs.com

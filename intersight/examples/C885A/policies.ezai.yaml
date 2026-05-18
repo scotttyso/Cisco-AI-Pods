@@ -13,25 +13,32 @@ intersight:
             ipv4pxe: disabled
             ipv6http: disabled
             ipv6pxe: disabled
+        certificate_management:
+          - assigned_sensitive_data: true
+            certificates:
+              - name: LDAPRootCA
+                type: RootCA
+                certificate_file: /home/certificates/LDAP-CA.crt
+            name: LDAP-Certificates
         ntp:
-          - name: C885A
+          - name: NTP
             ntp_servers:
               - 0.pool.ntp.org
               - 1.pool.ntp.org
             timezone: America/New_York
         ipmi_over_lan:
-          - name: C885A
+          - name: IPMI
             privilege: admin
         local_user:
-          - name: C885A
+          - name: Localusers
             users:
               - password: 1
                 role: admin
-                username: root
+                username: administrator
         ssh:
-          - name: C885A
+          - name: SSH
             ssh_port: 22
         power:
-          - name: C885A
+          - name: Power
             power_restore: LastState
             target_platform: Standalone
