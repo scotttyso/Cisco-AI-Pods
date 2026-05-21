@@ -1,5 +1,0 @@
----
-openshift_api_url: "{{ lookup('ansible.builtin.env', 'openshift_api_url') }}"
-openshift_token: "{{ lookup('ansible.builtin.env', 'openshift_token_id') }}"
-gitops_repo_url: ""
-gitops_target_revision: "main"

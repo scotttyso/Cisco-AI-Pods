@@ -10,30 +10,76 @@
   connection: local
   gather_facts: false
 
+  pre_tasks:
+    - name: Find Variable Files Under host_vars
+      ansible.builtin.find:
+        paths: "{{ playbook_dir }}/../host_vars"
+        patterns:
+          - "*.ezai.yaml"
+        file_type: file
+        recurse: true
+      register: var_files
+
+    - name: Merge Variable Files Into a Single Dictionary
+      ansible.builtin.set_fact:
+        merged_vars: "{{ merged_vars | default({}) | combine((lookup('ansible.builtin.file', item.path) | from_yaml), recursive=True) }}"
+      loop: "{{ var_files.files | sort(attribute='path') }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+
+    - name: Set Merged Objects
+      ansible.builtin.set_fact:
+        everpure: "{{ merged_vars.everpure | default({}) }}"
+        intersight: "{{ merged_vars.intersight | default({}) }}"
+        openshift: "{{ merged_vars.openshift | default({}) }}"
+        splunk_observability: "{{ merged_vars.splunk_observability | default({}) }}"
+
   roles:
-    - role: cisco.ai_pods.intersight_provision
+    # - role: cisco.ai_pods.everpure
+    - role: everpure
+      everpure: "{{ everpure }}"
+      tags: [storage, everpure]
+      when: (everpure.flash_arrays is defined or everpure.flash_blades is defined) and everpure.settings is defined
+
+    # - role: cisco.ai_pods.intersight_provision
+    - role: intersight_provision
       tags: [intersight, compute]
+      when: intersight | length > 0
 
-    - role: cisco.ai_pods.openshift_install
+    # - role: cisco.ai_pods.openshift_install
+    - role: openshift_install
       tags: [openshift, install]
+      when: openshift.install is defined
 
-    - role: cisco.ai_pods.openshift_certificates
+    # - role: cisco.ai_pods.openshift_certificates
+    - role: openshift_certificates
       tags: [openshift, certificates]
+      when: openshift.certificates is defined and openshift.certificates.api_key_file | length > 0
 
-    - role: cisco.ai_pods.openshift_auth
-      tags: [openshift, auth]
+    # - role: cisco.ai_pods.openshift_auth
+    - role: openshift_auth
+      tags: [auth]
+      when: openshift.ldap is defined and openshift.ldap.url | length > 0
 
-    - role: cisco.ai_pods.pure_storage
-      tags: [storage, pure]
-
-    - role: cisco.ai_pods.portworx_csi
+    # - role: cisco.ai_pods.portworx_csi
+    - role: portworx_csi
       tags: [storage, portworx]
+      when: (everpure.flash_arrays is defined or everpure.flash_blades is defined) and everpure.portworx is defined
 
-    - role: cisco.ai_pods.openshift_gitops
-      tags: [openshift, gitops]
+    - role: openshift_gitea
+      tags: [gitea]
+      when: openshift.operators.gitea.enabled | default(false) | bool
 
-    - role: cisco.ai_pods.gpu_operators
-      tags: [gpu, operators]
+    - role: openshift_argo_cd
+      tags: [argocd]
+      when: openshift.operators.openshift_gitops.enabled | default(false) | bool
 
-    - role: cisco.ai_pods.splunk_observability
+    # - role: cisco.ai_pods.openshift_gitops
+    - role: openshift_gitops
+      tags: [gitops]
+      when: openshift.operators.openshift_gitops.enabled | default(false) | bool
+
+    # - role: cisco.ai_pods.splunk_observability
+    - role: splunk_observability
+      splunk_observability: "{{ splunk_observability }}"
       tags: [observability, splunk]

@@ -1,6 +1,0 @@
----
-# Refactored from openshift/certificates/load_certificates.yaml
-# TODO: Move task content from openshift/certificates/ into this file
-- name: Load and apply certificates
-  ansible.builtin.debug:
-    msg: "Placeholder — migrate content from openshift/certificates/load_certificates.yaml"

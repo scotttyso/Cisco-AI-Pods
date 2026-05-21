@@ -1,0 +1,120 @@
+# yaml-language-server: $schema=/home/tyscott@rich.ciscolabs.com/scotttyso/Cisco-AI-Pods/schema/cisco-ai-pods.json --- IGNORE ---
+---
+openshift:
+  base_dns_domain: example.com
+  cluster_name: ai-pods
+  destination_directory: /home/user/my_repos/openshift-gitops-repo
+  file_storage_class: portworx-shared-gp3
+  operators:
+    cilium:
+      cluster_network:
+        v4_cidr: 10.128.0.0/14
+        v4_host_prefix: 23
+      enable_kube_proxy_replacement: true
+      enable_hubble_metrics: true
+      # Obtain Latest Download Link from https://docs.isovalent.com/ink/install/openshift.html
+      download_url: https://docs.isovalent.com/v25.11/public/clife/clife-v1.18.8.tar.gz
+    gitea:
+      enable: true
+    nvidia_network_operator:
+      mac_vlan:
+        - exclude_ips:
+            - 198.18.11.1/32
+          ip_range: 198.18.11.0/24
+          master_interface: ens201f0np0
+        - exclude_ips:
+            - 198.18.12.1/32
+          ip_range: 198.18.12.0/24
+          master_interface: ens202f0np0
+        - exclude_ips:
+            - 198.18.13.1/32
+          ip_range: 198.18.13.0/24
+          master_interface: ens203f0np0
+        - exclude_ips:
+            - 198.18.14.1/32
+          ip_range: 198.18.14.0/24
+          master_interface: ens204f0np0
+        - exclude_ips:
+            - 198.18.15.1/32
+          ip_range: 198.18.15.0/24
+          master_interface: ens205f0np0
+        - exclude_ips:
+            - 198.18.16.1/32
+          ip_range: 198.18.16.0/24
+          master_interface: ens206f0np0
+        - exclude_ips:
+            - 198.18.17.1/32
+          ip_range: 198.18.17.0/24
+          master_interface: ens207f0np0
+        - exclude_ips:
+            - 198.18.18.1/32
+          ip_range: 198.18.18.0/24
+          master_interface: ens208f0np0
+      persistent_net_rules:
+        - hostname: hgx-worker-01
+          interfaces:
+            - name: ens201f0np0
+              mac: 00:1e:67:8c:9b:11
+            - name: ens202f0np0
+              mac: 00:1e:67:8c:9b:12
+            - name: ens203f0np0
+              mac: 00:1e:67:8c:9b:13
+            - name: ens204f0np0
+              mac: 00:1e:67:8c:9b:14
+            - name: ens205f0np0
+              mac: 00:1e:67:8c:9b:15
+            - name: ens206f0np0
+              mac: 00:1e:67:8c:9b:16
+            - name: ens207f0np0
+              mac: 00:1e:67:8c:9b:17
+            - name: ens208f0np0
+              mac: 00:1e:67:8c:9b:18
+            - name: ens211f0np0
+              mac: 00:1e:67:8c:9b:19
+            - name: ens211f1np1
+              mac: 00:1e:67:8c:9b:1a
+            - name: ens214f0np0
+              mac: 00:1e:67:8c:9b:1b
+            - name: ens214f1np1
+              mac: 00:1e:67:8c:9b:1c
+        - hostname: hgx-worker-02
+          interfaces:
+            - name: ens201f0np0
+              mac: 00:1e:67:8c:9b:21
+            - name: ens202f0np0
+              mac: 00:1e:67:8c:9b:22
+            - name: ens203f0np0
+              mac: 00:1e:67:8c:9b:23
+            - name: ens204f0np0
+              mac: 00:1e:67:8c:9b:24
+            - name: ens205f0np0
+              mac: 00:1e:67:8c:9b:25
+            - name: ens206f0np0
+              mac: 00:1e:67:8c:9b:26
+            - name: ens207f0np0
+              mac: 00:1e:67:8c:9b:27
+            - name: ens208f0np0
+              mac: 00:1e:67:8c:9b:28
+            - name: ens211f0np0
+              mac: 00:1e:67:8c:9b:29
+            - name: ens211f1np1
+              mac: 00:1e:67:8c:9b:2a
+            - name: ens214f0np0
+              mac: 00:1e:67:8c:9b:2b
+            - name: ens214f1np1
+              mac: 00:1e:67:8c:9b:2c
+    openshift_gitops:
+      enable: true
+      gitops_repo_url: https://github.com/example/openshift-gitops-repo.git # Replace with your actual GitOps repo URL
+      prune: false
+      self_heal: false
+    operators_to_install:
+      - ansible-automation-platform
+      - external-secrets-operator
+      - kubernetes-nmstate-operator
+      - node-feature-discovery-operator
+      - nvidia-gpu-operator
+      - nvidia-network-operator
+      - openshift-virtualization
+    portworx:
+      enabled: true

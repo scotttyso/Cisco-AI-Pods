@@ -1,0 +1,22 @@
+---
+- name: Create Nexus Exporter Namespace
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: cisco-exporter
+    state: present
+    validate_certs: "{{ validate_certificates }}"
+
+- name: Set Nexus Device Password Fact
+  ansible.builtin.set_fact:
+    nexus_device_password: "{{ lookup('ansible.builtin.env', 'splunk_observability_nexus_password_' + splunk_observability.nexus.password) }}"
+
+- name: Configure Nexus Exporter
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', item) | from_yaml }}"
+    validate_certs: "{{ validate_certificates }}"
+  loop:
+    - nexus-config-map.yaml.j2
+    - nexus-deployment.yaml.j2
+    - nexus-service.yaml.j2

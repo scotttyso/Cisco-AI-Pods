@@ -1,0 +1,53 @@
+---
+- name: Create GitOps Namespace
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: "{{ operator_namespace }}"
+    state: present
+    validate_certs: "{{ validate_certificates }}"
+  register: gitops_namespace_result
+  retries: 3
+  delay: 5
+  until: gitops_namespace_result is succeeded
+
+- name: Create GitOps Operator Subscription
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'subscription.yaml.j2') | from_yaml }}"
+    state: present
+    validate_certs: "{{ validate_certificates }}"
+  register: gitops_subscription_result
+  retries: 3
+  delay: 5
+  until: gitops_subscription_result is succeeded
+
+- name: Create GitOps Operator Group
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'operator-group.yaml.j2') | from_yaml }}"
+    state: present
+    validate_certs: "{{ validate_certificates }}"
+  register: gitops_operator_group_result
+  retries: 3
+  delay: 5
+  until: gitops_operator_group_result is succeeded
+
+- name: Create GitOps Operator RBAC
+  kubernetes.core.k8s:
+    definition: "{{ lookup('template', 'rbac.yaml.j2') | from_yaml }}"
+    state: present
+    validate_certs: "{{ validate_certificates }}"
+  register: gitops_rbac_result
+  retries: 3
+  delay: 5
+  until: gitops_rbac_result is succeeded
+
+- name: Wait for GitOps Operator Deployment to be Ready
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    namespace: "{{ operator_namespace }}"
+    name: openshift-gitops-operator-controller-manager
+    validate_certs: "{{ validate_certificates }}"
+  register: deployment_info
+  until: deployment_info.resources[0].status.availableReplicas | default(0) > 0
+  retries: 10
+  delay: 30

@@ -1,0 +1,48 @@
+---
+############################
+# Subnets and Interfaces
+############################
+- name: Settings > Subnets and Interfaces > Subnets for {{ array_fqdn }}
+  purestorage.flasharray.purefa_subnet:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fa_url: "{{ array_url }}"
+    gateway: "{{ element.gateway }}"
+    lag: "{{ element.lag }}"
+    name: "{{ element.name }}"
+    prefix: "{{ element.network }}/{{ element.prefix }}"
+    state: "{{ element.state | default('present') }}"
+    vlan: "{{ element.vlan }}"
+  loop_control:
+    loop_var: element
+  loop: "{{ network.subnets_and_interfaces.subnets }}"
+  when: network.subnets_and_interfaces is defined  and network.subnets_and_interfaces.subnets is defined and array_fqdn in element.array_fqdns
+
+- name: Settings > Network > Connectors > Ethernet Interfaces for {{ array_fqdn }}
+  purestorage.flasharray.purefa_network:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fa_url: "{{ array_url }}"
+    address: "{{ element.address }}/{{ element.prefix }}"
+    enabled: "{{ element.enabled | default(true) }}"
+    gateway: "{{ element.gateway }}"
+    mtu: "{{ element.mtu | default(1500) }}"
+    name: "{{ element.name }}"
+    servicelist: "{{ element.services | default(['iscsi']) }}"
+    state: "{{ element.state | default('present') }}"
+  loop_control:
+    loop_var: element
+  loop: "{{ network.connectors.ethernet }}"
+  when: network.connectors is defined  and network.connectors.ethernet is defined and array_fqdn == element.array_fqdn
+
+############################
+# DNS Configuration
+############################
+- name: Settings > Network > Configuration > DNS Configuration for {{ array_fqdn }}
+  purestorage.flasharray.purefa_dns:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fa_url: "{{ array_url }}"
+    domain: "{{ network.dns.dns_configurations[0].domain }}"
+    nameservers: "{{ network.dns.dns_configurations[0].name_servers }}"
+  when: network.dns is defined and network.dns.dns_configurations is defined

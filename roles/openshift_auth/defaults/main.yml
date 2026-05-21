@@ -1,6 +1,0 @@
----
-openshift_api_url: "{{ lookup('ansible.builtin.env', 'openshift_api_url') }}"
-openshift_token: "{{ lookup('ansible.builtin.env', 'openshift_token_id') }}"
-ldap_url: ""
-ldap_bind_dn: ""
-ldap_insecure: false

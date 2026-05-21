@@ -1,0 +1,52 @@
+---
+############################
+# Link Aggregation Groups
+############################
+
+- name: Microsoft Team Notifications | Change for Network > Link Aggregation Group on {{ array_fqdn }} # noqa: no-handler
+  community.general.office_365_connector_card:
+    webhook: "{{ microsoft_teams_webhook }}"
+    text: "{{ msg.split('\n') }}"
+  vars:
+    msg: |
+      Array {{ array_fqdn }} link aggregation group configuration has changed
+      {{ lag_change.results | map(attribute='invocation') | map(attribute='module_args') | to_nice_yaml }}
+  when: lag_change.changed
+
+############################
+# Subnets and Interfaces
+############################
+
+- name: Microsoft Team Notifications | Change for Network > Subnet on {{ array_fqdn }} # noqa: no-handler
+  community.general.office_365_connector_card:
+    webhook: "{{ microsoft_teams_webhook }}"
+    text: "{{ msg.split('\n') }}"
+  vars:
+    msg: |
+      Array {{ array_fqdn }} subnet configuration has changed
+      {{ subnet_change.results | map(attribute='invocation') | map(attribute='module_args') | to_nice_yaml }}
+  when: subnet_change.changed
+
+- name: Microsoft Team Notifications | Change for Network > Interface on {{ array_fqdn }} # noqa: no-handler
+  community.general.office_365_connector_card:
+    webhook: "{{ microsoft_teams_webhook }}"
+    text: "{{ msg.split('\n') }}"
+  vars:
+    msg: |
+      Array {{ array_fqdn }} interface configuration has changed
+      {{ interface_change.results | map(attribute='invocation') | map(attribute='module_args') | to_nice_yaml }}
+  when: interface_change.changed
+
+############################
+# DNS Configuration
+############################
+
+- name: Microsoft Team Notifications | Change for Network > DNS on {{ array_fqdn }} # noqa: no-handler
+  community.general.office_365_connector_card:
+    webhook: "{{ microsoft_teams_webhook }}"
+    text: "{{ msg.split('\n') }}"
+  vars:
+    msg: |
+      Array {{ array_fqdn }} DNS configuration has changed
+      {{ dns_change.results | map(attribute='invocation') | map(attribute='module_args') | to_nice_yaml }}
+  when: dns_change.changed

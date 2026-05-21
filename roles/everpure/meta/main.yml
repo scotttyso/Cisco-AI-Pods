@@ -1,0 +1,17 @@
+---
+galaxy_info:
+  role_name: everpure
+  author: Tyson Scott
+  company: Cisco Systems
+  description: Configure Everpure FlashArray and FlashBlade for AI Pod storage infrastructure.
+  license: Apache-2.0
+  min_ansible_version: '2.15'
+  platforms:
+    - name: GenericLinux
+      versions: [all]
+  galaxy_tags:
+    - storage
+    - everpure
+    - flasharray
+    - flashblade
+dependencies: []

@@ -1,2 +1,0 @@
-# Compatibility shim: use centralized Python dependencies in repository root.
--r ../requirements.txt

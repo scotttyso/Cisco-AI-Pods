@@ -1,0 +1,15 @@
+---
+- name: Notifications | Check if Cisco WebEx is defined | for {{ array_fqdn }}
+  ansible.builtin.include_tasks:
+    file: "cisco_webex/notifications.yaml"
+  when: everpure.notifications.cisco_webex is defined
+
+- name: Notifications | Check if Microsoft Teams is defined | for {{ array_fqdn }}
+  ansible.builtin.include_tasks:
+    file: "microsoft_teams/notifications.yaml"
+  when: everpure.notifications.microsoft_teams is defined
+
+- name: Notifications | Check if Slack is defined | for {{ array_fqdn }}
+  ansible.builtin.include_tasks:
+    file: "slack/notifications.yaml"
+  when: everpure.notifications.slack is defined

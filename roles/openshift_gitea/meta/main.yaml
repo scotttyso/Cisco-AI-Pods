@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  role_name: openshift_gitea
+  author: Tyson Scott
+  company: Cisco Systems
+  description: Manage OpenShift operator Gitea for AI Pod clusters.
+  license: Apache-2.0
+  min_ansible_version: '2.15'
+  platforms:
+    - name: GenericLinux
+      versions: [all]
+  galaxy_tags:
+    - openshift
+    - gitea
+    - ai
+dependencies: []

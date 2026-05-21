@@ -1,0 +1,31 @@
+kind: LDAPSyncConfig
+apiVersion: v1
+url: {{ openshift.ldap.sync_url }}
+bindDN: {{ openshift.ldap.bind_dn }}
+bindPassword: {{ ldap_bind_password }}
+{% if openshift.ldap.secure_ldap %}
+insecure: false
+ca: /ldap-sync/ca.crt
+{% else %}
+insecure: true
+{% endif %}
+groupUIDNameMapping:
+{% for k,v in openshift.ldap.group_uid_mappings.items() %}
+  "{{ k }}": {{ v }}
+{% endfor %}
+augmentedActiveDirectory:
+    groupsQuery:
+        derefAliases: never
+        pageSize: 0
+        timeout: 0
+    groupUIDAttribute: dn
+    groupNameAttributes: [ cn ]
+    usersQuery:
+        baseDN: {{ openshift.ldap.base_dn }}
+        derefAliases: never
+        filter: (objectclass=person)
+        pageSize: 0
+        scope: sub
+        timeout: 0
+    userNameAttributes: [ sAMAccountName ]
+    groupMembershipAttributes: [ "memberOf:1.2.840.113556.1.4.1941:" ]

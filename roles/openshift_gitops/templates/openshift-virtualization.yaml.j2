@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: openshift-virtualization
+  namespace: openshift-gitops
+spec:
+  project: default
+  source:
+    repoURL: '{{ openshift.operators.openshift_gitops.gitops_repo_url }}'
+    targetRevision: HEAD
+    path: olm-catalog/openshift-virtualization
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: openshift-cnv
+  syncPolicy:
+    automated:
+      prune: {{ openshift.operators.openshift_gitops.prune | default('false') }}
+      selfHeal: {{ openshift.operators.openshift_gitops.self_heal | default('false') }}
+    syncOptions:
+      - CreateNamespace=true
+      - SkipDryRunOnMissingResource=true # Important: The CNV CRD won't exist during the first dry-run

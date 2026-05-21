@@ -1,0 +1,28 @@
+---
+apiVersion: nfd.openshift.io/v1
+kind: NodeFeatureDiscovery
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "1" # Ensures this is applied AFTER the operator is ready
+  name: nfd-instance
+  namespace: openshift-nfd
+spec:
+  instance: ''
+  operand:
+    servicePort: 12000
+  prunerOnDelete: false
+  topologyUpdater: false
+  workerConfig:
+    configData: |
+      core:
+        sleepInterval: 60s
+      sources:
+        pci:
+          deviceClassWhitelist:
+            - "02"
+            - "03"
+            - "0200"
+            - "0207"
+            - "12"
+          deviceLabelFields:
+            - "vendor"

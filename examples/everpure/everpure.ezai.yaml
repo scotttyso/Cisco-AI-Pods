@@ -1,0 +1,173 @@
+---
+everpure:
+  flash_arrays:
+    - api_token_id: 1
+      array_fqdn: array01.example.com
+      array_url: array01.example.com
+  flash_blades:
+    - api_token_id: 2
+      array_fqdn: array02.example.com
+      array_url: array02.example.com
+      nfs_endpoint: array02-vl103.example.com
+  portworx:
+    array_user: portworx
+    cluster_name: openshift-cluster-name
+    namespace: portworx
+    operator_source: "certified-operators"
+    storage_classes:
+      - name: px-csi-gold-block
+        default_virtual_class: true
+        parameters:
+          backend: pure_block
+          io_priority: high
+      - name: px-csi-gold-file
+        default_class: true
+        parameters:
+          backend: pure_file
+          io_priority: high
+          pure_export_rules: "*(rw,no_root_squash)"
+    version: "3.5.2.1"
+  settings:
+    network:
+      connectors:
+        ethernet:
+          - array_fqdn: array01.example.com
+            interface_list:
+              - address: 198.18.0.30
+                enabled: true
+                gateway: 198.18.0.254
+                mtu: 9000
+                name: ct0.eth10
+                prefix: 24
+                services:
+                  - nvme-tcp
+                state: present
+              - address: 198.18.0.31
+                enabled: true
+                gateway: 198.18.0.254
+                mtu: 9000
+                name: ct0.eth11
+                prefix: 24
+                services:
+                  - nvme-tcp
+                state: present
+              - address: 198.18.0.32
+                enabled: true
+                gateway: 198.18.0.254
+                mtu: 9000
+                name: ct0.eth14
+                prefix: 24
+                services:
+                  - nvme-tcp
+                state: present
+              - address: 198.18.0.33
+                enabled: true
+                gateway: 198.18.0.254
+                mtu: 9000
+                name: ct0.eth15
+                prefix: 24
+                services:
+                  - nvme-tcp
+                state: present
+              - address: 198.18.0.34
+                enabled: true
+                gateway: 198.18.0.254
+                mtu: 9000
+                name: ct1.eth10
+                prefix: 24
+                services:
+                  - nvme-tcp
+                state: present
+              - address: 198.18.0.35
+                enabled: true
+                gateway: 198.18.0.254
+                mtu: 9000
+                name: ct1.eth11
+                prefix: 24
+                services:
+                  - nvme-tcp
+                state: present
+              - address: 198.18.0.36
+                enabled: true
+                gateway: 198.18.0.254
+                mtu: 9000
+                name: ct1.eth14
+                prefix: 24
+                services:
+                  - nvme-tcp
+                state: present
+              - address: 198.18.0.37
+                enabled: true
+                gateway: 198.18.0.254
+                mtu: 9000
+                name: ct1.eth15
+                prefix: 24
+                services:
+                  - nvme-tcp
+                state: present
+      dns:
+        dns_configurations:
+          - domain: example.com
+            name: management
+            name_servers:
+              - 8.8.4.4
+              - 8.8.8.8
+    security:
+      directory_service:
+        configuration:
+          - base_dn: DC=example,DC=com
+            bind_user: CN=nam,DC=example,DC=com
+            bind_password: 1
+            enabled: true
+            uri_list:
+              - ldaps://ad.example.com:636
+            user_login_attribute: sAMAccountName
+            user_object_class: User
+        role_mappings:
+          - group: Storage Admins,OU=Everpure
+            group_base: DC=example,DC=com
+            role: storage_admin
+          - group: Operation Administrators,OU=Everpure
+            group_base: DC=example,DC=com
+            role: ops_admin
+          - group: Array Administrators,OU=Everpure
+            group_base: DC=example,DC=com
+            role: array_admin
+          - group: Ready Only,OU=Everpure
+            group_base: DC=example,DC=com
+            role: readonly
+    system:
+      alerts_and_notifications:
+        alert_routing:
+          sender_domain: example.com
+          relay_host: relay.example.com
+        alert_watchers:
+          - email: everpure-admins@example.com
+            notification_severity: info
+          - email: ai-admins@example.com
+            notification_severity: info
+      array_details:
+        idle_timeout: 30
+        login_banner: Unauthorized access is prohibited.
+        timezone: America/New_York
+      ntp_servers:
+        - 0.pool.ntp.org
+        - 1.pool.ntp.org
+      support:
+        phone_home_enabled: true
+        proxy_server: https://proxy.example.com:8080
+        remote_assist_connected: 24
+      monitoring:
+        # syslog_server_connections:
+        #   - name: 198_18_5_12
+        #     services:
+        #       - data-audit
+        #       - management
+        #     uri: udp://198.18.5.12:5200
+        snmp:
+          add_snmp_manager:
+            v2c:
+              - host: saf.example.com
+                name: Public
+                snmp_notification: trap
+                community: 1

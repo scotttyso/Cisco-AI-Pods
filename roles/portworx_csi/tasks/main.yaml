@@ -1,0 +1,175 @@
+---
+#################################################################################################################################
+# Portworx CSI Driver Installation Tasks
+# This role installs the Portworx CSI driver on OpenShift using the OperatorHub method.
+# It expects Portworx configuration to be defined in host_vars/everpure/*.ezai.yaml files under the everpure.portworx key.
+# The role performs the following steps:
+# 1. Validates that required Portworx configuration and OpenShift environment variables are present.
+# 2. Creates the Portworx namespace in OpenShift.
+# 3. Creates a Kubernetes Secret with the pure.json credentials for Portworx.
+# 4. Subscribes to the Portworx Operator in the OpenShift OperatorHub.
+# 5. Waits for the Portworx Operator deployment to be ready.
+# 6. Deploys the Portworx StorageCluster custom resource.
+# 7. Deploys any additional Portworx StorageClasses defined in the configuration.
+#################################################################################################################################
+
+###############################################################################
+# Load and merge everpure variables from host_vars/everpure/*.ezai.yaml files
+###############################################################################
+- name: Find Variable Files Under host_vars
+  ansible.builtin.find:
+    paths: "{{ playbook_dir }}/../host_vars/everpure"
+    patterns:
+      - "*.ezai.yaml"
+    file_type: file
+  register: everpure_var_files
+
+- name: Merge Variable Files Into a Single Dictionary
+  ansible.builtin.set_fact:
+    merged_vars: "{{ merged_vars | default({}) | combine((lookup('ansible.builtin.file', item.path) | from_yaml), recursive=True) }}"
+  loop: "{{ everpure_var_files.files | sort(attribute='path') }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
+
+- name: Set Merged Everpure Object
+  ansible.builtin.set_fact:
+    everpure: "{{ merged_vars.everpure | default({}) }}"
+
+###############################################################################
+# Validate required Portworx configuration and OpenShift environment variables
+###############################################################################
+- name: Validate required Portworx values are present
+  ansible.builtin.assert:
+    that:
+      - everpure is defined
+      - (everpure.flash_arrays is defined) or (everpure.flash_blades is defined)
+      - everpure.portworx is defined
+      - everpure.portworx.namespace is defined
+      - everpure.portworx.operator_source is defined
+      - everpure.portworx.storage_classes is defined
+      - everpure.portworx.storage_classes | length > 0
+    fail_msg: "Missing required everpure.portworx keys or flash_arrays/flash_blades entries in host_vars/everpure."
+
+- name: Validate OpenShift environment variables exist
+  ansible.builtin.assert:
+    that:
+      - lookup('ansible.builtin.env', 'openshift_token_id') | length > 0
+      - lookup('ansible.builtin.env', 'openshift_api_url') | length > 0
+    fail_msg: "Required environment variables not set: openshift_token_id, openshift_api_url"
+
+- name: Everpure | FlashArray | Portworx
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/portworx/flash_array.yaml"
+  vars:
+    flash_arrays: "{{ everpure.flash_arrays }}"
+  when: everpure.flash_arrays is defined
+
+###############################################################################
+# Build pure.json Secret
+###############################################################################
+- name: Everpure | FlashBlade | Portworx
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/portworx/flash_blade.yaml"
+  vars:
+    flash_blades: "{{ everpure.flash_blades }}"
+  when: everpure.flash_blades is defined
+
+- name: Create the pure.json secret from the result outputs
+  ansible.builtin.copy:
+    content: "{{ lookup('template', 'pure.json.j2') | to_nice_json }}"
+    dest: "{{ role_path }}/pure.json"
+    mode: "0600"
+
+- name: Ensure pure.json exists
+  ansible.builtin.stat:
+    path: "{{ role_path }}/pure.json"
+  register: pure_json_file
+
+- name: Fail when pure.json is missing
+  ansible.builtin.assert:
+    that:
+      - pure_json_file.stat.exists
+    fail_msg: "{{ role_path }}/pure.json not found. Run create_pure_json.yaml first."
+
+###############################################################################
+# Deploy Portworx Operator and StorageCluster
+###############################################################################
+- name: Verify OpenShift API connectivity
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Namespace
+    name: default
+  register: api_check
+  retries: 3
+  delay: 5
+  until: api_check is succeeded
+
+- name: Create Portworx Namespace
+  kubernetes.core.k8s:
+    name: "{{ everpure.portworx.namespace }}"
+    kind: Namespace
+    state: present
+    validate_certs: "{{ validate_certificates }}"
+
+- name: Create or update Portworx Secret
+  kubernetes.core.k8s:
+    state: present
+    validate_certs: "{{ validate_certificates }}"
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: Opaque
+      metadata:
+        name: px-pure-secret
+        namespace: "{{ everpure.portworx.namespace }}"
+      stringData:
+        pure.json: "{{ lookup('ansible.builtin.file', role_path + '/pure.json') }}"
+  no_log: true
+
+- name: Create Subscription for Portworx Operator
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: operators.coreos.com/v1alpha1
+      kind: Subscription
+      metadata:
+        name: portworx-certified
+        namespace: openshift-operators
+      spec:
+        channel: stable
+        installPlanApproval: Automatic
+        name: portworx-certified
+        source: "{{ everpure.portworx.operator_source }}"
+        sourceNamespace: openshift-marketplace
+    validate_certs: "{{ validate_certificates }}"
+
+- name: Wait for Portworx Operator to be ready
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    name: portworx-operator
+    namespace: openshift-operators
+    validate_certs: "{{ validate_certificates }}"
+  register: operator_deploy
+  until:
+    - operator_deploy.resources | length > 0
+    - operator_deploy.resources[0].status.readyReplicas | default(0) > 0
+  retries: 30
+  delay: 15
+
+- name: Prompt to continue with StorageCluster apply
+  ansible.builtin.pause:
+    prompt: "Operator appears ready. Press Enter to continue, or Ctrl+C then A to abort."
+  when: prompt_before_storagecluster_apply | bool
+
+- name: Deploy Portworx StorageCluster (Version 3.5.2)
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'storage-cluster.yaml.j2') | from_yaml }}"
+    validate_certs: "{{ validate_certificates }}"
+
+- name: Deploy Portworx Storage Classes
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'storage-classes.yaml.j2') | from_yaml }}"
+    validate_certs: "{{ validate_certificates }}"
+  loop: "{{ everpure.portworx.storage_classes }}"

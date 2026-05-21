@@ -1,6 +1,0 @@
----
-# Refactored from splunk-ai-pods/deploy_splunk_ai_pods.yaml
-# TODO: Move task content from splunk-ai-pods/ into this file
-- name: Deploy Splunk Observability stack
-  ansible.builtin.debug:
-    msg: "Placeholder — migrate content from splunk-ai-pods/deploy_splunk_ai_pods.yaml"

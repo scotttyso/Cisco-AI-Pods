@@ -1,0 +1,157 @@
+---
+- name: Validate Openshift Install Environment Variables
+  block:
+    - name: Create temporary directory for validation
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: everpure_validation_
+      register: temp_dir
+
+- name: Save OpenShift Dictionary to Temporary File
+  ansible.builtin.copy:
+    content: "{{ openshift | to_nice_json }}"
+    dest: "{{ temp_dir.path }}/openshift.json"
+    mode: '0644'
+  changed_when: false
+
+- name: Validate + Generate Server and NMState Manifest Templates from Inventory
+  ansible.builtin.command:
+    cmd: "python3 {{ role_path }}/library/generate_server_and_nmstate_templates.py --config {{ temp_dir.path }}/openshift.json"
+  register: validation_result
+  failed_when: validation_result.rc != 0
+  changed_when: false
+
+- name: Validate required install configuration exists
+  ansible.builtin.assert:
+    that:
+      - openshift.install is defined
+      - openshift.install.bare_metal is defined
+      - openshift.install.bare_metal.ssh_public_key is defined
+    fail_msg: "Required values missing under openshift.install.bare_metal (including ssh_public_key)"
+
+
+- name: Set Facts for assisted installer manifests & SSH public key
+  ansible.builtin.set_fact:
+    assisted_installer_directory: "{{ playbook_dir.rstrip('/') | dirname }}/assisted-installer"
+    openshift_install: "{{ openshift.install.bare_metal | default({}) }}"
+    ssh_public_key_env_name: "{{ 'ssh_public_key_' + (openshift_install.ssh_public_key | string) }}"
+    ssh_public_key_value: "{{ lookup('ansible.builtin.env', 'ssh_public_key_' + (openshift_install.ssh_public_key | string)) }}"
+
+- name: Validate SSH public key environment variable is set
+  ansible.builtin.assert:
+    that:
+      - ssh_public_key_value | length > 0
+    fail_msg: "Missing required environment variable: {{ ssh_public_key_env_name }}"
+
+- name: Ensure the Assisted Installer Folder Exists
+  ansible.builtin.file:
+    path: "{{ assisted_installer_directory }}"
+    state: directory
+    mode: '0755'
+
+- name: Ensure the Assisted Installer Manifests Folder Exists
+  ansible.builtin.file:
+    path: "{{ assisted_installer_directory }}/manifests"
+    state: directory
+    mode: '0755'
+
+##########################################################
+# Machine Configuration Tasks
+##########################################################
+- name: Manifests for Assisted Installer - Node Disruption Budgets
+  ansible.builtin.copy:
+    content: "{{ lookup('template', '99-node-disruption-policy.j2') }}"
+    dest: "{{ assisted_installer_directory }}/manifests/99-node-disruption-policy.yaml"
+    mode: '0644'
+
+- name: Manifests for Assisted Installer - Kernel Arguments, Kubelet Config, and NVMe Multipath Config
+  ansible.builtin.copy:
+    content: "{{ lookup('template', item.file + '.yaml.j2') }}"
+    dest: "{{ assisted_installer_directory }}/manifests/{{ item.file + '-' + item.name + '.yaml' }}"
+    mode: '0644'
+  loop:
+    - file: 99-kernel-arguments
+      name: master
+    - file: 99-kernel-arguments
+      name: worker
+    - file: 99-kubelet-config-memory
+      name: master
+    - file: 99-kubelet-config-memory
+      name: worker
+    - file: 99-nvme-nqn-generate
+      name: master
+    - file: 99-nvme-nqn-generate
+      name: worker
+
+##########################################################
+# Machine Configuration Tasks - Portworx
+##########################################################
+- name: Manifests for Assisted Installer - Portworx Multipathd Config if Portworx is the CSI
+  ansible.builtin.copy:
+    content: "{{ lookup('template', item.file + '.yaml.j2') }}"
+    dest: "{{ assisted_installer_directory }}/manifests/{{ item.file + '-' + item.name + '.yaml' }}"
+    mode: '0644'
+  loop:
+    - file: 99-portworx-multipathd-config
+      name: master
+    - file: 99-portworx-multipathd-config
+      name: worker
+  when: openshift.operators is defined and openshift.operators.portworx is defined and openshift.operators.portworx.enabled | default(false)
+
+##########################################################
+# Machine Configuration Tasks - NVIDIA Network Operator
+##########################################################
+- name: Run Persistent Net Rule tasks for NVIDIA Network Operator if enabled
+  ansible.builtin.import_tasks: "tasks/persistent_net_rules.yaml"
+  when: >-
+    openshift.operators is defined and openshift.operators | json_query('nvidia_network_operator.persistent_net_rules') is defined
+
+##########################################################
+# Machine Configuration Tasks - Cilium CNI
+##########################################################
+- name: Run Cilium tasks if Cilium is enabled as the network CNI
+  ansible.builtin.import_tasks: "tasks/cilium.yaml"
+  when: >-
+    openshift.operators is defined and openshift.operators | json_query('cilium.download_url') is defined
+
+##########################################################
+# iServer Manifests
+##########################################################
+- name: Create Cluster Manifest
+  ansible.builtin.copy:
+    content: "{{ lookup('template', 'iserver-cluster.json.j2') | to_nice_json(indent=4) }}"
+    dest: "{{ assisted_installer_directory }}/cluster.json"
+    mode: '0644'
+
+- name: Create SSH Public Key File for Cluster Deployment
+  ansible.builtin.copy:
+    content: "{{ ssh_public_key_value.rstrip() }}\n"
+    dest: "{{ assisted_installer_directory }}/ssh.pub"
+    mode: '0644'
+
+- name: Set Fact for ISO Web Server SSH Public Key if provided
+  ansible.builtin.set_fact:
+    iso_web_server_ssh_public_key: "{{ lookup('ansible.builtin.env', 'ssh_public_key_' + (openshift_install.iso_web_server.ssh_public_key | string)) }}"
+  when: openshift_install.iso_web_server is defined and openshift_install.iso_web_server.ssh_public_key is defined
+
+- name: Validate ISO Web Server SSH key environment variable if configured
+  ansible.builtin.assert:
+    that:
+      - iso_web_server_ssh_public_key | length > 0
+    fail_msg: "Missing required environment variable for iso_web_server.ssh_public_key suffix"
+  when: openshift_install.iso_web_server is defined and openshift_install.iso_web_server.ssh_public_key is defined
+
+- name: Set Fact for ISO Web Server Password if provided
+  ansible.builtin.set_fact:
+    iso_web_server_password: "{{ lookup('ansible.builtin.env', 'iso_web_server_password_' + openshift_install.iso_web_server.password) }}"
+  when: openshift_install.iso_web_server.password is defined
+
+- name: Create Web Server Manifest
+  ansible.builtin.copy:
+    content: "{{ lookup('template', 'iserver-web.json.j2') | to_nice_json(indent=4) }}"
+    dest: "{{ assisted_installer_directory }}/web_server.json"
+    mode: '0644'
+
+- name: Import Proxy Tasks if Proxy is enabled
+  ansible.builtin.import_tasks: "tasks/proxy.yaml"
+  when: openshift_install.proxy is defined

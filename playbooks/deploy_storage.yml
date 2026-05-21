@@ -6,8 +6,9 @@
   gather_facts: false
 
   roles:
-    - role: cisco.ai_pods.pure_storage
-      tags: [pure]
+    # - role: cisco.ai_pods.pure_storage
+    - role: everpure
+      tags: [everpure]
 
-    - role: cisco.ai_pods.portworx_csi
+    - role: portworx_csi
       tags: [portworx]

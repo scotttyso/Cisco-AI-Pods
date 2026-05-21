@@ -1,0 +1,19 @@
+---
+- name: Microsoft Team Notifications | Obtain Microsoft Teams WebHook | for {{ array_fqdn }}
+  ansible.builtin.set_fact:
+    microsoft_teams_webhook: "{{ lookup('ansible.builtin.env', 'microsoft_teams_webhook') }}"
+
+- name: Microsoft Team Notifications | Network | for {{ array_fqdn }}
+  ansible.builtin.include_tasks:
+    file: "everpure_network.yaml"
+  when: everpure.settings.network is defined
+
+- name: Microsoft Team Notifications | Security | for {{ array_fqdn }}
+  ansible.builtin.include_tasks:
+    file: "everpure_security.yaml"
+  when: everpure.settings.security is defined
+
+- name: Microsoft Team Notifications | System | for {{ array_fqdn }}
+  ansible.builtin.include_tasks:
+    file: "everpure_system.yaml"
+  when: everpure.settings.system is defined

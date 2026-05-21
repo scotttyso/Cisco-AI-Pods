@@ -1,0 +1,82 @@
+---
+- name: Verify Required Environment Variables Are Set
+  ansible.builtin.assert:
+    that:
+      - lookup('ansible.builtin.env', 'openshift_token_id') | length > 0
+      - lookup('ansible.builtin.env', 'openshift_api_url') | length > 0
+    fail_msg: "Required environment variables not set: openshift_token_id, openshift_api_url"
+
+- name: Create Otel Operator Namespace
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: otel
+    state: present
+    validate_certs: "{{ validate_certificates }}"
+
+- name: Run ETCD Tasks if ETCD Metrics Collection is Enabled
+  ansible.builtin.include_tasks: etcd.yaml
+  when: splunk_observability.otel_collector.metrics_collection.etcd_metrics | default(false) | bool
+
+- name: Add Splunk Otel Collector Chart Repository
+  kubernetes.core.helm_repository:
+    name: splunk-otel-collector-chart
+    repo_url: https://signalfx.github.io/splunk-otel-collector-chart
+    state: present
+    validate_certs: "{{ validate_certificates }}"
+
+- name: Set Fact for Proxy Password if provided
+  ansible.builtin.set_fact:
+    proxy_password: "{{ lookup('ansible.builtin.env', 'proxy_password_' + splunk_observability.otel_collector.proxy.password) }}"
+  when: |-
+    splunk_observability.otel_collector is defined and
+    splunk_observability.otel_collector.proxy is defined and
+    splunk_observability.otel_collector.proxy.password is defined
+
+- name: Create Splunk Otel Collector values.yaml from Template
+  ansible.builtin.template:
+    src: otel-values.yaml.j2
+    dest: "{{ role_path }}/values.yaml"
+    mode: '0644'
+
+- name: Deploy Splunk Otel Collector Chart
+  kubernetes.core.helm:
+    chart_ref: splunk-otel-collector-chart/splunk-otel-collector
+    name: splunk-otel-collector
+    release_namespace: otel
+    state: present
+    validate_certs: "{{ validate_certificates }}"
+    disable_hook: true
+    force: true
+    replace: true
+    update_repo_cache: true
+    wait: true
+    release_values:
+      clusterName: "{{ splunk_observability.openshift_cluster.cluster_name }}"
+      environment: "{{ splunk_observability.openshift_cluster.environment }}"
+      splunkObservability:
+        accessToken: "{{ lookup('ansible.builtin.env', 'splunk_observability_access_token_' + splunk_observability.access_token) }}"
+        realm: "{{ splunk_observability.splunk_realm | default('us0') }}"
+      splunkPlatform:
+        endpoint: "{{ splunk_observability.splunk_platform.endpoint | default('https://customer.splunkcloud.com') }}/services/collector/event"
+        index: "{{ splunk_observability.splunk_platform.index | default('my-index') }}"
+        token: "{{ lookup('ansible.builtin.env', 'splunk_platform_token_' + splunk_observability.splunk_platform.token) }}"
+    values_files:
+      - "{{ role_path }}/values.yaml"
+
+- name: Delete Generated Files / Directories
+  ansible.builtin.file:
+    path: "{{ role_path }}/{{ item }}"
+    state: absent
+  loop:
+    - client
+    - signer
+    - values.yaml
+
+- name: Run Intersight Tasks When Intersight is Enabled
+  ansible.builtin.include_tasks: intersight.yaml
+  when: splunk_observability.intersight.enable | default(false) | bool
+
+- name: Run Nexus Tasks When Nexus is Defined
+  ansible.builtin.include_tasks: nexus.yaml
+  when: splunk_observability.nexus is defined

@@ -1,6 +1,0 @@
----
-# Refactored from openshift/install/create_install_manifest_files.yaml
-# TODO: Move task content from openshift/install/ into this file
-- name: Generate OpenShift install manifests
-  ansible.builtin.debug:
-    msg: "Placeholder — migrate content from openshift/install/create_install_manifest_files.yaml"

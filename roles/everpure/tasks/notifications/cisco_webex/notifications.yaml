@@ -1,0 +1,19 @@
+---
+- name: Cisco WebEx Notifications | Obtain Cisco WebEx Token | for {{ array_fqdn }}
+  ansible.builtin.set_fact:
+    cisco_webex_token: "{{ lookup('ansible.builtin.env', 'cisco_webex_token') }}"
+
+- name: Cisco WebEx Notifications | Network | for {{ array_fqdn }}
+  ansible.builtin.include_tasks:
+    file: "everpure_network.yaml"
+  when: everpure.settings.network is defined
+
+- name: Cisco WebEx Notifications | Security | for {{ array_fqdn }}
+  ansible.builtin.include_tasks:
+    file: "everpure_security.yaml"
+  when: everpure.settings.security is defined
+
+- name: Cisco WebEx Notifications | System | for {{ array_fqdn }}
+  ansible.builtin.include_tasks:
+    file: "everpure_system.yaml"
+  when: everpure.settings.system is defined

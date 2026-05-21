@@ -1,0 +1,72 @@
+---
+############################
+# Link Aggregation Groups
+############################
+- name: Settings > Link Aggregation Groups for {{ array_fqdn }}
+  purestorage.flashblade.purefb_lag:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    name: "{{ element.name }}"
+    ports: "{{ element.ports }}"
+    state: "{{ element.state | default('present') }}"
+  loop_control:
+    loop_var: element
+  loop: "{{ network.link_aggregation_groups }}"
+  register: lag_change
+  when: network.link_aggregation_groups is defined
+
+############################
+# Subnets and Interfaces
+############################
+- name: Settings > Subnets and Interfaces > Subnets for {{ array_fqdn }}
+  purestorage.flashblade.purefb_subnet:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    gateway: "{{ element.gateway }}"
+    lag: "{{ element.lag }}"
+    mtu: "{{ element.mtu }}"
+    name: "{{ element.name }}"
+    prefix: "{{ element.network }}/{{ element.prefix }}"
+    state: "{{ element.state | default('present') }}"
+    vlan: "{{ element.vlan }}"
+  loop_control:
+    loop_var: element
+  loop: "{{ network.subnets_and_interfaces.subnets }}"
+  register: subnet_change
+  when: network.subnets_and_interfaces is defined  and network.subnets_and_interfaces.subnets is defined and array_fqdn in element.array_fqdns
+
+- name: Settings > Subnets and Interfaces > Interfaces for {{ array_fqdn }}
+  purestorage.flashblade.purefb_network:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    address: "{{ element.address }}"
+    itype: "{{ element.state | default('vip') }}"
+    name: "{{ element.name }}"
+    services: "{{ element.services | default('data') }}"
+    state: "{{ element.state | default('present') }}"
+  loop_control:
+    loop_var: element
+  loop: "{{ network.subnets_and_interfaces.interfaces }}"
+  register: interface_change
+  when: network.subnets_and_interfaces is defined  and network.subnets_and_interfaces.interfaces is defined and array_fqdn == element.array_fqdn
+
+############################
+# DNS Configuration
+############################
+- name: Settings > DNS > DNS Configuration for {{ array_fqdn }}
+  purestorage.flashblade.purefb_dns:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    domain: "{{ element.domain }}"
+    nameservers: "{{ element.name_servers }}"
+    source: "{{ element.source | default('management') }}"
+    state: "{{ element.state | default('present') }}"
+  loop_control:
+    loop_var: element
+  loop: "{{ network.dns.dns_configuration }}"
+  register: dns_change
+  when: network.dns is defined and network.dns.dns_configuration is defined

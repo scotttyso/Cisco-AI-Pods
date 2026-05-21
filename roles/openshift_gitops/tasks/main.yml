@@ -1,6 +1,0 @@
----
-# Refactored from openshift/openshift-gitops/generate_openshift_gitops_files.yaml
-# TODO: Move task content from openshift/openshift-gitops/ into this file
-- name: Generate and apply OpenShift GitOps configurations
-  ansible.builtin.debug:
-    msg: "Placeholder — migrate content from openshift/openshift-gitops/generate_openshift_gitops_files.yaml"

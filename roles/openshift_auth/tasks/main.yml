@@ -1,6 +1,0 @@
----
-# Refactored from openshift/oath_ldap/configure_oath_ldap.yaml
-# TODO: Move task content from openshift/oath_ldap/ into this file
-- name: Configure OAuth and LDAP authentication
-  ansible.builtin.debug:
-    msg: "Placeholder — migrate content from openshift/oath_ldap/configure_oath_ldap.yaml"

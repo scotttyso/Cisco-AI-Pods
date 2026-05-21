@@ -1,6 +1,0 @@
----
-# Refactored from everpure/install_portworx.yaml
-# TODO: Move task content from everpure/install_portworx.yaml into this file
-- name: Deploy Portworx CSI
-  ansible.builtin.debug:
-    msg: "Placeholder — migrate content from everpure/install_portworx.yaml"

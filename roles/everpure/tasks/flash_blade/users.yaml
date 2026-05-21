@@ -1,0 +1,60 @@
+---
+############################
+# Flash Blade - Local Users
+############################
+- name: Settings > Security > Users  > Users - Absent
+  purestorage.flashblade.purefb_user:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    name: "{{ element.name }}"
+    state: absent
+  loop_control:
+    loop_var: element
+  loop: "{{ everpure.settings.security.users }}"
+
+- name: Settings > Security > Users > Users
+  purestorage.flashblade.purefb_user:
+    api: "{{ element.api_token | default(false) }}"
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    name: "{{ element.name }}"
+    password: >-
+      {{ lookup('ansible.builtin.env', 'binding_parameters_password_{{ element.password }}')
+      if element.password > 0 else lookup('ansible.builtin.password', '/dev/null',
+      chars=['ascii_lowercase', 'ascii_uppercase', 'digits'], length=20) }}
+    public_key: ""
+    role: "{{ element.role }}"
+  loop_control:
+    loop_var: element
+  loop: "{{ everpure.settings.security.users }}"
+  register: flash_blade_users
+
+############################
+# User Outputs
+############################
+- name: Flash Blade > User Results - Print
+  ansible.builtin.debug:
+    var: flash_blade_users
+
+- name: Create Empty List
+  ansible.builtin.set_fact:
+    new_users: []
+- name: Flash Blade - Add Key to Dict
+  ansible.builtin.set_fact:
+    new_users: "{{ new_users + [e | combine({'nfs_address': nfs_address})] }}"
+  loop_control:
+    loop_var: e
+  loop:
+    "{{ flash_blade_users.results }}"
+
+- name: Flash Blade > User Results - Print1
+  ansible.builtin.debug:
+    var: new_users
+
+- name: Flash Blade > Users - create JSON outputs
+  ansible.builtin.template:
+    src: flash_blade.json.j2
+    dest: flash_blade.json
+    mode: "0644"

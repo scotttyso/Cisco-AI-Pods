@@ -1,0 +1,320 @@
+---
+- name: Verify Required Environment Variables Are Set
+  ansible.builtin.assert:
+    that:
+      - openshift_token | length > 0
+      - openshift_api_url | length > 0
+      - openshift.certificates.user_ca_bundle_file | length > 0
+      - openshift.certificates.ingress_cert_chain_file | length > 0
+      - openshift.certificates.ingress_key_file | length > 0
+      - openshift.certificates.api_cert_chain_file | length > 0
+      - openshift.certificates.api_key_file | length > 0
+      - openshift.certificates.api_server_hostname | length > 0
+    fail_msg: "One or more required environment variables are missing for certificate deployment"
+
+- name: Verify Certificate and Key Files Exist
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop:
+    - "{{ openshift.certificates.user_ca_bundle_file }}"
+    - "{{ openshift.certificates.ingress_cert_chain_file }}"
+    - "{{ openshift.certificates.ingress_key_file }}"
+    - "{{ openshift.certificates.api_cert_chain_file }}"
+    - "{{ openshift.certificates.api_key_file }}"
+  register: cert_file_stats
+  failed_when: not cert_file_stats.results | map(attribute='stat.exists') | min
+
+- name: Read User CA Bundle Certificate File Content
+  ansible.builtin.slurp:
+    src: "{{ openshift.certificates.user_ca_bundle_file }}"
+  register: user_ca_bundle_cert_file
+
+- name: Parse the User CA Bundle Certificate File as PEM
+  ansible.builtin.set_fact:
+    is_pem_cert: "{{ user_ca_bundle_cert_file['content'] | b64decode | community.crypto.x509_certificate_info is success }}"
+  register: user_ca_bundle_cert_info
+  ignore_errors: true
+
+- name: Report User CA Bundle Certificate File Type
+  ansible.builtin.debug:
+    msg: "User CA Bundle Certificate File is a valid PEM certificate."
+  when: not user_ca_bundle_cert_info.failed
+  failed_when: user_ca_bundle_cert_info.failed
+
+- name: Verify OpenShift API Connectivity via kubernetes.core
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Namespace
+    name: default
+  register: api_check
+  retries: 3
+  delay: 5
+  until: api_check is succeeded
+
+- name: Read lines of User CA Bundle Certificate File into List
+  ansible.builtin.set_fact:
+    cert_file_lines_list: "{{ lookup('file', openshift.certificates.user_ca_bundle_file).splitlines() }}"
+
+- name: Create User CA Bundle ConfigMap
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'user-ca-bundle.yaml.j2') | from_yaml }}"
+    validate_certs: "{{ validate_certificates }}"
+  register: user_ca_configmap_result
+  retries: 3
+  delay: 5
+  until: user_ca_configmap_result is succeeded
+
+- name: Patch Cluster Proxy
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: config.openshift.io/v1
+      kind: Proxy
+      metadata:
+        name: cluster
+      spec:
+        trustedCA:
+          name: user-ca-bundle
+    validate_certs: "{{ validate_certificates }}"
+  register: proxy_patch_apply_result
+  retries: 3
+  delay: 5
+  until: proxy_patch_apply_result is succeeded
+
+- name: Verify Cluster Proxy Patch
+  kubernetes.core.k8s_info:
+    api_version: config.openshift.io/v1
+    kind: Proxy
+    name: cluster
+    validate_certs: "{{ validate_certificates }}"
+  register: proxy_patch_result
+
+- name: Report Cluster Proxy Patch Result
+  ansible.builtin.debug:
+    msg: "Cluster Proxy trustedCA is set to user-ca-bundle"
+  failed_when: proxy_patch_result.resources[0].spec.trustedCA.name | default('') != 'user-ca-bundle'
+
+- name: Pause for 1 minute - Allow Machine Config Pool to update with new proxy certificate
+  ansible.builtin.pause:
+    minutes: 1
+
+- name: Wait for Master MCP to update
+  kubernetes.core.k8s_info:
+    api_version: machineconfiguration.openshift.io/v1
+    kind: MachineConfigPool
+    name: master
+    validate_certs: "{{ validate_certificates }}"
+  register: mcp_master
+  until:
+    - mcp_master.resources is defined
+    - mcp_master.resources[0].status.conditions | selectattr('type', 'equalto', 'Updating') | map(attribute='status') | first == 'False'
+    - mcp_master.resources[0].status.updatedMachineCount == mcp_master.resources[0].status.machineCount
+  retries: 30
+  delay: 60
+
+#####################
+# INGRESS CERTIFICATE
+#####################
+- name: Prompt User to continue to Ingress Certificate Update
+  ansible.builtin.pause:
+    prompt: "Confirm the User CA Bundle is ready to 'continue'. Press 'c' to continue or 'a' to abort."
+  when: certificate_prompt_before_apply | default(true) | bool
+
+- name: Read Ingress Certificate Chain File Content
+  ansible.builtin.slurp:
+    src: "{{ openshift.certificates.ingress_cert_chain_file }}"
+  register: ingress_cert_chain_file
+
+- name: Parse the Ingress Certificate Chain File as PEM
+  ansible.builtin.set_fact:
+    is_pem_cert: "{{ ingress_cert_chain_file['content'] | b64decode | community.crypto.x509_certificate_info is success }}"
+  register: ingress_cert_chain_cert_info
+  ignore_errors: true # Ignore errors if parsing fails
+
+- name: Report Ingress Certificate Chain File Type
+  ansible.builtin.debug:
+    msg: "Ingress Certificate Chain File is a valid PEM certificate."
+  when: not ingress_cert_chain_cert_info.failed
+  failed_when: ingress_cert_chain_cert_info.failed
+
+- name: Read Ingress Key File Content
+  ansible.builtin.slurp:
+    src: "{{ openshift.certificates.ingress_key_file }}"
+  register: ingress_key_file
+
+- name: Parse the Ingress Key File as PEM
+  ansible.builtin.set_fact:
+    is_pem_cert: "{{ ingress_key_file['content'] | b64decode | community.crypto.openssl_privatekey_info is success }}"
+  register: ingress_key_info
+  ignore_errors: true # Ignore errors if parsing fails
+
+- name: Report Ingress Key File Type
+  ansible.builtin.debug:
+    msg: "Ingress Key File is a valid PEM Key File."
+  when: not ingress_key_info.failed
+  failed_when: ingress_key_info.failed
+
+- name: Create Ingress Controller TLS Secret
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'ingress-tls-secret.yaml.j2') | from_yaml }}"
+    validate_certs: "{{ validate_certificates }}"
+  register: ingress_tls_secret_result
+  retries: 3
+  delay: 5
+  until: ingress_tls_secret_result is succeeded
+
+- name: Patch Ingress Controller to use new TLS Secrets
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: operator.openshift.io/v1
+      kind: IngressController
+      metadata:
+        name: default
+        namespace: openshift-ingress-operator
+      spec:
+        defaultCertificate:
+          name: ingress-tls-secret
+    validate_certs: "{{ validate_certificates }}"
+  register: ingress_patch_apply_result
+  retries: 3
+  delay: 5
+  until: ingress_patch_apply_result is succeeded
+
+- name: Verify Ingress Controller Patch
+  kubernetes.core.k8s_info:
+    api_version: operator.openshift.io/v1
+    kind: IngressController
+    name: default
+    namespace: openshift-ingress-operator
+    validate_certs: "{{ validate_certificates }}"
+  register: ingress_controller_patch_result
+
+- name: Report Ingress Controller Patch Result
+  ansible.builtin.debug:
+    msg: "Ingress Controller default certificate is set to ingress-tls-secret"
+  failed_when: ingress_controller_patch_result.resources[0].spec.defaultCertificate.name | default('') != 'ingress-tls-secret'
+
+- name: Pause for 1 minute - Allow Ingress Controller to restart with new certificate
+  ansible.builtin.pause:
+    minutes: 1
+
+- name: Wait for OpenShift OAuth Pods to be Ready
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: openshift-authentication
+    field_selectors:
+      - status.phase=Running
+  register: oauth_pods
+  until:
+    - oauth_pods.resources | length > 0
+    - oauth_pods.resources | map(attribute='status.containerStatuses') | flatten | map(attribute='ready') | reject('equalto', true) | list | length == 0
+  retries: 30
+  delay: 10
+
+- name: Wait for Ingress Router Pods to be Ready
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: openshift-ingress
+    field_selectors:
+      - status.phase=Running
+  register: ingress_pods
+  until:
+    - ingress_pods.resources | length > 0
+    - ingress_pods.resources | map(attribute='status.containerStatuses') | flatten | map(attribute='ready') | reject('equalto', true) | list | length == 0
+  retries: 30
+  delay: 10
+
+#####################
+# API CERTIFICATE
+#####################
+- name: Prompt User to continue to API Certificate Update
+  ansible.builtin.pause:
+    prompt: "Confirm the Ingress Certificate is ready to 'continue'. Press 'c' to continue or 'a' to abort."
+  when: certificate_prompt_before_apply | default(true) | bool
+
+- name: Read API Certificate Chain File Content
+  ansible.builtin.slurp:
+    src: "{{ openshift.certificates.api_cert_chain_file }}"
+  register: api_cert_chain_file
+
+- name: Parse the API Certificate Chain File as PEM
+  ansible.builtin.set_fact:
+    is_pem_cert: "{{ api_cert_chain_file['content'] | b64decode | community.crypto.x509_certificate_info is success }}"
+  register: api_cert_chain_cert_info
+  ignore_errors: true # Ignore errors if parsing fails
+
+- name: Report API Certificate Chain File Type
+  ansible.builtin.debug:
+    msg: "API Certificate Chain File is a valid PEM certificate."
+  when: not api_cert_chain_cert_info.failed
+  failed_when: api_cert_chain_cert_info.failed
+
+- name: Read API Key File Content
+  ansible.builtin.slurp:
+    src: "{{ openshift.certificates.api_key_file }}"
+  register: api_key_file
+
+- name: Parse the API Key File as PEM
+  ansible.builtin.set_fact:
+    is_pem_cert: "{{ api_key_file['content'] | b64decode | community.crypto.openssl_privatekey_info is success }}"
+  register: api_key_info
+  ignore_errors: true # Ignore errors if parsing fails
+
+- name: Report API Key File Type
+  ansible.builtin.debug:
+    msg: "API Key File is a valid PEM Key File."
+  when: not api_key_info.failed
+  failed_when: api_key_info.failed
+
+- name: Create API TLS Secret
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'api-tls-secret.yaml.j2') | from_yaml }}"
+    validate_certs: "{{ validate_certificates }}"
+  register: api_tls_secret_result
+  retries: 3
+  delay: 5
+  until: api_tls_secret_result is succeeded
+
+- name: Patch API to use new TLS Secrets
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: config.openshift.io/v1
+      kind: APIServer
+      metadata:
+        name: cluster
+      spec:
+        servingCerts:
+          namedCertificates:
+            - names:
+                - "{{ openshift.certificates.api_server_hostname }}"
+              servingCertificate:
+                name: api-tls-secret
+    validate_certs: "{{ validate_certificates }}"
+  register: api_patch_apply_result
+  retries: 3
+  delay: 5
+  until: api_patch_apply_result is succeeded
+
+- name: Pause for 2 minutes to allow API to restart with new certificate
+  ansible.builtin.pause:
+    minutes: 2
+
+- name: Wait for Kube API Server to be Ready after Certificate Update
+  kubernetes.core.k8s_info:
+    api_version: operator.openshift.io/v1
+    kind: KubeAPIServer
+    name: cluster
+    validate_certs: "{{ validate_certificates }}"
+  register: kube_apiserver
+  until:
+    - kube_apiserver.resources is defined
+    - kube_apiserver.resources[0].status.conditions | selectattr('type', 'equalto', 'NodeInstallerProgressing') | map(attribute='status') | first == 'False'
+  retries: 30
+  delay: 60

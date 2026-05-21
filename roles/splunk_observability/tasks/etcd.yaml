@@ -1,0 +1,34 @@
+---
+- name: Ensure the Etcd Folders Exists
+  ansible.builtin.file:
+    path: "{{ role_path }}/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - client
+    - signer
+
+- name: Download Etcd Metric Certificates
+  ansible.builtin.command:
+    cmd: "oc extract secret/etcd-metric-{{ item }} -n openshift-etcd --to={{ role_path }}/{{ item }}"
+    creates: "{{ role_path }}/{{ item }}/tls.crt"
+  loop:
+    - client
+    - signer
+
+- name: Create Etcd Secrets for Splunk Observability
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: splunk-monitoring-etcd-metrics-{{ item }}
+        namespace: otel
+      data:
+        tls.crt: "{{ lookup('file', role_path + '/' + item + '/tls.crt') | b64encode }}"
+        tls.key: "{{ lookup('file', role_path + '/' + item + '/tls.key') | b64encode }}"
+    validate_certs: "{{ validate_certificates }}"
+  loop:
+    - client
+    - signer

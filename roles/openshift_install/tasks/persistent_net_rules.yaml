@@ -1,0 +1,29 @@
+---
+- name: Udev rules for NVIDIA Network Operator
+  ansible.builtin.copy:
+    content: "{{ lookup('template', '70-persistent-net.rules.j2') }}"
+    dest: "{{ role_path }}/70-persistent-net.rules"
+    mode: '0644'
+  when: >-
+    openshift.operators | json_query('nvidia_network_operator.persistent_net_rules') is defined
+
+- name: Read Persistent Net Rules file content
+  ansible.builtin.slurp:
+    src: "{{ role_path }}/70-persistent-net.rules"
+  register: persistent_net_rules
+  when: >-
+    openshift.operators | json_query('nvidia_network_operator.persistent_net_rules') is defined
+
+- name: Manifests for Assisted Installer - Persistent Name Rules Udev Network
+  ansible.builtin.copy:
+    content: "{{ lookup('template', '70-machine-config-udev-network.yaml.j2') }}"
+    dest: "{{ assisted_installer_directory }}/manifests/70-machine-config-udev-network.yaml"
+    mode: '0644'
+  when: >-
+    openshift.operators | json_query('nvidia_network_operator.persistent_net_rules') is defined
+
+- name: Remove the temporary Persistent Net Rules file
+  ansible.builtin.file:
+    path: "{{ role_path }}/70-persistent-net.rules"
+    state: absent
+    mode: '0644'

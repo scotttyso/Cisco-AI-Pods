@@ -1,0 +1,19 @@
+{
+{% if openshift_install.proxy.http_proxy is defined %}
+{% if openshift_install.proxy.username is defined %}
+    "http_proxy": "{{ openshift_install.proxy.http_proxy.split(':')[0] }}://{{ openshift_install.proxy.username }}:{{ proxy_password }}@{{ openshift_install.proxy.http_proxy.split(':')[1] }}",
+{% else %}
+    "http_proxy": "{{ openshift_install.proxy.http_proxy }}",
+{% endif %}
+{% endif %}
+{% if openshift_install.proxy.https_proxy is defined %}
+{% if openshift_install.proxy.username is defined %}
+    "https_proxy": "{{ openshift_install.proxy.https_proxy.split(':')[0] }}://{{ openshift_install.proxy.username }}:{{ proxy_password }}@{{ openshift_install.proxy.https_proxy.split(':')[1] }}",
+{% else %}
+    "https_proxy": "{{ openshift_install.proxy.https_proxy }}",
+{% endif %}
+{% endif %}
+{% if openshift_install.proxy.no_proxy is defined %}
+    "no_proxy": "{{ openshift_install.proxy.no_proxy | join(',') }}",
+{% endif %}
+}

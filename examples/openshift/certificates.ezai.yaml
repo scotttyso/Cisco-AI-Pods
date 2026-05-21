@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=/home/tyscott@rich.ciscolabs.com/scotttyso/Cisco-AI-Pods/schema/cisco-ai-pods.json --- IGNORE ---
+---
+openshift:
+  certificates:
+    api_cert_chain_file: /path/to/api_cert_chain.pem
+    api_key_file: /path/to/api_key.pem
+    api_server_hostname: api.my-cluster.example.com
+    ingress_cert_chain_file: /path/to/ingress_cert.pem
+    ingress_key_file: /path/to/ingress_key.pem
+    user_ca_bundle_file: /path/to/user_ca_bundle.pem

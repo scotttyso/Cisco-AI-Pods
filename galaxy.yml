@@ -46,6 +46,6 @@ build_ignore:
 dependencies:
   kubernetes.core: '>=6.3.0'
   purestorage.flasharray: '>=1.42.0'
-  purestorage.flashblade: '>=1.42.0'
+  purestorage.flashblade: '>=1.24.0'
   ansible.posix: '>=1.5.0'
   cisco.intersight: '>=2.0.0'

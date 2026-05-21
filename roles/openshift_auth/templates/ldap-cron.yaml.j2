@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ldap-group-sync
+  namespace: ldap-sync
+spec:
+  # Format: https://en.wikipedia.org/wiki/Cron
+  schedule: '@hourly'
+  suspend: false
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: ldap-sync
+          restartPolicy: Never
+          containers:
+            - name: oc-cli
+              command:
+                - /bin/oc
+                - adm
+                - groups
+                - sync
+                - --whitelist=/ldap-sync/whitelist.txt
+                - --sync-config=/ldap-sync/ldap-sync.yaml
+                - --confirm
+              image: registry.redhat.io/openshift4/ose-cli
+              imagePullPolicy: Always
+              volumeMounts:
+              - mountPath: /ldap-sync/
+                name: config
+                readOnly: true
+          volumes:
+          - name: config
+            secret:
+              defaultMode: 420
+              secretName: ldap-sync

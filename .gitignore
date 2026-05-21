@@ -6,13 +6,14 @@
 pure.json
 
 # Generated customer-specific artifacts
+.ansible/
+assisted-installer/
 backup/
 netapp/trident-installer/
-openshift/install/assisted-installer/
 qa/
 splunk_ai_pods/client/
 splunk_ai_pods/signer/
-script_vars/
+host_vars/
 # *.ezai.yaml
 *.ezcai.yaml
 *.tar.gz

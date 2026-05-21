@@ -1,0 +1,578 @@
+distribution: openshift
+readinessProbe:
+  initialDelaySeconds: 180
+livenessProbe:
+  initialDelaySeconds: 180
+operator:
+  enabled: false
+operatorcrds:
+  installed: false
+gateway:
+  enabled: false
+splunkObservability:
+  profilingEnabled: true
+agent:
+  discovery:
+    enabled: true
+{% set _otel_collector = splunk_observability.otel_collector | default({}) %}
+{% if _otel_collector.proxy is defined %}
+  extraEnvs:
+    - name: HTTP_PROXY
+{% if openshift_install.proxy.http_proxy is defined %}
+{% if _otel_collector.proxy.username is defined %}
+    value: "{{ _otel_collector.proxy.http_proxy.split(':')[0] }}://{{ _otel_collector.proxy.username }}:{{ proxy_password }}@{{ _otel_collector.proxy.http_proxy.split(':')[1] }}",
+{% else %}
+    value: "{{ _otel_collector.proxy.http_proxy }}",
+{% endif %}
+{% endif %}
+    - name: HTTPS_PROXY
+{% if _otel_collector.proxy.https_proxy is defined %}
+{% if _otel_collector.proxy.username is defined %}
+    value: "{{ _otel_collector.proxy.https_proxy.split(':')[0] }}://{{ _otel_collector.proxy.username }}:{{ proxy_password }}@{{ _otel_collector.proxy.https_proxy.split(':')[1] }}",
+{% else %}
+    value: "{{ _otel_collector.proxy.https_proxy }}",
+{% endif %}
+{% endif %}
+    - name: NO_PROXY
+      value: "{{ _otel_collector.proxy.no_proxy | join(',') }}"
+{% endif %}
+{% if (_otel_collector.metrics_collection | default({})).get('etcd_metrics', false) %}
+  extraVolumes:
+    - name: etcd-certs-signer
+      secret:
+        secretName: splunk-monitoring-etcd-metrics-signer
+    - name: etcd-certs-client
+      secret:
+        secretName: splunk-monitoring-etcd-metrics-client
+  extraVolumeMounts:
+    - name: etcd-certs-signer
+      mountPath: /etc/prometheus/secrets/etcd-metric-signer
+      readOnly: true
+    - name: etcd-certs-client
+      mountPath: /etc/prometheus/secrets/etcd-metric-client
+      readOnly: true
+{% endif %}
+  resources:
+    limits:
+      cpu: 200m
+      # This value is being used as a source for default memory_limiter processor configurations
+      memory: 2000Mi
+  config:
+    exporters:
+      debug:
+        verbosity: detailed
+      signalfx:
+        send_otlp_histograms: true
+{% raw %}
+    processors:
+      filter/health:
+        error_mode: ignore
+        traces:
+          span:
+            - |
+              (
+                IsMatch(name, ".*/v1/health/live.*") or
+                IsMatch(name, ".*/v1/health/ready.*")
+              )
+{% endraw %}
+      filter/metrics_to_be_included:
+        metrics:
+          # Include only metrics used in charts and detectors
+          include:
+            match_type: strict
+            metric_names:
+{% if splunk_observability.nexus is defined %}
+              - cisco_collector_duration_seconds
+              - cisco_interface_receive_broadcast
+              - cisco_interface_receive_bytes
+              - cisco_interface_receive_drops
+              - cisco_interface_receive_errors
+              - cisco_interface_receive_multicast
+              - cisco_interface_transmit_bytes
+              - cisco_interface_transmit_drops
+              - cisco_interface_transmit_errors
+              - cisco_interface_up
+              - cisco_up
+{% endif %}
+{% if (_otel_collector.metrics_collection | default({})).get('nvidia_gpu_metrics', false)%}
+              - DCGM_FI_DEV_ECC_SBE_VOL_TOTAL
+              - DCGM_FI_DEV_ECC_DBE_VOL_TOTAL
+              - DCGM_FI_DEV_ECC_SBE_AGG_TOTAL
+              - DCGM_FI_DEV_ECC_DBE_AGG_TOTAL
+              - DCGM_FI_DEV_ECC_SBE_VOL_L
+              - DCGM_FI_DEV_ECC_DBE_VOL_L
+              - DCGM_FI_DEV_ECC_SBE_VOL_L
+              - DCGM_FI_DEV_ECC_DBE_VOL_L
+              - DCGM_FI_DEV_ECC_SBE_VOL_DEV
+              - DCGM_FI_DEV_ECC_DBE_VOL_DEV
+              - DCGM_FI_DEV_ECC_SBE_VOL_REG
+              - DCGM_FI_DEV_ECC_DBE_VOL_REG
+              - DCGM_FI_DEV_ECC_SBE_VOL_TEX
+              - DCGM_FI_DEV_ECC_DBE_VOL_TEX
+              - DCGM_FI_DEV_ECC_SBE_AGG_L1
+              - DCGM_FI_DEV_ECC_DBE_AGG_L1
+              - DCGM_FI_DEV_ECC_SBE_AGG_L2
+              - DCGM_FI_DEV_ECC_DBE_AGG_L2
+              - DCGM_FI_DEV_ECC_SBE_AGG_DEV
+              - DCGM_FI_DEV_ECC_DBE_AGG_DEV
+              - DCGM_FI_DEV_ECC_SBE_AGG_REG
+              - DCGM_FI_DEV_ECC_DBE_AGG_REG
+              - DCGM_FI_DEV_ECC_SBE_AGG_TEX
+              - DCGM_FI_DEV_ECC_DBE_AGG_TEX
+              - DCGM_FI_DEV_ECC_SBE_VOL_SHM
+              - DCGM_FI_DEV_ECC_DBE_VOL_SHM
+              - DCGM_FI_DEV_ECC_SBE_VOL_CBU
+              - DCGM_FI_DEV_ECC_DBE_VOL_CBU
+              - DCGM_FI_DEV_ECC_SBE_AGG_SHM
+              - DCGM_FI_DEV_ECC_DBE_AGG_SHM
+              - DCGM_FI_DEV_ECC_SBE_AGG_CBU
+              - DCGM_FI_DEV_ECC_DBE_AGG_CBU
+              - DCGM_FI_DEV_ECC_SBE_VOL_SRM
+              - DCGM_FI_DEV_ECC_DBE_VOL_SRM
+              - DCGM_FI_DEV_ECC_SBE_AGG_SRM
+              - DCGM_FI_DEV_ECC_DBE_AGG_SRM
+              - DCGM_FI_DEV_FB_FREE
+              - DCGM_FI_DEV_FB_USED
+              - DCGM_FI_DEV_GPU_TEMP
+              - DCGM_FI_DEV_GPU_UTIL
+              - DCGM_FI_DEV_MEM_CLOCK
+              - DCGM_FI_DEV_MEM_COPY_UTIL
+              - DCGM_FI_DEV_MEMORY_TEMP
+              - DCGM_FI_DEV_POWER_USAGE
+              - DCGM_FI_DEV_SM_CLOCK
+              - DCGM_FI_DEV_TOTAL_ENERGY_CONSUMPTION
+              - DCGM_FI_PROF_DRAM_ACTIVE
+              - DCGM_FI_PROF_GR_ENGINE_ACTIVE
+              - DCGM_FI_PROF_PCIE_RX_BYTES
+              - DCGM_FI_PROF_PCIE_TX_BYTES
+              - DCGM_FI_PROF_PIPE_TENSOR_ACTIVE
+{% endif %}
+              - e2e_request_latency_seconds
+{% if (_otel_collector.metrics_collection | default({})).get('etcd_metrics', false) %}
+              - etcd_network_peer_round_trip_time_seconds
+              - etcd_disk_wal_write_duration_seconds
+              - etcd_disk_backend_commit_duration_seconds
+{% endif %}
+              - generation_tokens_total
+              - go_info
+              - go_memstats_alloc_bytes
+              - go_memstats_alloc_bytes_total
+              - go_memstats_buck_hash_sys_bytes
+              - go_memstats_frees_total
+              - go_memstats_gc_sys_bytes
+              - go_memstats_heap_alloc_bytes
+              - go_memstats_heap_idle_bytes
+              - go_memstats_heap_inuse_bytes
+              - go_memstats_heap_objects
+              - go_memstats_heap_released_bytes
+              - go_memstats_heap_sys_bytes
+              - go_memstats_last_gc_time_seconds
+              - go_memstats_lookups_total
+              - go_memstats_mallocs_total
+              - go_memstats_mcache_inuse_bytes
+              - go_memstats_mcache_sys_bytes
+              - go_memstats_mspan_inuse_bytes
+              - go_memstats_mspan_sys_bytes
+              - go_memstats_next_gc_bytes
+              - go_memstats_other_sys_bytes
+              - go_memstats_stack_inuse_bytes
+              - go_memstats_stack_sys_bytes
+              - go_memstats_sys_bytes
+              - go_sched_gomaxprocs_threads
+              - gpu_cache_usage_perc
+              - gpu_total_energy_consumption_joules
+              - http.server.active_requests
+{% if splunk_observability.intersight is defined %}
+              - intersight.advisories.nonsecurity.affected_objects
+              - intersight.advisories.security.affected_objects
+              - intersight.advisories.security.count
+              - intersight.alarms.count
+              - intersight.ucs.fan.speed
+              - intersight.ucs.host.power
+              - intersight.ucs.host.temperature
+              - intersight.ucs.network.receive.rate
+              - intersight.ucs.network.transmit.rate
+              - intersight.ucs.network.utilization.average
+              - intersight.vm_count
+{% endif %}
+              - kube_pod_start_time
+              - kube_pod_status_scheduled_time
+              - kube_pod_completion_time
+              - kube_pod_status_initialized_time
+              - kube_pod_status_ready_time
+              - kube_pod_status_container_ready_time
+              - kube_pod_status_unscheduled_time
+              - milvus_proxy_cache_hit_count
+              - milvus_proxy_req_count
+              - milvus_proxy_req_in_queue_latency
+              - milvus_querycoord_collection_num
+              - milvus_rootcoord_ddl_req_count
+              - milvus_rootcoord_ddl_req_latency_in_queue
+              - milvus_rootcoord_dml_channel_num
+              - milvus_rootcoord_id_alloc_count
+              - num_request_max
+              - num_requests_running
+              - num_requests_waiting
+              - process_cpu_seconds_total
+              - process_max_fds
+              - process_open_fds
+              - process_resident_memory_bytes
+              - process_start_time_seconds
+              - process_virtual_memory_bytes
+              - process_virtual_memory_max_bytes
+              - promhttp_metric_handler_requests_in_flight
+              - promhttp_metric_handler_requests_total
+              - prompt_tokens_total
+{% if (_otel_collector.metrics_collection | default({})).get('portworx_metrics', false) %}
+              - px_cluster_cpu_percent
+              - px_cluster_disk_total_bytes
+              - px_cluster_disk_utilized_bytes
+              - px_cluster_status_nodes_offline
+              - px_cluster_status_nodes_online
+              - px_volume_read_latency_seconds
+              - px_volume_reads_total
+              - px_volume_readthroughput
+              - px_volume_write_latency_seconds
+              - px_volume_writes_total
+              - px_volume_writethroughput
+{% endif %}
+              - python_gc_collections_total
+              - python_gc_objects_collected_total
+              - python_gc_objects_uncollectable_total
+              - python_info
+              - redfish_performance_scrape_duration_seconds
+              - redfish_thermal_fans_lower_threshold_critical
+              - redfish_thermal_fans_upper_threshold_critical
+              - redfish_thermal_temperatures_reading_celsius
+              - request_failure_total
+              - request_finish_total
+              - request_generation_tokens
+              - request_prompt_tokens
+              - request_success_total
+              - system.cpu.time
+{% if (_otel_collector.metrics_collection | default({})).get('trident_metrics', false) %}
+              - trident_backend_count
+              - trident_node_count
+              - trident_operation_duration_milliseconds_count
+              - trident_operation_duration_milliseconds_quantile
+              - trident_operation_duration_milliseconds_sum
+              - trident_storageclass_count
+              - trident_volume_allocated_bytes
+              - trident_volume_count
+              - trident_volume_total_bytes
+{% endif %}
+              - time_to_first_token_seconds
+              - time_per_output_token_seconds
+{% if (_otel_collector.metrics_collection | default({})).get('nvidia_gpu_metrics', false) %}
+              - vllm:num_requests_running
+              - vllm:e2e_request_latency_seconds
+              - vllm:time_to_first_token_seconds
+              - vllm:time_per_output_token_seconds
+              - vllm:request_failure_total
+              - vllm:request_success_total
+              - vllm:num_requests_waiting
+              - vllm:prompt_tokens_total
+              - vllm:generation_tokens_total
+              - vllm:gpu_cache_usage_perc
+              - vllm:request_finish_total
+{% endif %}
+    receivers:
+      kubeletstats:
+        insecure_skip_verify: true
+{% if (_otel_collector.metrics_collection | default({})).get('etcd_metrics', false) %}
+      prometheus/etcd:
+        config:
+          scrape_configs:
+            - job_name: "etcd"
+              scheme: https
+              metrics_path: "/metrics"
+              scrape_interval: 10s
+              static_configs:
+                - targets:
+                    - {% raw %}'${K8S_NODE_NAME}:9979'{% endraw %}
+              tls_config:
+                insecure_skip_verify: true
+                ca_file: /etc/prometheus/secrets/etcd-metric-signer/tls.crt
+                cert_file: /etc/prometheus/secrets/etcd-metric-client/tls.crt
+                key_file: /etc/prometheus/secrets/etcd-metric-client/tls.key
+{% endif %}
+{% if _otel_collector.everpure_flash_arrays is defined and _otel_collector.everpure_flash_arrays | length > 0 %}
+{% for array in _otel_collector.everpure_flash_arrays %}
+      prometheus/pure:
+        config:
+          scrape_configs:
+            - job_name: 'pure_flash_arrays'
+              metrics_path: '/metrics/array'
+              scrape_interval: 60s
+              scrape_timeout:  60s
+              scheme: 'https'
+              tls_config:
+                insecure_skip_verify: true
+              authorization:
+                credentials: '{{ array.auth_token }}'
+              params:
+                namespace: ['{{ array.namespace }}']
+              static_configs:
+                - targets: 
+                    - {{ array.endpoint }}
+                  labels:
+                    instance: {{ array.endpoint.split('.')[0] }}
+                    env: 'production'
+            - job_name: 'pure_flash_volumes'
+              metrics_path: '/metrics/volumes'
+              scrape_interval: 60s
+              scrape_timeout:  60s
+              scheme: 'https'
+              tls_config:
+                insecure_skip_verify: true
+              authorization:
+                credentials: '{{ array.auth_token }}'
+              params:
+                  namespace:
+                    - '{{ array.namespace }}'
+              static_configs:
+                - targets: 
+                    - {{ array.endpoint }}
+                  labels:
+                    instance: {{ array.endpoint.split('.')[0] }}
+                    env: 'production'
+{% endif %}
+{% if splunk_observability.nexus is defined %}
+      receiver_creator/nexus:
+        # Name of the extensions to watch for endpoints to start and stop.
+        watch_observers: 
+          - k8s_observer
+        receivers:
+          prometheus/nexus:
+            config:
+              config:
+                scrape_configs:
+                  - job_name: nexus-metrics
+                    metrics_path: /metrics
+                    scrape_interval: 30s
+                    scrape_timeout:  30s
+                    static_configs:
+                      - targets:
+                          - '`endpoint`:9362'
+            {% raw %}rule: type == "pod" && labels["app"] == "cisco-exporter"{% endraw %}
+{% endif %}
+{% raw %}            
+      receiver_creator:
+        # Name of the extensions to watch for endpoints to start and stop.
+        watch_observers: 
+          - k8s_observer
+        receivers:
+          prometheus/dcgm:
+            config:
+              config:
+                scrape_configs:
+                  - job_name: gpu-metrics
+                    scrape_interval: 10s
+                    static_configs:
+                      - targets:
+                          - '`endpoint`:9400'
+            rule: type == "pod" && labels["app"] == "nvidia-dcgm-exporter"
+          prometheus/kube-state-metrics:
+            config:
+              config:
+                scrape_configs:
+                  - authorization:
+                      credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+                      type: Bearer
+                    job_name: kube-controller-manager
+                    metric_relabel_configs:
+                      - action: keep
+                        regex: (kube_pod_start_time|kube_pod_status_scheduled_time|kube_pod_completion_time|kube_pod_status_initialized_time|kube_pod_status_ready_time|kube_pod_status_container_ready_time|kube_pod_status_unscheduled_time)(?:_sum|_count|_bucket)?
+                        source_labels:
+                          - __name__
+                    scheme: https
+                    tls_config:
+                      insecure_skip_verify: true
+                    static_configs:
+                      - targets:
+                          - '`endpoint`:8443'
+            rule: type == "pod" && labels["app.kubernetes.io/name"] == "kube-state-metrics"
+          prometheus/milvus:
+            config:
+              config:
+                scrape_configs:
+                  - job_name: milvus-metrics
+                    static_configs:
+                      - targets:
+                          - '`endpoint`:9091'
+            rule: type == "pod" && labels["app.kubernetes.io/name"] == "milvus"
+{% endraw %}
+{% if (_otel_collector.metrics_collection | default({})).get('nvidia_gpu_metrics', false) %}
+{% raw %}
+          prometheus/nim-embedding:
+            config:
+              config:
+                scrape_configs:
+                  - job_name: nim-for-embedqallm-metrics
+                    scrape_interval: 10s
+                    metrics_path: /v1/metrics
+                    static_configs:
+                      - targets:
+                          - '`endpoint`:8000'
+            rule: type == "pod" && labels["app"] == "embedqa"
+          prometheus/nim-llm:
+            config:
+              config:
+                scrape_configs:
+                  - job_name: nim-for-llm-metrics
+                    scrape_interval: 10s
+                    metrics_path: /v1/metrics
+                    static_configs:
+                      - targets:
+                          - '`endpoint`:8000'
+            rule: type == "pod" && labels["app"] == "llm"
+          prometheus/nim-reranking:
+            config:
+              config:
+                scrape_configs:
+                  - job_name: nim-for-rerankqallm-metrics
+                    scrape_interval: 10s
+                    metrics_path: /v1/metrics
+                    static_configs:
+                      - targets:
+                          - '`endpoint`:8000'
+            rule: type == "pod" && labels["app"] == "rerankqa"
+{% endraw %}
+{% endif %}
+{% if (_otel_collector.metrics_collection | default({})).get('nvidia_gpu_metrics', false) %}
+{% raw %}
+          prometheus/portworx:
+            config:
+              config:
+                scrape_configs:
+                  - job_name: portworx-metrics
+                    static_configs:
+                      - targets:
+                          - '`endpoint`:17001'
+                          - '`endpoint`:17018'
+            rule: type == "pod" && labels["name"] == "portworx"
+{% endraw %}
+{% endif %}
+{% if (_otel_collector.metrics_collection | default({})).get('nvidia_gpu_metrics', false) %}
+{% raw %}
+          prometheus/vllm:
+            config:
+              config:
+                scrape_configs:
+                  - job_name: vllm-for-llm-metrics
+                    scrape_interval: 10s
+                    metrics_path: /metrics
+                    static_configs:
+                      - targets:
+                          - '`endpoint`:8080'
+            rule: type == "pod" && annotations["opendatahub.io/kserve-runtime"] == "vllm"
+    service:
+      pipelines:
+{% endraw %}
+{% endif %}
+{% if (_otel_collector.metrics_collection | default({})).get('nvidia_gpu_metrics', false) %}
+        metrics/nvidia-metrics:
+          exporters:
+          - signalfx
+          - debug
+          processors:
+          - memory_limiter
+          - filter/metrics_to_be_included
+          - batch
+          - resourcedetection
+          - resource
+          receivers:
+          - receiver_creator
+{% endif %}
+{% if splunk_observability.nexus is defined %}
+        metrics/nexus-metrics:
+          exporters:
+          - signalfx
+          processors:
+          - memory_limiter
+          - filter/metrics_to_be_included
+          - batch
+          - resourcedetection
+          - resource
+          receivers:
+          - receiver_creator/nexus
+          - otlp
+{% endif %}
+{% if (_otel_collector.metrics_collection | default({})).get('etcd_metrics', false) %}
+        metrics/etcd:
+          exporters:
+          - signalfx
+          processors:
+          - memory_limiter
+          - batch
+          - resourcedetection
+          - resource
+          - filter/metrics_to_be_included
+          receivers:
+          - prometheus/etcd
+{% endif %}
+        # metrics/kube-state-metrics:
+        #   exporters:
+        #   - signalfx
+        #   processors:
+        #   - memory_limiter
+        #   - batch
+        #   - resourcedetection
+        #   - resource
+        #   # - filter/metrics_to_be_included
+        #   receivers:
+        #   - prometheus/kube-state-metrics
+          
+        metrics/purefa_array_dcmaistpur001:
+          exporters:
+          - signalfx
+          processors:
+          - memory_limiter
+          - batch
+          - resourcedetection
+          - resource
+          receivers:
+          - prometheus/pure
+        traces:
+          processors:
+          - memory_limiter
+          - k8sattributes
+          - batch
+          - resourcedetection
+          - resource
+          - resource/add_environment
+          - filter/health
+clusterReceiver:
+{% if _otel_collector.proxy is defined %}
+  extraEnvs:
+    - name: HTTP_PROXY
+      value: "{{ splunk_observability.otel_collector.proxy.http_proxy }}"
+    - name: HTTPS_PROXY
+      value: "{{ splunk_observability.otel_collector.proxy.https_proxy }}"
+    - name: NO_PROXY
+      value: "{{ splunk_observability.otel_collector.proxy.no_proxy | join(',') }}"
+{% endif %}
+  # resources:
+  #   limits:
+  #     cpu: 200m
+  #     # This value is being used as a source for default memory_limiter processor configurations
+  #     memory: 1000Mi
+  # config:
+  #   exporters:
+  #     debug:
+  #       verbosity: detailed
+  #     signalfx:
+  #       send_otlp_histograms: true
+  #   service:
+  #     pipelines:
+  #       # metrics/pure_flash_arrays:
+  #       metrics:
+  #         exporters:
+  #           - signalfx
+  #         processors:
+  #           - memory_limiter
+  #           - batch
+  #           - resourcedetection
+  #           - resource
+  #         receivers:
+  #           - prometheus/pure

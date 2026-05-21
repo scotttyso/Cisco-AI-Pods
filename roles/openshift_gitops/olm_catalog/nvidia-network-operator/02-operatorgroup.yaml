@@ -1,0 +1,11 @@
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  name: nvidia-network-operator-group
+  namespace: nvidia-network-operator
+spec:
+  targetNamespaces:
+    - nvidia-network-operator

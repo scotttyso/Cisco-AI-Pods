@@ -1,0 +1,17 @@
+---
+galaxy_info:
+  role_name: openshift_argo_cd
+  author: Tyson Scott
+  company: Cisco Systems
+  description: Manage OpenShift operator Argo CD for AI Pod clusters.
+  license: Apache-2.0
+  min_ansible_version: '2.15'
+  platforms:
+    - name: GenericLinux
+      versions: [all]
+  galaxy_tags:
+    - openshift
+    - argo
+    - cd
+    - ai
+dependencies: []

@@ -77,6 +77,15 @@
             "title": "Domain Name",
             "type": "string"
         },
+        "abstract.hostname": {
+            "examples": [
+                "server.example.com"
+            ],
+            "maxLength": 255,
+            "minLength": 7,
+            "pattern": "(?=^.{1,255}$)(^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,63}$)",
+            "type": "string"
+        },
         "abstract.hostname_ip_or_ipv6": {
             "examples": [
                 "server.example.com",
@@ -205,7 +214,7 @@
                 {
                     "additionalProperties": false,
                     "properties": {
-                        "http_server": {
+                        "http_proxy": {
                             "default": "http://proxy.example.com:8080",
                             "description": "The default value is `http://proxy.example.com:8080`.  The HTTP proxy server to use.\n\nThis is optional, but if you have a proxy server, you can set it here.",
                             "examples": [
@@ -213,20 +222,21 @@
                             ],
                             "maxLength": 266,
                             "minLength": 1,
-                            "pattern": "^(?:http:\\/\\/)(((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}|((?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|:(?::[0-9A-Fa-f]{1,4}){1,7}|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?:(?::[0-9A-Fa-f]{1,4}){1,6})|:(?:(?::[0-9A-Fa-f]{1,4}){1,6}))(?:\\/(?:12[0-8]|1[0-1][0-9]|\\d{1,2}))?|((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,6})(:(\\d{1,5}))$",
-                            "title": "Proxy HTTP Server",
+                            "pattern": "^(?:http[s]?:\\/\\/)(((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}|((?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|:(?::[0-9A-Fa-f]{1,4}){1,7}|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?:(?::[0-9A-Fa-f]{1,4}){1,6})|:(?:(?::[0-9A-Fa-f]{1,4}){1,6}))(?:\\/(?:12[0-8]|1[0-1][0-9]|\\d{1,2}))?|((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,6})(:(\\d{1,5}))$",
+                            "title": "HTTP Proxy Server",
                             "type": "string"
                         },
-                        "https_server": {
-                            "default": "https://proxy.example.com:8080",
-                            "description": "The default value is `https://proxy.example.com:8080`.  The HTTPS proxy server to use.\n\nThis is optional, but if you have a proxy server, you can set it here.",
+                        "https_proxy": {
+                            "default": "http://proxy.example.com:8080",
+                            "description": "The default value is `http://proxy.example.com:8080`.  The HTTPS proxy server to use.\n\nThis is optional, but if you have a proxy server, you can set it here.",
                             "examples": [
+                                "http://proxy.example.com:8080",
                                 "https://proxy.example.com:8080"
                             ],
                             "maxLength": 266,
                             "minLength": 1,
-                            "pattern": "^(?:https:\\/\\/)(((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}|((?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|:(?::[0-9A-Fa-f]{1,4}){1,7}|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?:(?::[0-9A-Fa-f]{1,4}){1,6})|:(?:(?::[0-9A-Fa-f]{1,4}){1,6}))(?:\\/(?:12[0-8]|1[0-1][0-9]|\\d{1,2}))?|((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,6})(:(\\d{1,5}))$",
-                            "title": "Proxy HTTPS Server",
+                            "pattern": "^(?:http[s]?:\\/\\/)(((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}|((?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|:(?::[0-9A-Fa-f]{1,4}){1,7}|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?:(?::[0-9A-Fa-f]{1,4}){1,6})|:(?:(?::[0-9A-Fa-f]{1,4}){1,6}))(?:\\/(?:12[0-8]|1[0-1][0-9]|\\d{1,2}))?|((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,6})(:(\\d{1,5}))$",
+                            "title": "HTTPS Proxy Server",
                             "type": "string"
                         },
                         "no_proxy": {
@@ -244,11 +254,11 @@
                                 ],
                                 "maxLength": 512,
                                 "minLength": 3,
-                                "pattern": "^(((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}(?:\\/(?:3[0-2]|[0-2]?\\d))?|((?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|:(?::[0-9A-Fa-f]{1,4}){1,7}|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?:(?::[0-9A-Fa-f]{1,4}){1,6})|:(?:(?::[0-9A-Fa-f]{1,4}){1,6}))(?:\\/(?:12[0-8]|1[0-1][0-9]|\\d{1,2}))?|(\\.)?((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,6})$",
+                                "pattern": "^localhost|(((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}(?:\\/(?:3[0-2]|[0-2]?\\d))?|((?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|:(?::[0-9A-Fa-f]{1,4}){1,7}|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?:(?::[0-9A-Fa-f]{1,4}){1,6})|:(?:(?::[0-9A-Fa-f]{1,4}){1,6}))(?:\\/(?:12[0-8]|1[0-1][0-9]|\\d{1,2}))?|(\\.)?((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,6})$",
                                 "title": "Bypass URL",
                                 "type": "string"
                             },
-                            "maxItems": 5,
+                            "maxItems": 100,
                             "minItems": 1,
                             "title": "Bypass URLs",
                             "type": "array",
@@ -968,11 +978,14 @@
                         },
                         "shared_services": {
                             "$ref": "#/definitions/shared_services"
+                        },
+                        "splunk_observability": {
+                            "$ref": "#/definitions/splunk_observability"
                         }
                     }
                 }
             ],
-            "description": "This dictionary provides the required configuration settings for Cisco AI Pods.\n\nOptional Fields are:\n  * `hyperfabric`\n  * `intersight`\n  * `openshift`\n  * `everpure`\n  * `vast`",
+            "description": "This dictionary provides the required configuration settings for Cisco AI Pods.\n\nOptional fields are:\n  * `intersight`\n  * `openshift`\n  * `everpure`\n  * `shared_services`\n  * `splunk_observability`",
             "required": [],
             "title": "Cisco AI Pods",
             "type": "object",
@@ -1103,7 +1116,7 @@
             "properties": {
                 "api_token_id": {
                     "default": 1,
-                    "description": "The default value is `1`.  API Token for authenticating with the Everpure Array.  A number Between 1-64 to denote the variables everpure_api_token_[1-64].  i.e. `export pure_api_token_1='cisco123'`.",
+                    "description": "The default value is `1`.  API Token for authenticating with the Everpure Array.  A number Between 1-64 to denote the variables everpure_api_token_[1-64].  i.e. `export everpure_api_token_1='a1234567-abcd-1234-5678-abcdef123456'`.",
                     "examples": [
                         1
                     ],
@@ -1152,7 +1165,7 @@
             "properties": {
                 "api_token_id": {
                     "default": 1,
-                    "description": "The default value is `1`.  API Token for authenticating with the Everpure Array.",
+                    "description": "The default value is `1`.  API Token for authenticating with the Everpure Array.  A number Between 1-64 to denote the variables everpure_api_token_[1-64].  i.e. `export everpure_api_token_1='a1234567-abcd-1234-5678-abcdef123456'`.",
                     "examples": [
                         1
                     ],
@@ -3708,7 +3721,7 @@
                     }
                 }
             ],
-            "description": "This dictionary defines the Intersight deployment settings.\n\nOptional Fields are:\n  * `configure` - Configuration of Pools, Policies, Profiles, and Templates\n  * `script_settings` - Global Script Settings like `intersight_fqdn`\n  * `system` - System settings for Intersight",
+            "description": "This dictionary defines the Intersight deployment settings.\n\nOptional fields are:\n  * `configure` - Configuration of Pools, Policies, Profiles, and Templates\n  * `script_settings` - Global Script Settings like `intersight_fqdn`\n  * `system` - System settings for Intersight",
             "required": [],
             "title": "Intersight deployment settings",
             "type": "object",
@@ -36498,8 +36511,22 @@
                         "base_dns_domain": {
                             "$ref": "#/definitions/openshift.base_dns_domain"
                         },
+                        "certificates": {
+                            "$ref": "#/definitions/openshift.certificates"
+                        },
                         "cluster_name": {
                             "$ref": "#/definitions/openshift.cluster_name"
+                        },
+                        "destination_directory": {
+                            "description": "Absolute path to the OpenShift GitOps Repository on the host.",
+                            "examples": [
+                                "/home/user/my_repos/cluster_argo_cd_sync"
+                            ],
+                            "maxLength": 4096,
+                            "minLength": 1,
+                            "pattern": "^(?:(?:/(?:[^\\0/]+/)*[^\\0/]+)|(?:[A-Za-z]:[\\\\/](?:[^<>:\"|?*\\r\\n]+[\\\\/])*[^<>:\"|?*\\r\\n]+)|(?:\\.{1,2}[\\\\/])?(?:[^<>:\"|?*\\r\\n\\\\/]+[\\\\/])*[^<>:\"|?*\\r\\n\\\\/]+)$",
+                            "title": "API Key File",
+                            "type": "string"
                         },
                         "file_storage_class": {
                             "$ref": "#/definitions/abstract.dns_1123_label",
@@ -36524,14 +36551,20 @@
                     }
                 }
             ],
-            "description": "This dictionary defines the OpenShift Container Platform (OCP) deployment settings.\n\nRequired Fields are:\n  * `cluster_name`\n  * `file_storage_class`\n  * `install`\n  * `operators`",
+            "description": "This dictionary defines the OpenShift Container Platform (OCP) deployment settings.\n\nTo Install OpenShift the Required fields are:\n  * `install`\n\nTo Install API and Ingress Certificates after Install the Required fields are:\n  * `certificates`\n\nTo Configure OpenShift Auth after Install the Required fields are:\n  * `ldap`\n\nTo Install OpenShift Operators the Required fields are:\n  * `base_dns_domain`\n  * `cluster_name`\n  * `destination_directory`\n  * `file_storage_class`\n  * `operators`",
             "oneOf": [
                 {
                     "required": [
                         "base_dns_domain",
                         "cluster_name",
+                        "destination_directory",
                         "file_storage_class",
                         "operators"
+                    ]
+                },
+                {
+                    "required": [
+                        "certificates"
                     ]
                 },
                 {
@@ -36559,6 +36592,87 @@
             ],
             "title": "OpenShift Base DNS Domain"
         },
+        "openshift.certificates": {
+            "additionalProperties": false,
+            "description": "This dictionary defines the OpenShift Certificates configuration.\n\nRequired fields are:\n  * `api_cert_chain_file`\n  * `api_server_hostname`\n  * `api_key_file`\n  * `ingress_cert_chain_file`\n  * `ingress_key_file`\n  * `user_ca_bundle_file`",
+            "properties": {
+                "api_cert_chain_file": {
+                    "description": "Absolute path to the API certificate chain file on the host. File must be in PEM format.",
+                    "examples": [
+                        "/home/user/pki/api_cert_chain_file.cer"
+                    ],
+                    "maxLength": 4096,
+                    "minLength": 1,
+                    "pattern": "^(?:(?:/(?:[^\\0/]+/)*[^\\0/]+)|(?:[A-Za-z]:[\\\\/](?:[^<>:\"|?*\\r\\n]+[\\\\/])*[^<>:\"|?*\\r\\n]+)|(?:\\.{1,2}[\\\\/])?(?:[^<>:\"|?*\\r\\n\\\\/]+[\\\\/])*[^<>:\"|?*\\r\\n\\\\/]+)$",
+                    "title": "API Certificate Chain File",
+                    "type": "string"
+                },
+                "api_server_hostname": {
+                    "default": "api.my-cluster.example.com",
+                    "description": "The default value is `api.my-cluster.example.com`.  The Hostname for the OpenShift API.",
+                    "examples": [
+                        "api.my-cluster.example.com"
+                    ],
+                    "$ref": "#/definitions/abstract.hostname",
+                    "title": "OpenShift API Hostname",
+                    "type": "string"
+                },
+                "api_key_file": {
+                    "description": "Absolute path to the API key file on the host. File must be in PEM format.",
+                    "examples": [
+                        "/home/user/pki/api_key_file.key"
+                    ],
+                    "maxLength": 4096,
+                    "minLength": 1,
+                    "pattern": "^(?:(?:/(?:[^\\0/]+/)*[^\\0/]+)|(?:[A-Za-z]:[\\\\/](?:[^<>:\"|?*\\r\\n]+[\\\\/])*[^<>:\"|?*\\r\\n]+)|(?:\\.{1,2}[\\\\/])?(?:[^<>:\"|?*\\r\\n\\\\/]+[\\\\/])*[^<>:\"|?*\\r\\n\\\\/]+)$",
+                    "title": "API Key File",
+                    "type": "string"
+                },
+                "ingress_cert_chain_file": {
+                    "description": "Absolute path to the ingress certificate chain file on the host. File must be in PEM format.",
+                    "examples": [
+                        "/home/user/pki/ingress_cert_chain_file.cer"
+                    ],
+                    "maxLength": 4096,
+                    "minLength": 1,
+                    "pattern": "^(?:(?:/(?:[^\\0/]+/)*[^\\0/]+)|(?:[A-Za-z]:[\\\\/](?:[^<>:\"|?*\\r\\n]+[\\\\/])*[^<>:\"|?*\\r\\n]+)|(?:\\.{1,2}[\\\\/])?(?:[^<>:\"|?*\\r\\n\\\\/]+[\\\\/])*[^<>:\"|?*\\r\\n\\\\/]+)$",
+                    "title": "Ingress Certificate Chain File",
+                    "type": "string"
+                },
+                "ingress_key_file": {
+                    "description": "Absolute path to the ingress key file on the host. File must be in PEM format.",
+                    "examples": [
+                        "/home/user/pki/ingress_key_file.key"
+                    ],
+                    "maxLength": 4096,
+                    "minLength": 1,
+                    "pattern": "^(?:(?:/(?:[^\\0/]+/)*[^\\0/]+)|(?:[A-Za-z]:[\\\\/](?:[^<>:\"|?*\\r\\n]+[\\\\/])*[^<>:\"|?*\\r\\n]+)|(?:\\.{1,2}[\\\\/])?(?:[^<>:\"|?*\\r\\n\\\\/]+[\\\\/])*[^<>:\"|?*\\r\\n\\\\/]+)$",
+                    "title": "Ingress Key File",
+                    "type": "string"
+                },
+                "user_ca_bundle_file": {
+                    "description": "Absolute path to the user CA bundle file on the host. File must be in PEM format.",
+                    "examples": [
+                        "/home/user/pki/user_ca_bundle_file.cer"
+                    ],
+                    "maxLength": 4096,
+                    "minLength": 1,
+                    "pattern": "^(?:(?:/(?:[^\\0/]+/)*[^\\0/]+)|(?:[A-Za-z]:[\\\\/](?:[^<>:\"|?*\\r\\n]+[\\\\/])*[^<>:\"|?*\\r\\n]+)|(?:\\.{1,2}[\\\\/])?(?:[^<>:\"|?*\\r\\n\\\\/]+[\\\\/])*[^<>:\"|?*\\r\\n\\\\/]+)$",
+                    "title": "User CA Bundle File",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "api_cert_chain_file",
+                "api_key_file",
+                "api_server_hostname",
+                "ingress_cert_chain_file",
+                "ingress_key_file",
+                "user_ca_bundle_file"
+            ],
+            "title": "OpenShift Certificates Configuration",
+            "type": "object"
+        },
         "openshift.cluster_name": {
             "$ref": "#/definitions/abstract.dns_1123_label",
             "default": "default",
@@ -36572,7 +36686,7 @@
         },
         "openshift.install": {
             "additionalProperties": false,
-            "description": "This dictionary defines the OpenShift Container Platform (OCP) install options.\n\nRequired Fields are:\n  * `bare_metal`",
+            "description": "This dictionary defines the OpenShift Container Platform (OCP) install options.\n\nRequired fields are:\n  * `bare_metal`",
             "properties": {
                 "bare_metal": {
                     "$ref": "#/definitions/openshift.install.bare_metal"
@@ -36662,7 +36776,7 @@
                     "type": "object"
                 }
             ],
-            "description": "This dictionary provides the required configuration settings for Cisco AI Pods - RedHat Openshift cluster deployment.\n\nRequired Fields are:`cluster_name`\n  * `cluster_domain`\n  * `cluster_networking`\n  * `cluster_version`\n  * `iso_web_server`\n  * `ssh_public_key`\n\nOptional fields are:`cpu_architecture`\n  * `fabric_interconnects`\n  * `iso`\n  * `ntp_servers`\n  * `proxy_servers`",
+            "description": "This dictionary provides the required configuration settings for Cisco AI Pods - RedHat Openshift cluster deployment.\n\nRequired fields are:`cluster_name`\n  * `cluster_domain`\n  * `cluster_networking`\n  * `cluster_version`\n  * `iso_web_server`\n  * `ssh_public_key`\n\nOptional fields are:`cpu_architecture`\n  * `fabric_interconnects`\n  * `iso`\n  * `ntp_servers`\n  * `proxy_servers`",
             "title": "OpenShift Container Platform (OCP) - Bare Metal Provisioning",
             "unevaluatedProperties": false
         },
@@ -37061,7 +37175,7 @@
                     "type": "object"
                 }
             ],
-            "description": "This dictionary provides the required configuration settings for RedHat Openshift cluster network configuration.\n\nRequired Fields are:\n  * `api`\n  * `ingress`\n  * `machine_network_gateway`\n  * `routes`\n\nOptional fields are:\n  * `container_network_interface`\n  * `container_network_version`\n  * `dns_search_domains`\n  * `dns_servers`\n  * `service_network`",
+            "description": "This dictionary provides the required configuration settings for RedHat Openshift cluster network configuration.\n\nRequired fields are:\n  * `api`\n  * `ingress`\n  * `machine_network_gateway`\n  * `routes`\n\nOptional fields are:\n  * `container_network_interface`\n  * `container_network_version`\n  * `dns_search_domains`\n  * `dns_servers`\n  * `service_network`",
             "title": "OpenShift Container Platform (OCP) - Networking",
             "unevaluatedProperties": false
         },
@@ -37416,7 +37530,7 @@
                     "type": "object"
                 }
             ],
-            "description": "This dictionary provides the required configuration settings for the web server that will host the installation ISO.\n\nRequired Fields are:\n  * `image_base_url`\n  * `image_upload_directory`\n  * `server_address`\n\nOptional Fields are:\n  * `password`\n  * `ssh_public_key`\n  * `username`",
+            "description": "This dictionary provides the required configuration settings for the web server that will host the installation ISO.\n\nRequired fields are:\n  * `image_base_url`\n  * `image_upload_directory`\n  * `server_address`\n\nOptional fields are:\n  * `password`\n  * `ssh_public_key`\n  * `username`",
             "title": "ISO Web Server Configuration",
             "unevaluatedProperties": false
         },
@@ -37529,10 +37643,18 @@
         },
         "openshift.operators": {
             "additionalProperties": false,
-            "description": "This dictionary defines the OpenShift operator configuration settings.\n\nRequired fields are:\n  * `operators_to_install`",
+            "description": "This dictionary defines the OpenShift operator configuration settings.\n\nRequired fields are:\n  * `operators_to_install`\n\nOptional fields are:\n  * `cilium`\n  * `gitea`\n  * `nvidia_network_operator`\n  * `openshift_gitops`",
+            "dependentRequired": {
+                "operators_to_install": [
+                    "openshift_gitops"
+                ]
+            },
             "properties": {
                 "cilium": {
                     "$ref": "#/definitions/openshift.operators.cilium"
+                },
+                "gitea": {
+                    "$ref": "#/definitions/openshift.operators.gitea"
                 },
                 "nvidia_network_operator": {
                     "$ref": "#/definitions/openshift.operators.nvidia_network_operator"
@@ -37566,7 +37688,6 @@
                 }
             },
             "required": [
-                "operators_to_install"
             ],
             "title": "OpenShift Operators",
             "type": "object"
@@ -37633,6 +37754,23 @@
                 "v4_host_prefix"
             ],
             "title": "Cilium Cluster Network",
+            "type": "object"
+        },
+        "openshift.operators.gitea": {
+            "additionalProperties": false,
+            "description": "This dictionary defines the Gitea operator configuration.\n\nRequired fields are:\n  * `enable`",
+            "properties": {
+                "enable": {
+                    "default": false,
+                    "description": "The default value is `false`.  Whether to enable the Gitea operator.",
+                    "title": "Enable Gitea Operator",
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "enable"
+            ],
+            "title": "Gitea Operator Configuration",
             "type": "object"
         },
         "openshift.operators.nvidia_network_operator": {
@@ -37760,8 +37898,14 @@
         },
         "openshift.operators.openshift_gitops": {
             "additionalProperties": false,
-            "description": "This dictionary defines the OpenShift GitOps (ArgoCD) operator configuration.\n\nRequired fields are:\n  * `gitops_repo_url`",
+            "description": "This dictionary defines the OpenShift GitOps (ArgoCD) operator configuration.\n\nRequired fields are:\n  * `enable`\n  * `gitops_repo_url`\n\nOptional fields are:\n  * `prune`\n  * `self_heal`",
             "properties": {
+                "enable": {
+                    "default": false,
+                    "description": "The default value is `false`.  Whether to enable the OpenShift GitOps (Argo CD) Operator.",
+                    "title": "Enable OpenShift GitOps Operator",
+                    "type": "boolean"
+                },
                 "gitops_repo_url": {
                     "description": "URL of the Git repository used by OpenShift GitOps (ArgoCD) for application deployment.",
                     "examples": [
@@ -37787,6 +37931,7 @@
                 }
             },
             "required": [
+                "enable",
                 "gitops_repo_url"
             ],
             "title": "OpenShift GitOps Configuration",
@@ -37797,8 +37942,8 @@
             "description": "This dictionary defines Portworx operator settings.",
             "properties": {
                 "enabled": {
-                    "default": true,
-                    "description": "The default value is `true`.  Whether to enable Portworx deployment.",
+                    "default": false,
+                    "description": "The default value is `false`.  Whether to enable Portworx deployment.",
                     "title": "Enable Portworx",
                     "type": "boolean"
                 }
@@ -37832,11 +37977,385 @@
                     }
                 }
             ],
-            "description": "This dictionary provides the required configuration settings for shared services.\n\nOptional Fields are:\n  * `dns_search_domains`\n  * `dns_servers`\n  * `domain_name`\n  * `ntp_servers`\n  * `proxy_servers`",
+            "description": "This dictionary provides the required configuration settings for shared services.\n\nOptional fields are:\n  * `dns_search_domains`\n  * `dns_servers`\n  * `domain_name`\n  * `ntp_servers`\n  * `proxy_servers`",
             "required": [],
             "title": "Cisco AI Pods",
             "type": "object",
             "unevaluatedProperties": false
+        },
+        "splunk_observability": {
+            "allOf": [
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "access_token": {
+                            "default": 1,
+                            "description": "The default value is `1`.  The Splunk Observability Cloud Access Token.  A number Between 1-64 to denote the variables splunk_observability_access_token_[1-64].  i.e. `export splunk_observability_access_token_1='a1234567-abcd-1234-5678-abcdef123456'`.",
+                            "maximum": 64,
+                            "minimum": 1,
+                            "title": "Splunk Observability Access Token Identifier",
+                            "type": "integer"
+                        },
+                        "intersight": {
+                            "$ref": "#/definitions/splunk_observability.intersight"
+                        },
+                        "nexus": {
+                            "$ref": "#/definitions/splunk_observability.nexus"
+                        },
+                        "openshift_cluster": {
+                            "$ref": "#/definitions/splunk_observability.openshift_cluster"
+                        },
+                        "otel_collector": {
+                            "$ref": "#/definitions/splunk_observability.otel_collector"
+                        },
+                        "realm": {
+                            "default": "us0",
+                            "description": "The default value is `us0`.  In Splunk Observability Cloud, a realm is a self-contained deployment that hosts your organization. Your realm dictates the specific API and ingest endpoints your agents or integrations must communicate with..",
+                            "enum": [
+                                "eu0",
+                                "us0",
+                                "us1"
+                            ],
+                            "title": "Splunk Observability Realm",
+                            "type": "string"
+                        },
+                        "splunk_platform": {
+                            "$ref": "#/definitions/splunk_observability.splunk_platform"
+                        }
+                    }
+                }
+            ],
+            "description": "This dictionary defines the Splunk Observability deployment settings.\n\nRequired fields are:\n  * `access_token`\n  * `openshift_cluster`\n  * `otel_collector`\n  * `splunk_platform`\n\nOptional fields are:\n  * `intersight`\n  * `nexus`\n  * `realm`",
+            "required": [
+                "access_token",
+                "openshift_cluster",
+                "otel_collector",
+                "splunk_platform"
+            ],
+            "title": "Splunk Observability Deployment Settings",
+            "type": "object",
+            "unevaluatedProperties": false
+        },
+        "splunk_observability.intersight": {
+            "additionalProperties": false,
+            "description": "This dictionary defines if the Intersight Otel Collector is enabled.\n\nRequired fields are:\n  * `enable`",
+            "properties": {
+                "enable": {
+                    "default": false,
+                    "description": "The default value is `false`.  Whether to enable the Intersight Otel Collector.",
+                    "title": "Enable Intersight Otel Collector",
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "enable"
+            ],
+            "title": "Intersight Otel Collector Configuration",
+            "type": "object"
+        },
+        "splunk_observability.nexus": {
+            "additionalProperties": false,
+            "description": "This dictionary defines the Splunk Observability - Cisco Exporter - Nexus Device List.\n\nRequired fields are:\n  * `device_list`\n  * `features`\n  * `password`\n  * `username`",
+            "properties": {
+                "device_list": {
+                    "description": "List of Nexus devices to add to the Cisco Exporter.",
+                    "items": {
+                        "default": "198.18.0.1",
+                        "description": "The default value is `198.18.0.1`.  Hostname, IPv4 or IPv6 address.",
+                        "$ref": "#/definitions/abstract.hostname_ip_or_ipv6",
+                        "title": "Nexus Device",
+                        "type": "string"
+                    },
+                    "maxItems": 255,
+                    "minItems": 1,
+                    "title": "List of Nexus Switches",
+                    "type": "array",
+                    "uniqueItems": true
+                },
+                "features": {
+                    "$ref": "#/definitions/splunk_observability.nexus.features"
+                },
+                "password": {
+                    "default": 1,
+                    "description": "The default value is `1`.  The Password for the Nexus Device List.  A number Between 1-64 to denote the variables splunk_observability_nexus_password_[1-64].  i.e. `export splunk_observability_nexus_password_1='cisco123'`.",
+                    "maximum": 64,
+                    "minimum": 1,
+                    "title": "Splunk Observability - Nexus Password Identifier",
+                    "type": "integer"
+                },
+                "username": {
+                    "default": "admin",
+                    "description": "The default value is `admin`.  Name of the user to be created on the endpoint. Usernames must be 1 to 28 characters long, start with an alphanumeric character or underscore, use only alphanumeric characters and the special characters `+`, `=`, `.`, `_`, `\\`, `-`, cannot be all numeric, and cannot be one of the reserved system account names:\n  * `adm`\n  * `bin`\n  * `daemon`\n  * `ftp`\n  * `ftpuser`\n  * `games`\n  * `gdm`\n  * `gopher`\n  * `halt`\n  * `lp`\n  * `mail`\n  * `mailnull`\n  * `man`\n  * `mtsuser`\n  * `news`\n  * `nobody`\n  * `root`\n  * `rpc`\n  * `rpcuser`\n  * `san-admin`\n  * `shutdown`\n  * `sync`\n  * `sys`\n  * `uucp`\n  * `xfs`.",
+                    "examples": [
+                        "admin"
+                    ],
+                    "intersight_api": "Name",
+                    "maxLength": 28,
+                    "minLength": 1,
+                    "pattern": "^(?!(?:adm|bin|daemon|ftp|ftpuser|games|gdm|gopher|halt|lp|mail|mailnull|man|mtsuser|news|nobody|root|rpc|rpcuser|san-admin|shutdown|sync|sys|uucp|xfs)$)(?![0-9]+$)[A-Za-z0-9_][A-Za-z0-9+=._\\\\-]{0,27}$",
+                    "title": "username",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "device_list",
+                "password",
+                "username"
+            ],
+            "title": "Splunk Observability - Cisco Exporter - Nexus Configuration",
+            "type": "object"
+        },
+        "splunk_observability.nexus.features": {
+            "additionalProperties": false,
+            "description": "This dictionary defines the Splunk Observability - Cisco Exporter - Nexus Device List - Features to collect data from.\n\nOptional fields are:\n  * `bgp`\n  * `environment`\n  * `facts`\n  * `interfaces`\n  * `optics`",
+            "properties": {
+                "bgp": {
+                    "default": false,
+                    "description": "The default value is `false`.  Flag to collect BGP metrics.",
+                    "title": "BGP Metrics Collection",
+                    "type": "boolean"
+                },
+                "environment": {
+                    "default": false,
+                    "description": "The default value is `false`.  Flag to collect environment metrics.",
+                    "title": "Environment Metrics Collection",
+                    "type": "boolean"
+                },
+                "facts": {
+                    "default": false,
+                    "description": "The default value is `false`.  Flag to collect facts metrics.",
+                    "title": "Facts Metrics Collection",
+                    "type": "boolean"
+                },
+                "interfaces": {
+                    "default": true,
+                    "description": "The default value is `true`.  Flag to collect interface metrics.",
+                    "title": "Interface Metrics Collection",
+                    "type": "boolean"
+                },
+                "optics": {
+                    "default": true,
+                    "description": "The default value is `true`.  Flag to collect optics metrics.",
+                    "title": "Optics Metrics Collection",
+                    "type": "boolean"
+                }
+            },
+            "required": [
+            ],
+            "title": "Splunk Observability - Cisco Exporter - Nexus - Features",
+            "type": "object"
+        },
+        "splunk_observability.openshift_cluster": {
+            "additionalProperties": false,
+            "description": "This dictionary defines the Splunk Observability - OpenShift Cluster Configuration.\n\nRequired fields are:\n  * `cluster_name`\n  * `environment`",
+            "properties": {
+                "cluster_name": {
+                    "default": "cluster1",
+                    "description": "The default value is `cluster1`.  The OpenShift Cluster Name.",
+                    "examples": [
+                        "cluster1",
+                        "my-cluster"
+                    ],
+                    "$ref": "#/definitions/abstract.dns_1123_label",
+                    "title": "OpenShift Cluster Name",
+                    "type": "string"
+                },
+                "environment": {
+                    "default": "ai-pods",
+                    "description": "The default value is `ai-pods`.  The OpenShift Cluster Environment.  The helm chart will rely on the enviornment varialbe to tag your metrics correctly.  command, your AI infrastructure and platform metrics will lack the necessary tags to group and map telemetry data correctly across your clusters.",
+                    "examples": [
+                        "ai-pods",
+                        "my-environment"
+                    ],
+                    "$ref": "#/definitions/abstract.dns_1123_label",
+                    "title": "OpenShift Cluster Environment",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "cluster_name",
+                "environment"
+            ],
+            "title": "Splunk Observability - OpenShift Cluster Configuration",
+            "type": "object"
+        },
+        "splunk_observability.otel_collector": {
+            "additionalProperties": false,
+            "description": "This dictionary defines the Splunk Observability - Otel Collector Configuration.\n\nRequired fields are:\n  * `metrics_collection`\n\nOptional fields are:\n  * `everpure_flash_arrays`\n  * `proxy`",
+            "properties": {
+                "everpure_flash_arrays": {
+                    "description": "A list of Everpure FlashArrays to collect metrics from.\n\nRequired fields are:\n  * `api_token_id`\n  * `name`\n  * `namespace`\n  * `endpoint`\n  * ",
+                    "items": {
+                        "$ref": "#/definitions/splunk_observability.otel_collector.everpure_flash_arrays"
+                    },
+                    "maxItems": 15,
+                    "minItems": 1,
+                    "title": "Everpure FlashArrays",
+                    "type": "array",
+                    "uniqueItems": true
+                },
+                "metrics_collection": {
+                    "$ref": "#/definitions/splunk_observability.otel_collector.metrics_collection"
+                },
+                "proxy": {
+                    "$ref": "#/definitions/splunk_observability.otel_collector.proxy"
+                }
+            },
+            "required": [
+                "metrics_collection"
+            ],
+            "title": "Splunk Observability - Otel Collector Configuration",
+            "type": "object"
+        },
+        "splunk_observability.otel_collector.everpure_flash_arrays": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "api_token_id": {
+                    "default": 1,
+                    "description": "The default value is `1`.  The Everpure FlashArray API Token Identifier.  A number Between 1-64 to denote the variables everpure_api_token_[1-64].  i.e. `export everpure_api_token_1='a1234567-abcd-1234-5678-abcdef123456'`.",
+                    "maximum": 64,
+                    "minimum": 1,
+                    "title": "Everpure FlashArray API Token Identifier",
+                    "type": "integer"
+                },
+                "endpoint": {
+                    "default": "my-array.example.com",
+                    "description": "The default value is `my-array.example.com`.  The Hostname or IPv4/IPv6 address for the Everpure FlashArray instance.",
+                    "examples": [
+                        "my-array.example.com"
+                    ],
+                    "$ref": "#/definitions/abstract.hostname_ip_or_ipv6",
+                    "title": "Everpure Flash Array Endpoint",
+                    "type": "string"
+                },
+                "namespace": {
+                    "default": "purefa",
+                    "description": "The default value is `purefa`.  The namespace/project of the Everpure FlashArray exporter.",
+                    "examples": [
+                        "purefa"
+                    ],
+                    "$ref": "#/definitions/abstract.dns_1123_label",
+                    "title": "Flash Array Collector Namespace",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "api_token_id",
+                "endpoint",
+                "namespace"
+            ],
+            "title": "Splunk Observability - Otel Collector Configuration - Everpure FlashArrays",
+            "type": "object"
+        },
+        "splunk_observability.otel_collector.metrics_collection": {
+            "additionalProperties": false,
+            "description": "This dictionary defines the Splunk Observability - Otel Collector - Metrics Collection configuration.\n\nRequired fields are:\n  * `etcd_metrics`\n  * `nvidia_gpu_metrics`\n\nOptional fields are:\n  * `portworx_metrics`\n  * `trident_metrics`",
+            "properties": {
+                "etcd_metrics": {
+                    "default": true,
+                    "description": "The default value is `true`.  Flag to collect ETCD platform metrics.",
+                    "title": "ETCD Metrics Collection",
+                    "type": "boolean"
+                },
+                "nvidia_gpu_metrics": {
+                    "default": true,
+                    "description": "The default value is `true`.  Flag to collect NVIDIA GPU metrics.",
+                    "title": "NVIDIA GPU Metrics Collection",
+                    "type": "boolean"
+                },
+                "portworx_metrics": {
+                    "default": false,
+                    "description": "The default value is `false`.  Flag to collect Portworx metrics.",
+                    "title": "Portworx Metrics Collection",
+                    "type": "boolean"
+                },
+                "trident_metrics": {
+                    "default": false,
+                    "description": "The default value is `false`.  Flag to collect Trident metrics.",
+                    "title": "Trident Metrics Collection",
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "etcd_metrics",
+                "nvidia_gpu_metrics"
+            ],
+            "title": "Splunk Observability - Otel Collector - Metrics Collection",
+            "type": "object"
+        },
+        "splunk_observability.otel_collector.proxy": {
+            "additionalProperties": false,
+            "description": "This dictionary defines the Splunk Observability - Otel Collector - Proxy Configuration if required.\n\nRequired fields are:\n  * `https_proxy`\n  * `no_proxy`\n\nOptional fields are:\n  * `password`\n  * `username`\n\nFor `no_proxy` we recommend including the following at a minimum:\n\n  * `localhost`\n  * `.cluster.local`\n  * `.svc.cluster.local`\n  * `apps.<cluster_name>.<base_dns_domain>`\n  * `.<cluster_name>.<base_dns_domain>`\n  * `.<base_dns_domain>`",
+            "properties": {
+                "http_proxy": {
+                    "$ref": "#/definitions/abstract.proxy_servers/allOf/0/properties/http_proxy"
+                },
+                "https_proxy": {
+                    "$ref": "#/definitions/abstract.proxy_servers/allOf/0/properties/https_proxy"
+                },
+                "no_proxy": {
+                    "$ref": "#/definitions/abstract.proxy_servers/allOf/0/properties/no_proxy"
+                },
+                "password": {
+                    "$ref": "#/definitions/abstract.proxy_servers/allOf/0/properties/password"
+                },
+                "username": {
+                    "$ref": "#/definitions/abstract.proxy_servers/allOf/0/properties/username"
+                }
+            },
+            "required": [
+                "http_proxy",
+                "https_proxy",
+                "no_proxy"
+            ],
+            "title": "Splunk Observability - Otel Collector - Proxy Configuration",
+            "type": "object"
+        },
+        "splunk_observability.splunk_platform": {
+            "additionalProperties": false,
+            "description": "This dictionary defines the Splunk Observability - Otel Collector Configuration.\n\nRequired fields are:\n  * `endpoint`\n  * `token`\n\nOptional fields are:\n  * `realm`",
+            "properties": {
+                "endpoint": {
+                    "default": "https://customer.splunkcloud.com",
+                    "description": "The default value is `https://customer.splunkcloud.com`.  The URL for the Splunk Cloud customer instance.",
+                    "examples": [
+                        "https://customer.splunkcloud.com"
+                    ],
+                    "maxLength": 266,
+                    "minLength": 1,
+                    "pattern": "^(?:https:\\/\\/)(((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}|((?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|:(?::[0-9A-Fa-f]{1,4}){1,7}|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?:(?::[0-9A-Fa-f]{1,4}){1,6})|:(?:(?::[0-9A-Fa-f]{1,4}){1,6}))(?:\\/(?:12[0-8]|1[0-1][0-9]|\\d{1,2}))?|((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,6})$",
+                    "title": "Splunk Platform Endpoint URL",
+                    "type": "string"
+                },
+                "index": {
+                    "default": "cisco-ai-pods",
+                    "description": "The default value is `cisco-ai-pods`.  A Splunk platform index is a repository that stores and organizes incoming raw data (logs, metrics, and traces) as searchable, time-stamped events. Administrators configure indexes to control data retention, optimize search performance, and apply role-based access controls.  User-defined Splunk indexes strictly allow only the following characters:\n\n  * Lowercase letters (a-z)\n  * Numbers (0-9)\n  * Underscores (_)\n  * Hyphens (-)\n\nCrucial Naming Rules:\n  * No uppercase letters: Index names must be lowercase.\n  * Starts with a letter: They cannot begin with an underscore, hyphen, or number.\n  * Reserved words: They cannot contain the word \"kvstore\".",
+                    "examples": [
+                        "cisco-ai-pods"
+                    ],
+                    "maxLength": 50,
+                    "minLength": 1,
+                    "pattern": "^(?!.*kvstore)[a-z][a-z0-9_-]{0,49}$",
+                    "title": "Splunk Platform Index",
+                    "type": "string"
+                },
+                "token": {
+                    "default": 1,
+                    "description": "The default value is `1`.  The Splunk Platform Token.  A number Between 1-64 to denote the variables splunk_platform_token_[1-64].  i.e. `export splunk_platform_token_1='a1234567-abcd-1234-5678-abcdef123456'`.",
+                    "maximum": 64,
+                    "minimum": 1,
+                    "title": "Splunk Platform Token Identifier",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "endpoint",
+                "index",
+                "token"
+            ],
+            "title": "Splunk Observability - Otel Collector Configuration",
+            "type": "object"
         }
     },
     "description": "JSON Schema for Cisco AI Pods.",

@@ -1,0 +1,68 @@
+---
+############################
+# Certificates
+############################
+- name: Settings > Security > Certificates > Array Certificates | for {{ array_fqdn }}
+  purestorage.flashblade.purefb_certs:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    certificate: "{{ lookup('file', lookup('ansible.builtin.env', 'cert_mgmt_certificate_{{ element.certificate }}')) }}"
+    intermediate_cert: |
+      {{ lookup('file', lookup('ansible.builtin.env', 'cert_mgmt_intermediate_certificate_{{ element.intermediate_certificate }}')) | default('') }}
+    key: "{{ lookup('file', lookup('ansible.builtin.env', 'cert_mgmt_private_key_{{ element.private_key }}')) }}"
+    passphrase: "{{ lookup('ansible.builtin.env', 'cert_mgmt_passphrase_{{ element.passphrase }}') | default('') }}"
+  loop_control:
+    loop_var: element
+  loop: "{{ security.certificates.array_certificates }}"
+  register: certificates_change
+  when: security.certificates is defined and security.certificates.array_certificates is defined and array_fqdn in element.array_fqdns
+
+- name: Settings > Security > Certificates > Certificate Groups | for {{ array_fqdn }}
+  purestorage.flashblade.purefb_certgrp:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    certificates: "{{ element.certificates }}"
+    name: "{{ element.name }}"
+    state: "{{ element.state | default('present') }}"
+  loop_control:
+    loop_var: element
+  loop: "{{ security.certificates.certificate_groups }}"
+  register: certificate_groups_change
+  when: security.certificates is defined and security.certificates.certificate_groups is defined and array_fqdn in element.array_fqdns
+
+############################
+# Directory Service
+############################
+- name: Settings > Security > Directory Service > Role Mappings | for {{ array_fqdn }}
+  purestorage.flashblade.purefb_dsrole:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    group: "{{ element.group | default(null) }}"
+    group_base: "{{ element.group_base | default(null) }}"
+    role: "{{ element.role }}"
+    state: "{{ element.state | default('present') }}"
+  loop_control:
+    loop_var: element
+  loop: "{{ security.directory_service.role_mappings }}"
+  register: directory_service_role_mappings_change
+  when: security.directory_service is defined and security.directory_service.role_mappings is defined
+
+- name: Settings > Security > Directory Service > Configuration | for {{ array_fqdn }}
+  purestorage.flashblade.purefb_ds:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    base_dn: "{{ element.base_dn }}"
+    bind_password: "{{ lookup('ansible.builtin.env', 'binding_parameters_password_{{ element.bind_password }}') }}"
+    bind_user: "{{ element.bind_user }}"
+    dstype: "{{ element.type | default('management') }}"
+    enable: "{{ element.enable | default(true) }}"
+    uri: "{{ element.uri_list }}"
+  loop_control:
+    loop_var: element
+  loop: "{{ security.directory_service.configuration }}"
+  register: directory_service_change
+  when: security.directory_service is defined and security.directory_service.configuration is defined

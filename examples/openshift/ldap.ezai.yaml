@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=/home/tyscott@rich.ciscolabs.com/scotttyso/Cisco-AI-Pods/schema/cisco-ai-pods.json --- IGNORE ---
+---
+openshift:
+  ldap:
+    base_dn: DC=rich,DC=ciscolabs,DC=com
+    bind_dn: CN=Network Service,OU=Service Accounts,DC=rich,DC=ciscolabs,DC=com
+    certificate_file_path: ca1.crt
+    cluster_admins:
+      - lab-admins
+    group_uid_mappings:
+      "CN=Lab Admin,OU=Cisco Employees,DC=rich,DC=ciscolabs,DC=com": lab-admins
+    secure_ldap: true
+    sync_url: ldaps://ad1.rich.ciscolabs.com:636
+    url: ldaps://ad1.rich.ciscolabs.com:636/DC=rich,DC=ciscolabs,DC=com?sAMAccountName?sub?(&(objectclass=*)((memberOf=CN=Lab Admin,OU=Cisco Employees,DC=rich,DC=ciscolabs,DC=com)))

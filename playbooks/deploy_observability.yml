@@ -5,5 +5,27 @@
   connection: local
   gather_facts: false
 
+  pre_tasks:
+    - name: Find Variable Files Under host_vars
+      ansible.builtin.find:
+        paths: "{{ playbook_dir }}/../host_vars/splunk_observability"
+        patterns:
+          - "*.ezai.yaml"
+        file_type: file
+      register: splunk_observability_var_files
+
+    - name: Merge Variable Files Into a Single Dictionary
+      ansible.builtin.set_fact:
+        merged_vars: "{{ merged_vars | default({}) | combine((lookup('ansible.builtin.file', item.path) | from_yaml), recursive=True) }}"
+      loop: "{{ splunk_observability_var_files.files | sort(attribute='path') }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+
+    - name: Set Merged Splunk Observability Object
+      ansible.builtin.set_fact:
+        splunk_observability: "{{ merged_vars.splunk_observability | default({}) }}"
+
   roles:
-    - role: cisco.ai_pods.splunk_observability
+    # - role: cisco.ai_pods.splunk_observability
+    - role: splunk_observability
+      when: splunk_observability.deploy | default(false) | bool

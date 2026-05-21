@@ -1,0 +1,38 @@
+---
+- name: FlashArray - Get facts for {{ array_fqdn }}
+  purestorage.flasharray.purefa_info:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fa_url: "{{ array_url }}"
+    gather_subset:
+      - config
+      - minimum
+  register: array_info
+
+- name: FlashArray - Set facts for {{ array_fqdn }}
+  ansible.builtin.set_fact:
+    array_name: "{{ array_fqdn.split('.')[0] }}"
+    array_version: "{{ array_info.purefa_info.default.purity_version }}"
+    network: "{{ everpure.settings.network | default({}) }}"
+    security: "{{ everpure.settings.security | default({}) }}"
+    system: "{{ everpure.settings.system | default({}) }}"
+
+- name: FlashArray - Settings > Network | for {{ array_fqdn }}
+  ansible.builtin.include_tasks:
+    file: "settings_network.yaml"
+  when: everpure.settings.network is defined
+
+- name: FlashArray - Settings > Access | for {{ array_fqdn }}
+  ansible.builtin.include_tasks:
+    file: "settings_access.yaml"
+  when: everpure.settings.security is defined
+
+- name: FlashArray - Settings > System | for {{ array_fqdn }}
+  ansible.builtin.include_tasks:
+    file: "settings_system.yaml"
+  when: everpure.settings.system is defined
+
+- name: FlashArray Notifications | for {{ array_fqdn }}
+  ansible.builtin.include_tasks:
+    file: "../notifications/notifications.yaml"
+  when: everpure.notifications is defined

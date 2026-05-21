@@ -1,0 +1,31 @@
+---
+- name: Create Intersight Otel Operator Namespace
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: intersight-otel
+    state: present
+    validate_certs: "{{ validate_certificates }}"
+
+- name: Create Intersight Secret for Splunk Observability
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: intersight-api-credentials
+        namespace: intersight-otel
+      data:
+        intersight-key-id: "{{ lookup('ansible.builtin.env', 'intersight_api_key_id') | b64encode }}"
+        intersight-key: "{{ lookup('file', lookup('ansible.builtin.env', 'intersight_secret_key')) | b64encode }}"
+    validate_certs: "{{ validate_certificates }}"
+
+- name: Configure Intersight Otel
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', item) | from_yaml }}"
+    validate_certs: "{{ validate_certificates }}"
+  loop:
+    - intersight-config-map.yaml.j2
+    - intersight-deployment.yaml.j2

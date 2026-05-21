@@ -1,8 +1,0 @@
----
-collections:
-  - name: kubernetes.core
-    version: 6.3.0 # Or latest
-  - name: purestorage.flasharray
-    version: 1.42.0 # Or latest
-  - name: purestorage.flashblade
-    version: 1.24.0 # Or latest

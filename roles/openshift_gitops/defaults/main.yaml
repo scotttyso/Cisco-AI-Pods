@@ -1,0 +1,13 @@
+---
+gitops_repo_url: ""
+gitops_target_revision: "main"
+openshift_api_url: "{{ lookup('ansible.builtin.env', 'openshift_api_url') }}"
+openshift_token: "{{ lookup('ansible.builtin.env', 'openshift_token_id') }}"
+openshift_defaults:
+  destination_directory: "{{ playbook_dir }}/_generated_gitops"
+  cluster_name: default
+  base_dns_domain: example.com
+  operators:
+    operators_to_install: []
+    nvidia_network_operator:
+      mac_vlan: []

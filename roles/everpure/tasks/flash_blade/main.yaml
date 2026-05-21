@@ -1,0 +1,34 @@
+---
+- name: FlashBlade | Get facts for {{ array_fqdn }}
+  purestorage.flashblade.purefb_info:
+    api_token: "{{ api_token }}"
+    fb_url: "{{ array_url }}"
+  register: array_info
+
+- name: FlashBlade | Set facts
+  ansible.builtin.set_fact:
+    array_name: "{{ array_fqdn.split('.')[0] }}"
+    array_version: "{{ array_info.purefb_info.default.purity_version }}"
+    network: "{{ everpure.settings.network | default({}) }}"
+    security: "{{ everpure.settings.security | default({}) }}"
+    system: "{{ everpure.settings.system | default({}) }}"
+
+- name: FlashBlade - Settings > Network | for {{ array_fqdn }}
+  ansible.builtin.include_tasks:
+    file: "settings_network.yaml"
+  when: everpure.settings.network is defined
+
+- name: FlashBlade - Settings > Security | for {{ array_fqdn }}
+  ansible.builtin.include_tasks:
+    file: "settings_security.yaml"
+  when: everpure.settings.security is defined
+
+- name: FlashBlade - Settings > System | for {{ array_fqdn }}
+  ansible.builtin.include_tasks:
+    file: "settings_system.yaml"
+  when: everpure.settings.system is defined
+
+- name: FlashBlade Notifications | for {{ array_fqdn }}
+  ansible.builtin.include_tasks:
+    file: "../notifications/notifications.yaml"
+  when: everpure.notifications is defined

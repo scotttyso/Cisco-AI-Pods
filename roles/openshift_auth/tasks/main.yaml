@@ -1,0 +1,238 @@
+---
+- name: Verify Required Environment Variables Are Set
+  ansible.builtin.assert:
+    that:
+      - lookup('ansible.builtin.env', 'ldap_bind_password') | length > 0
+      - lookup('ansible.builtin.env', 'openshift_token_id') | length > 0
+      - lookup('ansible.builtin.env', 'openshift_api_url') | length > 0
+    fail_msg: "Required environment variables not set: ldap_bind_password, openshift_token_id, openshift_api_url"
+
+- name: Validate Required LDAP Configuration
+  ansible.builtin.assert:
+    that:
+      - openshift.ldap is defined
+      - openshift.ldap.secure_ldap is defined
+      - openshift.ldap.sync_url is defined
+      - openshift.ldap.bind_dn is defined
+      - openshift.ldap.base_dn is defined
+      - openshift.ldap.group_uid_mappings is defined
+    fail_msg: "Required LDAP configuration missing or incomplete"
+
+- name: Verify LDAP Certificate File Exists (for secure LDAP)
+  ansible.builtin.stat:
+    path: "{{ openshift.ldap.certificate_file_path }}"
+  register: cert_file_stat
+  failed_when: cert_file_stat.stat.exists == false
+  when: openshift.ldap.secure_ldap | bool
+
+- name: Read Certificate File for LDAP Chain File Content
+  ansible.builtin.slurp:
+    src: "{{ openshift.ldap.certificate_file_path }}"
+  register: ldap_cert_chain_file
+  when: openshift.ldap.secure_ldap | bool
+
+- name: Parse the LDAP Certificate Chain File as PEM
+  ansible.builtin.set_fact:
+    is_pem_cert: "{{ '-----BEGIN CERTIFICATE-----' in (ldap_cert_chain_file['content'] | b64decode) }}"
+  when: openshift.ldap.secure_ldap | bool
+
+- name: Report LDAP Certificate Chain File Type
+  ansible.builtin.debug:
+    msg: "LDAP Certificate Chain File is a valid PEM certificate."
+  when: openshift.ldap.secure_ldap | bool
+  failed_when: not is_pem_cert | default(false)
+
+- name: Verify OpenShift API connectivity
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Namespace
+    name: default
+  register: api_check
+  retries: 3
+  delay: 5
+  until: api_check is succeeded
+
+- name: Create LDAP BindPassword Secret (idempotent)
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: ldap-bind-password
+        namespace: openshift-config
+      type: Opaque
+      stringData:
+        bindPassword: "{{ lookup('ansible.builtin.env', 'ldap_bind_password') }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
+  no_log: true
+  retries: 3
+  delay: 5
+  until: ldap_bind_pass_result is succeeded
+  register: ldap_bind_pass_result
+
+- name: Create LDAP Certificates ConfigMap (idempotent)
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: ldap-ca-cert
+        namespace: openshift-config
+      data:
+        ca.crt: "{{ lookup('ansible.builtin.file', openshift.ldap.certificate_file_path) }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
+  retries: 3
+  delay: 5
+  until: ldap_cert_result is succeeded
+  register: ldap_cert_result
+  when: openshift.ldap.secure_ldap | bool
+
+- name: Configure ActiveDirectory OAuth
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'active-directory.yaml.j2') | from_yaml }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
+  retries: 3
+  delay: 5
+  until: identity_result is succeeded
+  register: identity_result
+
+- name: Set Bind Password Variable
+  ansible.builtin.set_fact:
+    ldap_bind_password: "{{ lookup('ansible.builtin.env', 'ldap_bind_password') }}"
+  no_log: true
+
+- name: Create LDAP Synchronization Project
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'project.yaml.j2') | from_yaml }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
+  retries: 3
+  delay: 5
+  until: project_result is succeeded
+  register: project_result
+
+- name: Create ldap-sync.yaml
+  ansible.builtin.template:
+    src: ldap-sync.yaml.j2
+    dest: "{{ role_path }}/ldap-sync.yaml"
+    mode: '0644'
+
+- name: Create whitelist.txt
+  ansible.builtin.template:
+    src: whitelist.txt.j2
+    dest: "{{ role_path }}/whitelist.txt"
+    mode: '0644'
+
+- name: Read ldap-sync.yaml and whitelist.txt for Secret Data
+  ansible.builtin.set_fact:
+    ldap_sync_config: "{{ lookup('ansible.builtin.file', role_path + '/ldap-sync.yaml') }}"
+    whitelist_config: "{{ lookup('ansible.builtin.file', role_path + '/whitelist.txt') }}"
+
+- name: Create LDAP Sync Secret with CA (idempotent)
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: ldap-sync
+        namespace: ldap-sync
+      type: Opaque
+      data:
+        ldap-sync.yaml: "{{ ldap_sync_config | b64encode }}"
+        whitelist.txt: "{{ whitelist_config | b64encode }}"
+        ca.crt: "{{ lookup('ansible.builtin.file', openshift.ldap.certificate_file_path) | b64encode }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
+  retries: 3
+  delay: 5
+  until: ldap_sync_secret is succeeded
+  register: ldap_sync_secret
+  when: openshift.ldap.secure_ldap | bool
+
+- name: Create LDAP Sync Secret without CA (idempotent)
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: ldap-sync
+        namespace: ldap-sync
+      type: Opaque
+      data:
+        ldap-sync.yaml: "{{ ldap_sync_config | b64encode }}"
+        whitelist.txt: "{{ whitelist_config | b64encode }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
+  retries: 3
+  delay: 5
+  until: ldap_sync_secret is succeeded
+  register: ldap_sync_secret
+  when: not openshift.ldap.secure_ldap | bool
+
+- name: Create LDAP Synchronization RBAC
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'rbac-ldap-group-sync.yaml.j2') | from_yaml }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
+  retries: 3
+  delay: 5
+  until: rbac_result is succeeded
+  register: rbac_result
+
+- name: Create ldap-sync Service Account (idempotent)
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: ldap-sync
+        namespace: ldap-sync
+    validate_certs: "{{ validate_certificates | default(false) }}"
+  retries: 3
+  delay: 5
+  until: sa_result is succeeded
+  register: sa_result
+
+- name: Add ldap-sync Service Account Cluster Role Binding (idempotent)
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: ldap-sync-cluster-role-binding
+      subjects:
+        - kind: ServiceAccount
+          name: ldap-sync
+          namespace: ldap-sync
+      roleRef:
+        kind: ClusterRole
+        name: ldap-group-sync
+        apiGroup: rbac.authorization.k8s.io
+    validate_certs: "{{ validate_certificates | default(false) }}"
+  retries: 3
+  delay: 5
+  until: crb_result is succeeded
+  register: crb_result
+
+- name: Create LDAP Synchronization CRON Job
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'ldap-cron.yaml.j2') | from_yaml }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
+  retries: 3
+  delay: 5
+  until: cronjob_result is succeeded
+  register: cronjob_result
+
+- name: Cleanup Temporary Files
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/{{ item }}"
+    state: absent
+  loop: ["ldap-sync.yaml", "whitelist.txt"]
+  when: cronjob_result is succeeded or ansible_failed_task is undefined
+  failed_when: false

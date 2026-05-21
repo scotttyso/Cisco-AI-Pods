@@ -1,0 +1,179 @@
+---
+############################
+# Alerts and Notifications
+############################
+
+- name: Settings > System > Alerts and Notifications > Alert Routing | for {{ array_fqdn }}
+  purestorage.flashblade.purefb_smtp:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    domain: "{{ system.alerts_and_notifications.alert_routing.sender_domain }}"
+    host: "{{ system.alerts_and_notifications.alert_routing.relay_host }}"
+  register: alert_routing_change
+  when: system.alerts_and_notifications is defined and system.alerts_and_notifications.alert_routing is defined
+
+- name: Settings > System > Alerts and Notifications > Alert Watchers | for {{ array_fqdn }}
+  purestorage.flashblade.purefb_alert:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    address: "{{ element.email }}"
+    enabled: "{{ element.enabled | default(true) }}"
+    severity: "{{ element.notification_severity | default('info') }}"
+    state: "{{ element.state | default('present') }}"
+  loop_control:
+    loop_var: element
+  loop: "{{ system.alerts_and_notifications.alert_watchers }}"
+  register: alert_watchers_change
+  when: system.alerts_and_notifications is defined and system.alerts_and_notifications.alert_watchers is defined
+
+############################
+# Array Details
+############################
+
+- name: Settings > System > Array Name | for {{ array_fqdn }}
+  purestorage.flashblade.purefb_bladename:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    name: "{{ array_name }}"
+  register: array_name_change
+  when: system.array_details is defined
+
+- name: Settings > System > Array Details > Idle Timeout | for {{ array_fqdn }}
+  purestorage.flashblade.purefb_timeout:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    state: present
+    timeout: "{{ system.array_details.idle_timeout }}"
+  register: idle_timeout_change
+  when: system.array_details is defined and system.array_details.idle_timeout is defined
+
+- name: Settings > System > Array Details > Login Banner | for {{ array_fqdn }}
+  purestorage.flashblade.purefb_banner:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    banner: "{{ system.array_details.login_banner }}"
+    state: present
+  register: login_banner_change
+  when: system.array_details is defined and system.array_details.login_banner is defined
+
+- name: Settings > System > Array Details > Timezone | for {{ array_fqdn }}
+  purestorage.flashblade.purefb_tz:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    timezone: "{{ system.array_details.timezone }}"
+  register: timezone_change
+  when: system.array_details is defined and system.array_details.timezone is defined
+
+############################
+# NTP Servers
+############################
+
+- name: Settings > System > NTP Servers | for {{ array_fqdn }}
+  purestorage.flashblade.purefb_ntp:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    ntp_servers: "{{ system.ntp_servers }}"
+    state: present
+  register: ntp_servers_change
+  when: system.ntp_servers is defined
+
+############################
+# Monitoring
+############################
+
+- name: Settings > System > Monitoring > Syslog Server Connections | for {{ array_fqdn }}
+  purestorage.flashblade.purefb_syslog:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    address: "{{ element.uri.split(':')[1] | replace('//', '') }}"
+    name: "{{ element.name }}"
+    port: "{{ element.uri.split(':')[2] | default(514) }}"
+    protocol: "{{ element.uri.split(':')[0] }}"
+    services: "{{ element.services | default(['management']) }}"
+    state: "{{ element.state | default('present') }}"
+  loop_control:
+    loop_var: element
+  loop: "{{ system.monitoring.syslog_server_connections }}"
+  register: syslog_server_connections_change
+  when: system.monitoring is defined and system.monitoring.syslog_server_connections is defined
+
+- name: Settings > System > Monitoring > SNMP > Add SNMP Manager v2c | for {{ array_fqdn }}
+  purestorage.flashblade.purefb_snmp_mgr:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    community: "{{ lookup('ansible.builtin.env', 'snmp_community_{{ element.community }}') }}"
+    host: "{{ element.host }}"
+    name: "{{ element.name }}"
+    notification: "{{ element.snmp_notification | default('trap') }}"
+    state: "{{ element.state | default('present') }}"
+    version: v2c
+  loop_control:
+    loop_var: element
+  loop: "{{ system.monitoring.snmp.add_snmp_manager.v2c }}"
+  register: snmp_manager_v2c_change
+  when: system.monitoring is defined and system.monitoring.snmp.add_snmp_manager is defined and system.monitoring.snmp.add_snmp_manager.v2c is defined
+
+- name: Settings > System > Monitoring > SNMP > Add SNMP Manager v3 | for {{ array_fqdn }}
+  purestorage.flashblade.purefb_snmp_mgr:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    auth_passphrase: "{{ lookup('ansible.builtin.env', 'snmp_auth_passphrase_{{ element.auth_passphrase }}') }}"
+    auth_protocol: "{{ element.auth_protocol | default('SHA') }}"
+    host: "{{ element.host }}"
+    name: "{{ element.name }}"
+    notification: "{{ element.snmp_notification | default('trap') }}"
+    privacy_passphrase: "{{ lookup('ansible.builtin.env', 'snmp_privacy_passphrase_{{ element.privacy_passphrase }}') }}"
+    privacy_protocol: "{{ element.privacy_protocol | default('AES') }}"
+    state: "{{ element.state | default('present') }}"
+    user: "{{ element.user }}"
+    version: v3
+  loop_control:
+    loop_var: element
+  loop: "{{ system.monitoring.snmp.add_snmp_manager.v3 }}"
+  register: snmp_manager_v3_change
+  when: system.monitoring is defined and system.monitoring.snmp.add_snmp_manager is defined and system.monitoring.snmp.add_snmp_manager.v3 is defined
+
+############################
+# Support
+############################
+
+- name: Settings > System > Support > Phone Home | for {{ array_fqdn }}
+  purestorage.flashblade.purefb_phonehome:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    state: present
+  register: phone_home_change
+  when: system.support is defined and (system.support.phone_home_enabled | bool)
+
+- name: Settings > System > Support > Proxy Server | for {{ array_fqdn }}
+  purestorage.flashblade.purefb_proxy:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    host: "{{ system.support.proxy_server.split(':')[1] | replace('//', '') }}"
+    port: "{{ system.support.proxy_server.split(':')[2] | default(80) }}"
+    secure: "{{ true if system.support.proxy_server.split(':')[0] == 'https' else false }}"
+    state: present
+  register: proxy_server_change
+  when: system.support is defined and system.support.proxy_server is defined
+
+- name: Settings > System > Support > Remote Assist | for {{ array_fqdn }}
+  purestorage.flashblade.purefb_ra:
+    api_token: "{{ api_token }}"
+    disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
+    fb_url: "{{ array_url }}"
+    duration: "{{  system.support.remote_assist_connected | default(24) }}"
+    state: present
+  register: remote_assist_change
+  when: system.support is defined and (system.support.remote_assist_connected | bool)
