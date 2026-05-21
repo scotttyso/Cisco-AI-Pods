@@ -26,7 +26,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 # Schema path (relative to filter_plugins directory)
-_SCHEMA_PATH = Path(__file__).resolve().parent.parent.parent / "schema" / "cisco-ai-pods.json"
+_SCHEMA_PATH = Path(__file__).resolve().parent.parent.parent / \
+    "schema" / "cisco-ai-pods.json"
 
 # Sensitive variable patterns indexed by prefix
 # Maps env_prefix -> (schema_key, description)
@@ -86,51 +87,64 @@ def _colorize(text: str, color_code: str, stream=sys.stderr) -> str:
 def load_schema(schema_path: Optional[Path] = None) -> Dict[str, Any]:
     """Load schema and extract sensitive variable properties."""
     global _SENSITIVE_SCHEMA_PROPS
-    
+
     if schema_path is None:
         schema_path = _SCHEMA_PATH
-    
+
     if not schema_path.exists():
         raise FileNotFoundError(f"Schema not found at {schema_path}")
-    
+
     with open(schema_path) as f:
         schema = json.load(f)
-    
-    if "definitions" not in schema or "abstract.sensitive_variables" not in schema["definitions"]:
-        raise ValueError("Schema missing 'definitions.abstract.sensitive_variables'")
-    
-    _SENSITIVE_SCHEMA_PROPS = schema["definitions"]["abstract.sensitive_variables"].get("properties", {})
+
+    if "definitions" not in schema or "abstract.sensitive_variables" not in schema[
+            "definitions"]:
+        raise ValueError(
+            "Schema missing 'definitions.abstract.sensitive_variables'")
+
+    _SENSITIVE_SCHEMA_PROPS = schema["definitions"]["abstract.sensitive_variables"].get(
+        "properties", {})
     return schema
 
 
 def _wrap_cli_text(text: str, indent: str = "  ", width: int = 100) -> str:
     """Wrap text to specified width with indentation for CLI output."""
-    return textwrap.fill(text, width=width, subsequent_indent=indent, break_long_words=False, break_on_hyphens=False)
+    return textwrap.fill(
+        text,
+        width=width,
+        subsequent_indent=indent,
+        break_long_words=False,
+        break_on_hyphens=False)
 
 
-def _format_export_command(env_var_name: str, schema_key: Optional[str] = None) -> str:
+def _format_export_command(env_var_name: str,
+                           schema_key: Optional[str] = None) -> str:
     """Format export command suggestion for a missing variable."""
     lines = [
         "",
         _colorize("  To fix this, run:", "1;33"),
         _colorize(f"    export {env_var_name}='<your_value_here>'", "33"),
     ]
-    
+
     if schema_key and schema_key in _SENSITIVE_SCHEMA_PROPS:
         schema_rule = _SENSITIVE_SCHEMA_PROPS[schema_key]
         description = schema_rule.get("description", "").strip()
         if description:
             wrapped_description = _wrap_cli_text(description, indent="    ")
             if _supports_color(sys.stderr):
-                wrapped_description = "\n".join(_colorize(line, "36") for line in wrapped_description.splitlines())
+                wrapped_description = "\n".join(_colorize(
+                    line, "36") for line in wrapped_description.splitlines())
             lines.append("")
             lines.append(_colorize("  Description:", "1;36"))
             lines.append(wrapped_description)
-    
+
     return "\n".join(lines)
 
 
-def _validate_value_against_schema(env_var_name: str, env_value: str, schema_key: Optional[str]) -> Optional[str]:
+def _validate_value_against_schema(
+        env_var_name: str,
+        env_value: str,
+        schema_key: Optional[str]) -> Optional[str]:
     """Validate env var value against schema constraints and return error text when invalid."""
     if not schema_key or schema_key not in _SENSITIVE_SCHEMA_PROPS:
         return None
@@ -152,8 +166,7 @@ def _validate_value_against_schema(env_var_name: str, env_value: str, schema_key
             if re.fullmatch(pattern, env_value) is None:
                 return (
                     f"Environment variable '{env_var_name}' is invalid: value does not match required pattern "
-                    f"for '{schema_key}'."
-                )
+                    f"for '{schema_key}'.")
         except re.error:
             # If the schema regex is malformed, do not block validation.
             return None
@@ -161,10 +174,11 @@ def _validate_value_against_schema(env_var_name: str, env_value: str, schema_key
     return None
 
 
-def collect_required_sensitive_variables(model: Dict[str, Any]) -> Dict[str, Tuple[str, str]]:
+def collect_required_sensitive_variables(
+        model: Dict[str, Any]) -> Dict[str, Tuple[str, str]]:
     """
     Collect all required sensitive variable environment variable names from model.
-    
+
     Returns:
         Dict mapping env_var_name -> (env_prefix, schema_key)
     """
@@ -180,37 +194,41 @@ def collect_required_sensitive_variables(model: Dict[str, Any]) -> Dict[str, Tup
                 parsed = int(stripped)
                 return parsed if 0 < parsed <= 64 else None
         return None
-    
+
     def traverse_model(obj: Any, path: str = "") -> None:
         """Recursively traverse model looking for sensitive variable identifiers."""
         if isinstance(obj, dict):
             for key, value in obj.items():
                 current_path = f"{path}.{key}" if path else key
-                
+
                 # Check if this key matches a sensitive variable prefix pattern
-                for env_prefix, (schema_key, _) in _SENSITIVE_VAR_PATTERNS.items():
+                for env_prefix, (schema_key,
+                                 _) in _SENSITIVE_VAR_PATTERNS.items():
                     # Key could be the field name itself or part of it
                     if key == env_prefix or key.endswith(f"_{env_prefix}"):
                         sid = _sensitive_id(value)
                         if sid is not None:
                             env_var_name = f"{env_prefix}_{sid}"
-                            required_vars[env_var_name] = (env_prefix, schema_key)
+                            required_vars[env_var_name] = (
+                                env_prefix, schema_key)
 
                 # Path-aware detection for fields whose YAML key is 'password'
-                # but whose env var prefix is determined by context (parent path).
+                # but whose env var prefix is determined by context (parent
+                # path).
                 sid = _sensitive_id(value)
                 if key == 'password' and sid is not None:
                     if 'binding_parameters' in current_path:
-                        required_vars[f'ldap_binding_password_{sid}'] = ('ldap_binding_password', 'ldap_binding_password')
+                        required_vars[f'ldap_binding_password_{sid}'] = (
+                            'ldap_binding_password', 'ldap_binding_password')
                     elif 'remote_key_management' in current_path and 'enable_authentication' in current_path:
                         required_vars[f'drive_security_authentication_password_{sid}'] = (
-                            'drive_security_authentication_password',
-                            'drive_security_authentication_password'
-                        )
+                            'drive_security_authentication_password', 'drive_security_authentication_password')
                     elif 'local_user' in current_path and 'users' in current_path:
-                        required_vars[f'local_user_password_{sid}'] = ('local_user_password', 'local_user_password')
+                        required_vars[f'local_user_password_{sid}'] = (
+                            'local_user_password', 'local_user_password')
                     elif 'profiles' in current_path and 'server' in current_path and 'targets' in current_path:
-                        required_vars[f'local_user_password_{sid}'] = ('local_user_password', 'local_user_password')
+                        required_vars[f'local_user_password_{sid}'] = (
+                            'local_user_password', 'local_user_password')
 
                 # Path-aware detection for drive security passphrase keys where
                 # YAML key names do not include the env var prefix.
@@ -225,23 +243,28 @@ def collect_required_sensitive_variables(model: Dict[str, Any]) -> Dict[str, Tup
                         'drive_security_passphrase'
                     )
                 elif key == 'auth_password' and sid is not None and 'snmp' in current_path:
-                    required_vars[f'snmp_auth_passphrase_{sid}'] = ('snmp_auth_passphrase', 'snmp_password')
+                    required_vars[f'snmp_auth_passphrase_{sid}'] = (
+                        'snmp_auth_passphrase', 'snmp_password')
                 elif key == 'privacy_password' and sid is not None and 'snmp' in current_path:
-                    required_vars[f'snmp_privacy_passphrase_{sid}'] = ('snmp_privacy_passphrase', 'snmp_password')
+                    required_vars[f'snmp_privacy_passphrase_{sid}'] = (
+                        'snmp_privacy_passphrase', 'snmp_password')
                 elif key == 'community_string' and sid is not None and 'snmp_trap_destinations' in current_path:
-                    required_vars[f'snmp_trap_community_{sid}'] = ('snmp_trap_community', 'snmp_community_string')
+                    required_vars[f'snmp_trap_community_{sid}'] = (
+                        'snmp_trap_community', 'snmp_community_string')
                 elif key == 'trap_community_string' and sid is not None and 'snmp' in current_path:
-                    required_vars[f'snmp_trap_community_{sid}'] = ('snmp_trap_community', 'snmp_community_string')
+                    required_vars[f'snmp_trap_community_{sid}'] = (
+                        'snmp_trap_community', 'snmp_community_string')
                 elif key == 'encryption_key' and sid is not None and 'ipmi' in current_path:
-                    required_vars[f'ipmi_encryption_key_{sid}'] = ('ipmi_encryption_key', 'ipmi_encryption_key')
+                    required_vars[f'ipmi_encryption_key_{sid}'] = (
+                        'ipmi_encryption_key', 'ipmi_encryption_key')
 
                 # Recurse into nested structures
                 traverse_model(value, current_path)
-        
+
         elif isinstance(obj, list):
             for idx, item in enumerate(obj):
                 traverse_model(item, f"{path}[{idx}]")
-    
+
     traverse_model(model)
     return required_vars
 
@@ -252,41 +275,44 @@ def validate_all_sensitive_variables(
 ) -> Tuple[bool, List[str], List[str], Dict[str, str]]:
     """
     Validate all sensitive variables in model and return their values.
-    
+
     Returns:
         Tuple of (success: bool, missing_vars: List[str], error_messages: List[str], sensitive_vars: Dict[str, str])
     """
     load_schema(schema_path)
-    
+
     required_vars = collect_required_sensitive_variables(model)
     missing_vars = []
     error_messages = []
     sensitive_vars = {}
-    
-    for env_var_name, (env_prefix, schema_key) in sorted(required_vars.items()):
+
+    for env_var_name, (env_prefix, schema_key) in sorted(
+            required_vars.items()):
         env_value = os.environ.get(env_var_name)
-        
+
         if env_value in (None, ""):
             missing_vars.append(env_var_name)
             error_msg = f"Missing required environment variable '{env_var_name}'"
             error_msg += _format_export_command(env_var_name, schema_key)
             error_messages.append(error_msg)
         else:
-            validation_error = _validate_value_against_schema(env_var_name, env_value, schema_key)
+            validation_error = _validate_value_against_schema(
+                env_var_name, env_value, schema_key)
             if validation_error:
                 missing_vars.append(env_var_name)
-                validation_error += _format_export_command(env_var_name, schema_key)
+                validation_error += _format_export_command(
+                    env_var_name, schema_key)
                 error_messages.append(validation_error)
             else:
                 sensitive_vars[env_var_name] = env_value
-    
+
     success = len(missing_vars) == 0
     return success, missing_vars, error_messages, sensitive_vars
 
 
 if __name__ == "__main__":
     import argparse
-    
+
     parser = argparse.ArgumentParser(
         description="Validate all sensitive environment variables required by data model",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -302,31 +328,36 @@ if __name__ == "__main__":
         type=str,
         help="Path to JSON schema (default: schema/cisco-ai-pods.json)",
     )
-    
+
     args = parser.parse_args()
-    
+
     try:
         model_path = Path(args.model)
         if not model_path.exists():
-            print(f"ERROR: Model file not found: {model_path}", file=sys.stderr)
+            print(
+                f"ERROR: Model file not found: {model_path}",
+                file=sys.stderr)
             sys.exit(1)
-        
+
         with open(model_path) as f:
             model = json.load(f)
-        
+
         schema_path = Path(args.schema) if args.schema else None
-        success, missing_vars, error_messages, sensitive_vars = validate_all_sensitive_variables(model, schema_path)
-        
+        success, missing_vars, error_messages, sensitive_vars = validate_all_sensitive_variables(
+            model, schema_path)
+
         if success:
             print("✓ All required sensitive environment variables are present and valid.")
             sys.exit(0)
         else:
-            print(f"\nERROR: {len(missing_vars)} missing sensitive environment variable(s):\n", file=sys.stderr)
+            print(
+                f"\nERROR: {len(missing_vars)} missing sensitive environment variable(s):\n",
+                file=sys.stderr)
             for msg in error_messages:
                 print(msg, file=sys.stderr)
             print(file=sys.stderr)
             sys.exit(1)
-    
+
     except FileNotFoundError as e:
         print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)

@@ -1,126 +1,308 @@
-# OpenShift Deployment Order
+# OpenShift Deployment Guide
 
-Use this guide to run the OpenShift workflow in the correct sequence.
+This guide provides comprehensive workflows for deploying and configuring OpenShift clusters as part of the Cisco AI Pods infrastructure. Follow the sections in order, or jump to a specific role's section if you only need that component.
 
-## Table of Contents
+## Quick Navigation
 
-- [OpenShift Deployment Order](#openshift-deployment-order)
-  - [Table of Contents](#table-of-contents)
-  - [Quick Start](#quick-start)
-  - [How to Run](#how-to-run)
-  - [Variable Files](#variable-files)
-  - [Run Order](#run-order)
-  - [Troubleshooting](#troubleshooting)
+- **[Cluster Installation](#cluster-installation)** — Generate manifests and deploy bare-metal OpenShift
+- **[Authentication](#authentication)** — Configure LDAP/Active Directory
+- **[Certificates](#certificates)** — Manage custom CA, ingress, and API certificates
+- **[GitOps](#gitops)** — Generate content for GitOps repositories
+- **[Argo CD](#argo-cd)** — Install OpenShift GitOps Operator
+- **[Gitea](#gitea)** — Deploy internal Git repository
 
-## Quick Start
+---
 
-1. **Create the host_vars folder (if needed) then Copy and Edit the LDAP variables file:**
+## How to Run
 
-  ```bash
-  mkdir host_vars/
-  cp -r examples/openshift
-  ```
+### Run the full Cisco AI Pods stack:
+```bash
+ansible-playbook playbooks/deploy_ai_pod.yaml
+```
 
-2. **Edit each of the *.ezai.yaml files in the host_vars/openshift folder.**
+### Run only OpenShift roles:
+```bash
+ansible-playbook playbooks/deploy_openshift.yaml
+```
 
-3. **Export sensitive credentials as environment variables** — the playbook reads these at runtime and never writes them to disk.  Below are examples based on the example environment:
+### Run a specific OpenShift role (examples):
+```bash
+ansible-playbook playbooks/deploy_openshift.yaml --tags install
+ansible-playbook playbooks/deploy_openshift.yaml --tags auth
+ansible-playbook playbooks/deploy_openshift.yaml --tags certificates
+```
 
+---
+
+## Cluster Installation
+
+Generate and deploy bare-metal OpenShift cluster manifests via Cisco iServer and the OpenShift Assisted Installer.
+
+**Role:** `roles/openshift_install`  
+**Variables:** `host_vars/openshift/*.ezai.yaml*`
+**Tag:** `install`
+
+### Prerequisites
+
+- Ansible with collections: `ansible.builtin`, `community.general`
+- iServer executable from [datacenter/iserver releases](https://github.com/datacenter/iserver/releases)
+- ISO web server reachable from target nodes
+- SSH key pair for cluster node access
+
+### Quick Start - Example
+
+1. **Edit install variables:**
    ```bash
-   export ldap_bind_password="<bind_password>"
-   export openshift_api_url="https://api.<cluster>.<domain>:6443"
-   export openshift_token_id="<token>"
+   mkdir host_vars
+   cp -r examples/openshift host_vars/
+   ```
+
+2. **Modify each *.ezai.yaml file with the Configuration Relavent to the Environment**
+
+3. **At a minimum configure (For OpenShift Install):**
+   - `openshift.install.bare_metal.cluster_name`
+   - `openshift.install.bare_metal.base_dns_domain`
+   - `openshift.install.bare_metal.cluster_version`
+   - `openshift.install.bare_metal.cluster_networking` (API VIP, Ingress VIP, machine network, DNS)
+   - `openshift.install.bare_metal.fabric_interconnects` (if using servers with `fabric_interconnect`)
+   - `openshift.install.bare_metal.iso_web_server` (IP, image URL, upload directory)
+   - `openshift.install.bare_metal.servers` (hostnames, roles, interfaces, MACs)
+
+4. **Export sensitive credentials:**
+   ```bash
    export redfish_password_1='replace-with-secret-1'
    export redfish_password_2='replace-with-secret-2'
    export fi_password_1='replace-with-fi-secret-1'
    export fi_password_2='replace-with-fi-secret-2'
    export ssh_public_key_1='ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI... your-user@example.com'
+   export GITHUB_TOKEN='replace-with-github-token'  # optional
    ```
 
-   Obtain the token from the OpenShift web console:
-   - Click your username (top-right) → **Copy login command** → **Display Token**
+4. **Run the playbook:**
+   ```bash
+   ansible-playbook playbooks/deploy_ai_pod.yaml --tags install
+   ```
 
-   ![Copy Login Command](images/openshift/copy_login_command.png)
-   ![Display Token](images/openshift/display_token.png)
+5. **Run iServer:**
+   ```bash
+   cd assisted-installer
+   ./iserver create ocp cluster bm --dir ./ --mode check
+   ./iserver create ocp cluster bm --dir ./ --mode install
+   ```
 
-## How to Run
+For detailed instructions, see [roles/openshift_install/README.md](../roles/openshift_install/README.md).
 
-Run all Cisco AI Pods domains:
+---
 
-```bash
-ansible-playbook playbooks/deploy_ai_pod.yaml
-```
+## Authentication
 
-Run only the OpenShift workflow:
+Configure OpenShift OAuth to authenticate against Active Directory via LDAP/LDAPS, with automatic group synchronization.
 
-```bash
-ansible-playbook playbooks/deploy_openshift.yaml
-```
+**Role:** `roles/openshift_auth`  
+**Variables:** `host_vars/openshift/ldap.ezai.yaml`  
+**Tag:** `auth`
 
-[Back to Table of Contents](#table-of-contents)
+### Prerequisites
+
+- Ansible with `kubernetes.core` collection
+- `oc` CLI installed on Ansible controller
+- OpenShift cluster token with `cluster-admin` privileges
+- Active Directory service account with read access
+- For LDAPS: CA certificate chain of LDAP server(s)
+
+### Quick Start
+
+1. **Get LDAP server certificate (LDAPS only):**
+   ```bash
+   openssl s_client -showcerts -connect ldap-server.example.com:636 </dev/null 2>/dev/null \
+     | awk '/BEGIN CERTIFICATE/,/END CERTIFICATE/' > ca.crt
+   ```
+
+2. **Copy and edit LDAP variables in Visual Studio Code:**
+   ```bash
+   cp -r examples/openshift host_vars/
+   code host_vars/openshift/ldap.ezai.yaml
+   ```
+
+   Before editing, follow [Prepare the Environment](guide_prepare_the_environment.md) and ensure the Red Hat YAML extension is installed and schema validation is enabled:
+   - [Install Visual Studio Code Extensions](guide_prepare_the_environment.md#install-visual-studio-code-extensions)
+   - [YAML Schema for auto-completion, Help, and Error Validation](guide_prepare_the_environment.md#yaml-schema-for-auto-completion-help-and-error-validation)
+
+3. **Export credentials:**
+   ```bash
+   export ldap_bind_password="<bind_password>"
+   export openshift_api_url="https://api.<cluster>.<domain>:6443"
+   export openshift_token_id="<token>"
+   ```
+
+   Get token from OpenShift web console:
+   - Click username (top-right) → **Copy login command** → **Display Token**
+
+4. **Run the playbook:**
+   ```bash
+   ansible-playbook playbooks/deploy_openshift.yaml --tags auth
+   ```
+
+For detailed instructions, see [roles/openshift_auth/README.md](../roles/openshift_auth/README.md).
+
+---
+
+## Certificates
+
+Manage custom CA bundle, ingress wildcard certificate, and API server certificate.
+
+**Role:** `roles/openshift_certificates`  
+**Tag:** `certificates`
+
+### Prerequisites
+
+- `oc` CLI installed on Ansible controller
+- Ansible collections: `kubernetes.core`, `community.crypto`
+- Cluster credentials with permission to patch cluster resources
+- Certificate and key files available locally (PEM format, unencrypted)
+
+### Quick Start
+
+1. **Export credentials:**
+   ```bash
+   export openshift_api_url="https://api.<cluster>.<domain>:6443"
+   export openshift_token_id="<token>"
+   ```
+
+2. **Run the playbook:**
+   ```bash
+   ansible-playbook playbooks/deploy_openshift.yaml --tags certificates
+   ```
+
+3. **Validate:**
+   ```bash
+   oc get configmap user-ca-bundle -n openshift-config -o yaml
+   oc get secret ingress-tls-secret -n openshift-ingress
+   oc get secret api-tls-secret -n openshift-config
+   ```
+
+For detailed instructions, see [roles/openshift_certificates/README.md](../roles/openshift_certificates/README.md).
+
+---
+
+## GitOps
+
+Generate content for GitOps repositories (Helm charts and OLM catalogs for cluster operators).
+
+**Role:** `roles/openshift_gitops`  
+**Variables:** `host_vars/openshift/operators.ezai.yaml`  
+**Tag:** `gitops`
+
+### Quick Start
+
+1. **Edit operators variables in Visual Studio Code:**
+   ```bash
+   code host_vars/openshift/operators.ezai.yaml
+   ```
+
+   Before editing, follow [Prepare the Environment](guide_prepare_the_environment.md) and ensure the Red Hat YAML extension is installed and schema validation is enabled:
+   - [Install Visual Studio Code Extensions](guide_prepare_the_environment.md#install-visual-studio-code-extensions)
+   - [YAML Schema for auto-completion, Help, and Error Validation](guide_prepare_the_environment.md#yaml-schema-for-auto-completion-help-and-error-validation)
+
+2. **Define at minimum:**
+   - `openshift.destination_directory`
+   - `openshift.operators.openshift_gitops.gitops_repo_url`
+
+3. **Run the playbook:**
+   ```bash
+   ansible-playbook playbooks/deploy_openshift.yaml --tags gitops
+   ```
+
+4. **Commit to GitOps repository:**
+   ```bash
+   cd <destination>
+   git add . && git commit -m "Generated OpenShift operators" && git push
+   ```
+
+For detailed instructions, see [roles/openshift_gitops/README.md](../roles/openshift_gitops/README.md).
+
+---
+
+## Argo CD
+
+Install the OpenShift GitOps Operator (Argo CD) on the cluster.
+
+**Role:** `roles/openshift_argo_cd`  
+**Tag:** `argocd`
+
+### Quick Start
+
+1. **Export credentials:**
+   ```bash
+   export openshift_api_url="https://api.<cluster>.<domain>:6443"
+   export openshift_token_id="<token>"
+   ```
+
+2. **Run the playbook:**
+   ```bash
+   ansible-playbook playbooks/deploy_openshift.yaml --tags argocd
+   ```
+
+3. **Verify:**
+   ```bash
+   oc get csv -n openshift-gitops-operator
+   ```
+
+For detailed instructions, see [roles/openshift_argo_cd/README.md](../roles/openshift_argo_cd/README.md).
+
+---
+
+## Gitea
+
+Deploy an internal Git repository (Gitea) for onboarding repositories.
+
+**Role:** `roles/openshift_gitea`  
+**Tag:** `gitea`
+
+### Quick Start
+
+1. **Export credentials:**
+   ```bash
+   export openshift_api_url="https://api.<cluster>.<domain>:6443"
+   export openshift_token_id="<token>"
+   ```
+
+2. **Run the playbook:**
+   ```bash
+   ansible-playbook playbooks/deploy_openshift.yaml --tags gitea
+   ```
+
+3. **Verify:**
+   ```bash
+   oc get gitea -n gitea-operator
+   oc get route -n gitea-operator
+   ```
+
+For detailed instructions, see [roles/openshift_gitea/README.md](../roles/openshift_gitea/README.md).
+
+---
+
+## Common Troubleshooting
+
+- **"oc not found":** Download from https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/
+- **"Unauthorized":** Verify environment variables and get fresh token (they expire after 24 hours)
+- **"Could not reach API":** Check cluster endpoint is reachable: `curl -k https://api.<cluster>.<domain>:6443`
+- **All roles are idempotent — safe to re-run:** Fix the issue and run again
+
+---
 
 ## Variable Files
 
-- The [examples](examples) folder contains example variable files for each OpenShift module.
-- Create the [host_vars](host_vars) folder if it does not exist:
+The [examples](examples) folder contains example variable files. Copy to [host_vars](host_vars) and edit for your environment in Visual Studio Code:
 
-  ```bash
-  mkdir -p host_vars
-  ```
+```bash
+mkdir -p host_vars
+cp -r examples/openshift host_vars/
+code host_vars/openshift/<file>.ezai.yaml
+```
 
-- Copy the files you need from [examples](examples) into [host_vars](host_vars), then edit the copies with values for your environment.
-- The module playbooks in the Run Order section below read their active inputs from [host_vars](host_vars).
+Important: use the Red Hat YAML extension and schema mapping from [Prepare the Environment](guide_prepare_the_environment.md#yaml-schema-for-auto-completion-help-and-error-validation) so invalid inputs are caught before playbook execution.
 
-Top-level project README:
-- [Cisco-AI-Pods README](../README.md)
+---
 
-[Back to Table of Contents](#table-of-contents)
-
-## Run Order
-
-1. Install
-- Generates base Assisted Installer payloads (`cluster.json`, `web_server.json`, `ssh.pub`) and, via the Python module, creates `server.json` plus `nmstate_*.yaml` profiles used for host networking and inventory mapping to be consumed with `iserver` module.
-- [install README](openshift_install.md)
-
-2. Certificates
-- Applies trust bundle, ingress wildcard certificate, and API server certificate updates, then validates certificate rollout/state on the cluster.
-- [certificates README](openshift_certificates.md)
-
-3. Everpure Portworx Install
-- Prepares Everpure credentials, installs Portworx Operator/StorageCluster, and creates StorageClasses for persistent workload storage.
-- [Everpure Portworx README](../portworx.md)
-
-4. OATH LDAP (Optional for Active Directory Authentication)
-- Configures OpenShift OAuth/LDAP integration for AD sign-in and deploys group sync resources (including scheduled synchronization).
-- [oath_ldap README](openshift_auth.md)
-
-5. Base Operators
-- Installs foundational operators needed before higher-level platform automation.
-- Note: Gitea is only required if another Git service is not available.
-- [Gitea README](openshift_gitea.md)
-- [OpenShift GitOps Operator README](openshift_argo_cd.md)
-
-6. OpenShift GitOps
-- Generates and stages GitOps repository content (Helm/OLM trees and rendered Argo CD applications) consumed by OpenShift GitOps.
-- [openshift-gitops README](openshift_gitops.md)
-
-[Back to Table of Contents](#table-of-contents)
-
-## Troubleshooting
-
-- Workflow fails during install manifest generation:
-  - Validate required environment variables for redfish/FI passwords are exported before running the install workflow.
-  - See [install README](openshift_install.md).
-- Certificate rollout is incomplete:
-  - Verify certificate resources were applied and ingress/API pods were restarted as expected.
-  - See [certificates README](openshift_certificates.md).
-- LDAP users cannot authenticate:
-  - Confirm bind credentials and LDAP sync objects are correct and sync jobs complete successfully.
-  - See [oath_ldap README](openshift_auth.md).
-- GitOps applications fail to sync:
-  - Verify generated manifests are present in the target repository path and operator CRDs are installed first.
-  - See [openshift-gitops README](openshift_gitops.md).
-
-[Back to Table of Contents](#table-of-contents)
-
-Back to top-level:
-- [Cisco-AI-Pods README](../README.md)
+**Related:** [Cisco-AI-Pods README](../README.md)

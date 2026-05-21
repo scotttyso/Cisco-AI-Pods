@@ -1,9 +1,10 @@
-#=============================================================================
+# =============================================================================
 # Source Modules
-#=============================================================================
-def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
+# =============================================================================
 import sys
 from pathlib import Path
+def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
+
 
 SCRIPT_PATH = Path(__file__).resolve().parent
 CLASSES_PATH = SCRIPT_PATH / 'src'
@@ -18,15 +19,18 @@ if str(CLASSES_PATH) not in sys.path:
 try:
     from roles.intersight_ucs_provision.library.src import pcolor
     from dotmap import DotMap
-    import json, re
+    import json
+    import re
 except ImportError as e:
     prRed(f'src/validating.py line 6 - !!! ERROR !!!\n{e.__class__.__name__}')
     prRed(f" Module {e.name} is required to run this script")
     prRed(f" Install the module using the following: `pip install {e.name}`")
     sys.exit(1)
 
-oregex = re.compile('fabric.([a-zA-z]+(Mode|Role)|V[l|s]an)|vnic.(Eth|Fc)If|iam.EndPointUserRole|DriveGroup|Ldap(Group|Provider)')
-policy_regex = re.compile('(network_connectivity|ntp|port|snmp|switch_control|syslog|system_qos|vlan|vsan)')
+oregex = re.compile(
+    'fabric.([a-zA-z]+(Mode|Role)|V[l|s]an)|vnic.(Eth|Fc)If|iam.EndPointUserRole|DriveGroup|Ldap(Group|Provider)')
+policy_regex = re.compile(
+    '(network_connectivity|ntp|port|snmp|switch_control|syslog|system_qos|vlan|vsan)')
 DESCRIPTION_WORD_MAP = {
     'Fiattached': 'FIAttached',
     'Fc': 'FC',
@@ -59,151 +63,237 @@ DESCRIPTION_WORD_MAP = {
     'Wwpn': 'WWPN',
 }
 
-#=============================================================================
+# =============================================================================
 # Function - Change Policy Description to Sentence
-#=============================================================================
+# =============================================================================
+
+
 def mod_pol_description(pol_description):
     words = str.title(pol_description.replace('_', ' ')).split()
     return ' '.join(DESCRIPTION_WORD_MAP.get(word, word) for word in words)
 
-#=============================================================================
+# =============================================================================
 # Notifications
-#=============================================================================
+# =============================================================================
+
+
 def begin_loop(ptype1, ptype2):
     pcolor.LightGray(f'\n{"-"*108}\n')
-    pcolor.LightPurple(f"  Beginning {' '.join(ptype1.split('_')).title()} {ptype2} Deployment.\n")
+    pcolor.LightPurple(
+        f"  Beginning {' '.join(ptype1.split('_')).title()} {ptype2} Deployment.\n")
+
 
 def completed_item(category, ptype, kwargs):
     iresults = DotMap(kwargs.api_results)
     ikeys = list(iresults.keys())
     method = kwargs.method
-    name  = None
+    name = None
     pmoid = iresults.Moid
-    regex = re.compile(r'^(comm.TagDefinition|iam.SharingRule|organization.Organization|resource.Group)$', re.IGNORECASE)
-    preg  = re.compile(r'^(Parent|((Eth|Fc)Network|(L|S)anConnectivity|Ldap|Port|Storage)Policy|SwitchClusterProfile(Template))')
+    regex = re.compile(
+        r'^(comm.TagDefinition|iam.SharingRule|organization.Organization|resource.Group)$',
+        re.IGNORECASE)
+    preg = re.compile(
+        r'^(Parent|((Eth|Fc)Network|(L|S)anConnectivity|Ldap|Port|Storage)Policy|SwitchClusterProfile(Template))')
     if any(re.search(preg, i) for i in ikeys):
         parent_match = next((i for i in ikeys if re.search(preg, i)), None)
         psplit = kwargs.intersight_object_map[iresults.ObjectType].split('.')
-        if len(psplit) > 2: policy_name = psplit[1]
-        else: policy_name = psplit[-1]
-        ptitle = mod_pol_description((' '.join(policy_name.split('_'))).title())
-        if   'vnic.EthIf' == iresults.ObjectType: name = f"vNIC {iresults.Name}"
-        elif 'vnic.FcIf' == iresults.ObjectType:  name = f"vHBA {iresults.Name}"
-        elif 'PcId' in ikeys:             name = f"{ptitle} - PortChannel `{iresults.PcId}`"
-        elif 'PortId' in ikeys:           name = f"{ptitle} - Port `{iresults.PortId}`"
-        elif 'PortIdStart' in ikeys:      name = f"{ptitle} - PortIdStart `{iresults.PortIdStart}`"
-        elif 'Server' in ikeys:           name = f"{ptitle} - `{iresults.Server}`"
-        elif 'ManualDriveGroup' in ikeys: name = f"{ptitle} - DriveGroup `{iresults.Name}`"
-        elif 'VlanId' in ikeys:           name = f"{ptitle} - VLAN `{iresults.VlanId}`"
-        elif 'VsanId' in ikeys:           name = f"{ptitle} - VSAN `{iresults.VsanId}`"
-        else: name = f"{ptitle} - `{iresults.Name}`"
+        if len(psplit) > 2:
+            policy_name = psplit[1]
+        else:
+            policy_name = psplit[-1]
+        ptitle = mod_pol_description(
+            (' '.join(policy_name.split('_'))).title())
+        if 'vnic.EthIf' == iresults.ObjectType:
+            name = f"vNIC {iresults.Name}"
+        elif 'vnic.FcIf' == iresults.ObjectType:
+            name = f"vHBA {iresults.Name}"
+        elif 'PcId' in ikeys:
+            name = f"{ptitle} - PortChannel `{iresults.PcId}`"
+        elif 'PortId' in ikeys:
+            name = f"{ptitle} - Port `{iresults.PortId}`"
+        elif 'PortIdStart' in ikeys:
+            name = f"{ptitle} - PortIdStart `{iresults.PortIdStart}`"
+        elif 'Server' in ikeys:
+            name = f"{ptitle} - `{iresults.Server}`"
+        elif 'ManualDriveGroup' in ikeys:
+            name = f"{ptitle} - DriveGroup `{iresults.Name}`"
+        elif 'VlanId' in ikeys:
+            name = f"{ptitle} - VLAN `{iresults.VlanId}`"
+        elif 'VsanId' in ikeys:
+            name = f"{ptitle} - VSAN `{iresults.VsanId}`"
+        else:
+            name = f"{ptitle} - `{iresults.Name}`"
         rsplit = kwargs.intersight_object_map[iresults.ObjectType].split('.')
         parent_policy = rsplit[0]
-        parent_name   = kwargs.intersight_api[kwargs.org][category][parent_policy][iresults[parent_match].Moid]
-        parent_title  = mod_pol_description((parent_policy.replace('_', ' ')).title())
-        rtype = DESCRIPTION_WORD_MAP.get(category.replace('_', ' ').title(), category.replace('_', ' ').title())
+        parent_name = kwargs.intersight_api[kwargs.org][category][parent_policy][iresults[parent_match].Moid]
+        parent_title = mod_pol_description(
+            (parent_policy.replace('_', ' ')).title())
+        rtype = DESCRIPTION_WORD_MAP.get(
+            category.replace(
+                '_', ' ').title(), category.replace(
+                '_', ' ').title())
         if method == 'post':
-            pcolor.Green(f'{" "*6}* Completed {method.upper()} for Organization: `{kwargs.org}` > {parent_title} {rtype} `{parent_name}`: {name} - Moid: {pmoid}')
+            pcolor.Green(
+                f'{" "*6}* Completed {method.upper()} for Organization: `{kwargs.org}` > {parent_title} {rtype} `{parent_name}`: {name} - Moid: {pmoid}')
         else:
-            pcolor.LightPurple(f'{" "*6}* Completed {method.upper()} for Organization: `{kwargs.org}` > {parent_title} {rtype} `{parent_name}`: {name} - Moid: {pmoid}')
+            pcolor.LightPurple(
+                f'{" "*6}* Completed {method.upper()} for Organization: `{kwargs.org}` > {parent_title} {rtype} `{parent_name}`: {name} - Moid: {pmoid}')
         return
     elif re.search(regex, iresults.ObjectType):
-        if 'SharingRule' in iresults.ObjectType: resource = 'iam_sharing_rule'
-        else: resource = kwargs.intersight_object_map[iresults.ObjectType]
-        ptype = mod_pol_description(resource.replace('_', ' ').title())
-        if 'Key' in ikeys: name = f"{ptype}: `{iresults.Key}`"
-        else: name = f"{ptype}: `{iresults.Name}`"
-        if method == 'post':
-            pcolor.Green(f'{" "*6}* Completed {method.upper()} for System -> {name} - Moid: {pmoid}')
+        if 'SharingRule' in iresults.ObjectType:
+            resource = 'iam_sharing_rule'
         else:
-            pcolor.LightPurple(f'{" "*6}* Completed {method.upper()} for System -> {name} - Moid: {pmoid}')
+            resource = kwargs.intersight_object_map[iresults.ObjectType]
+        ptype = mod_pol_description(resource.replace('_', ' ').title())
+        if 'Key' in ikeys:
+            name = f"{ptype}: `{iresults.Key}`"
+        else:
+            name = f"{ptype}: `{iresults.Name}`"
+        if method == 'post':
+            pcolor.Green(
+                f'{" "*6}* Completed {method.upper()} for System -> {name} - Moid: {pmoid}')
+        else:
+            pcolor.LightPurple(
+                f'{" "*6}* Completed {method.upper()} for System -> {name} - Moid: {pmoid}')
         return
-    elif 'asset.DeviceClaim' == iresults.ObjectType:  name = f"Claiming Server `{iresults.SerialNumber}` Registration"
-    elif 'autosupport' == ptype:   name = "AutoSupport"
-    elif 'user_role' in ptype:     name = f"Role for {ptype}"
-    elif 'upgrade' in ptype:       name = f".  Performing Firmware Upgrade on {kwargs.serial} - {kwargs.server} Server Profile"
-    elif 'UserId' in ikeys:        name = f"{iresults.UserId} CCO User Authentication"
-    elif 'eula' in ptype:          name = f"Account EULA Acceptance"
+    elif 'asset.DeviceClaim' == iresults.ObjectType:
+        name = f"Claiming Server `{iresults.SerialNumber}` Registration"
+    elif 'autosupport' == ptype:
+        name = "AutoSupport"
+    elif 'user_role' in ptype:
+        name = f"Role for {ptype}"
+    elif 'upgrade' in ptype:
+        name = f".  Performing Firmware Upgrade on {kwargs.serial} - {kwargs.server} Server Profile"
+    elif 'UserId' in ikeys:
+        name = f"{iresults.UserId} CCO User Authentication"
+    elif 'eula' in ptype:
+        name = f"Account EULA Acceptance"
     elif 'Action' in ikeys:
-        if iresults.Action == 'Deploy': name = f"Deploy Profile {pmoid}"
-        else: name = iresults['Name']
-    elif 'ScheduledActions' in ikeys: name = f"Activating Profile {pmoid}"
-    elif 'Targets' in ikeys:          name = iresults['Targets'][0]['Name']
-    elif 'update_tags' in ptype:      name = f"Tags updated for Physical Server attached to {kwargs.tag_server_profile}"
-    elif 'Identity' in ikeys:         name = f"Reservation: `{iresults.Identity}`"
-    elif 'Name' in ikeys:             name = iresults['Name']
+        if iresults.Action == 'Deploy':
+            name = f"Deploy Profile {pmoid}"
+        else:
+            name = iresults['Name']
+    elif 'ScheduledActions' in ikeys:
+        name = f"Activating Profile {pmoid}"
+    elif 'Targets' in ikeys:
+        name = iresults['Targets'][0]['Name']
+    elif 'update_tags' in ptype:
+        name = f"Tags updated for Physical Server attached to {kwargs.tag_server_profile}"
+    elif 'Identity' in ikeys:
+        name = f"Reservation: `{iresults.Identity}`"
+    elif 'Name' in ikeys:
+        name = iresults['Name']
     elif 'EndPointRole' in ikeys:
         users = DotMap()
-        for k,v in kwargs.user_moids.items(): users[v.moid] = k
-        name = list(users.values())[list(users.keys()).index(iresults.EndPointUser.Moid)]
-    if name == None:
+        for k, v in kwargs.user_moids.items():
+            users[v.moid] = k
+        name = list(
+            users.values())[
+            list(
+                users.keys()).index(
+                iresults.EndPointUser.Moid)]
+    if name is None:
         print(json.dumps(iresults, indent=4))
         print(kwargs.ptype)
         print(kwargs.parent_name)
         print(kwargs.parent_type)
         print('missing definition')
         raise
-    elif re.search('^(Activating|Deploy)', name): pcolor.Cyan(f'      * {name}.')
+    elif re.search('^(Activating|Deploy)', name):
+        pcolor.Cyan(f'      * {name}.')
     elif re.search('(eula|upgrade)', ptype) and ptype == 'firmware':
-        if method == 'post': pcolor.Green(f'{" "*6}* Completed {method.upper()} for {ptype} {name}.')
-        else: pcolor.LightPurple(f'      * Completed {method.upper()} for {ptype} {name}.')
-    elif 'Claiming' in name: pcolor.Green(f'{" "*6}- Completed POST for {name} - Moid: {pmoid}')
-    elif 'Reservation' in name: pcolor.Green(f'{" "*6}- Completed POST for {name} - Moid: {pmoid}')
+        if method == 'post':
+            pcolor.Green(
+                f'{" "*6}* Completed {method.upper()} for {ptype} {name}.')
+        else:
+            pcolor.LightPurple(
+                f'      * Completed {method.upper()} for {ptype} {name}.')
+    elif 'Claiming' in name:
+        pcolor.Green(f'{" "*6}- Completed POST for {name} - Moid: {pmoid}')
+    elif 'Reservation' in name:
+        pcolor.Green(f'{" "*6}- Completed POST for {name} - Moid: {pmoid}')
     elif 'bulk/MoMergers' == kwargs.uri:
-        if method == 'post': pcolor.Green(f'{" "*6}- Completed Bulk Merger {method.upper()} for Organization: `{kwargs.org}` > Name: {name} - Moid: {pmoid}')
-        else: pcolor.LightPurple(f'{" "*4}- Completed Bulk Merger {method.upper()} for Organization: `{kwargs.org}` > Name: {name} - Moid: {pmoid}')
+        if method == 'post':
+            pcolor.Green(
+                f'{" "*6}- Completed Bulk Merger {method.upper()} for Organization: `{kwargs.org}` > Name: {name} - Moid: {pmoid}')
+        else:
+            pcolor.LightPurple(
+                f'{" "*4}- Completed Bulk Merger {method.upper()} for Organization: `{kwargs.org}` > Name: {name} - Moid: {pmoid}')
     else:
-        rcategory = DESCRIPTION_WORD_MAP.get(category.replace('_', ' ').title(), category.replace('_', ' ').title())
+        rcategory = DESCRIPTION_WORD_MAP.get(
+            category.replace(
+                '_', ' ').title(), category.replace(
+                '_', ' ').title())
         rtype = mod_pol_description(ptype.replace('_', ' ').title())
-        if method == 'post': pcolor.Green(f'{" "*6}- Completed {method.upper()} for Organization: `{kwargs.org}` Name: {name} - Moid: {pmoid}')
-        else: pcolor.LightPurple(f'{" "*6}- Completed {method.upper()} for Organization: `{kwargs.org}` > Name: {name} - Moid: {pmoid}')
+        if method == 'post':
+            pcolor.Green(
+                f'{" "*6}- Completed {method.upper()} for Organization: `{kwargs.org}` Name: {name} - Moid: {pmoid}')
+        else:
+            pcolor.LightPurple(
+                f'{" "*6}- Completed {method.upper()} for Organization: `{kwargs.org}` > Name: {name} - Moid: {pmoid}')
+
 
 def deploy_notification(profile, profile_type):
     pcolor.LightGray(f'\n{"-"*108}\n')
-    pcolor.LightPurple(f'   Deploy Action Still ongoing for {profile_type} Profile {profile}')
+    pcolor.LightPurple(
+        f'   Deploy Action Still ongoing for {profile_type} Profile {profile}')
     pcolor.LightGray(f'\n{"-"*108}\n')
+
 
 def end_loop(ptype1, ptype2):
-    pcolor.LightPurple(f"\n   Completed {' '.join(ptype1.split('_')).title()} {ptype2} Deployment.")
+    pcolor.LightPurple(
+        f"\n   Completed {' '.join(ptype1.split('_')).title()} {ptype2} Deployment.")
+
 
 def section_begin(resource_type, resource):
-    ptype1  = ' '.join(resource_type.split('_')).title()
+    ptype1 = ' '.join(resource_type.split('_')).title()
     ptype2 = mod_pol_description((' '.join(resource.split('_'))).title())
     pcolor.LightGray(f'\n{"-"*108}\n')
-    pcolor.LightPurple(f"  Beginning Intersight -> {ptype1} -> {ptype2} Deployments.\n")
+    pcolor.LightPurple(
+        f"  Beginning Intersight -> {ptype1} -> {ptype2} Deployments.\n")
+
 
 def section_end(resource_type, resource):
-    ptype1  = ' '.join(resource_type.split('_')).title()
+    ptype1 = ' '.join(resource_type.split('_')).title()
     ptype2 = mod_pol_description((' '.join(resource.split('_'))).title())
     pcolor.LightGray(f'\n{"-"*108}\n')
-    pcolor.LightPurple(f"  Completed Intersight -> {ptype1} -> {ptype2} Deployments.\n")
+    pcolor.LightPurple(
+        f"  Completed Intersight -> {ptype1} -> {ptype2} Deployments.\n")
+
 
 def section_begin_c88x(resource_type, resource):
-    ptype1  = ' '.join(resource_type.split('_')).title()
+    ptype1 = ' '.join(resource_type.split('_')).title()
     ptype2 = mod_pol_description((' '.join(resource.split('_'))).title())
     pcolor.LightGray(f'\n{"-"*108}\n')
     pcolor.LightPurple(f"  Beginning {ptype1} -> {ptype2} Deployment.\n")
 
+
 def section_end_c88x(resource_type, resource):
-    ptype1  = ' '.join(resource_type.split('_')).title()
+    ptype1 = ' '.join(resource_type.split('_')).title()
     ptype2 = mod_pol_description((' '.join(resource.split('_'))).title())
     pcolor.LightGray(f'\n{"-"*108}\n')
     pcolor.LightPurple(f"  Completed {ptype1} -> {ptype2} Deployment.\n")
 
+
 def section_begin_org(org, resource, resource_type):
-    ptype1  = ' '.join(resource_type.split('_')).title()
+    ptype1 = ' '.join(resource_type.split('_')).title()
     ptype2 = mod_pol_description((' '.join(resource.split('_'))).title())
     pcolor.LightGray(f'\n{"-"*108}\n')
-    pcolor.LightPurple(f"  Beginning Intersight -> {ptype1} -> {ptype2} Deployments for Organization: `{org}`.\n")
+    pcolor.LightPurple(
+        f"  Beginning Intersight -> {ptype1} -> {ptype2} Deployments for Organization: `{org}`.\n")
+
 
 def section_end_org(org, resource, resource_type):
-    ptype1  = ' '.join(resource_type.split('_')).title()
+    ptype1 = ' '.join(resource_type.split('_')).title()
     ptype2 = mod_pol_description((' '.join(resource.split('_'))).title())
-    pcolor.LightPurple(f"\n  Completed Intersight -> {ptype1} -> {ptype2} Deployments for Organization: `{org}`.")
+    pcolor.LightPurple(
+        f"\n  Completed Intersight -> {ptype1} -> {ptype2} Deployments for Organization: `{org}`.")
 
-#=============================================================================
+# =============================================================================
 # Errors
-#=============================================================================
+# =============================================================================
+
+
 def error_file_location(varName, varValue):
     pcolor.LightGray(f'\n{"-"*108}\n')
     pcolor.Yellow(f'  !!! ERROR !!! The "{varName}" "{varValue}"')
@@ -211,13 +301,16 @@ def error_file_location(varName, varValue):
     pcolor.LightGray(f'\n{"-"*108}\n')
     raise
 
+
 def error_organization(org):
     pcolor.LightGray(f'\n{"-"*108}\n')
     pcolor.Yellow(f'   !!! ERROR !!!')
-    pcolor.Yellow(f'   The organization was not found in Intersight, but it is referenced in the input file.')
+    pcolor.Yellow(
+        f'   The organization was not found in Intersight, but it is referenced in the input file.')
     pcolor.Yellow(f'   Organization: {org}')
     pcolor.LightGray(f'\n{"-"*108}\n')
     raise
+
 
 def error_requests(method, status, text, uri):
     pcolor.LightGray(f'\n{"-"*108}\n')
@@ -228,38 +321,52 @@ def error_requests(method, status, text, uri):
     raise
 
 
-#=============================================================================
+# =============================================================================
 # Messages
-#=============================================================================
+# =============================================================================
 def message_invalid_selection():
-    pcolor.Red(f'\n{"-"*108}\n\n  !!!Error!!! Invalid Selection.  Please Select a valid Option from the List.')
+    pcolor.Red(
+        f'\n{"-"*108}\n\n  !!!Error!!! Invalid Selection.  Please Select a valid Option from the List.')
     pcolor.Red(f'\n{"-"*108}\n')
+
 
 def message_invalid_y_or_n(length):
-    if length == 'short': dash_rep = '-'*54
-    else: dash_rep = '-'*108
-    pcolor.Red(f'\n{dash_rep}\n\n  !!!Error!!! Invalid Value.  Please enter `Y` or `N`.')
+    if length == 'short':
+        dash_rep = '-' * 54
+    else:
+        dash_rep = '-' * 108
+    pcolor.Red(
+        f'\n{dash_rep}\n\n  !!!Error!!! Invalid Value.  Please enter `Y` or `N`.')
     pcolor.Red(f'\n{dash_rep}\n')
 
+
 def message_fcoe_vlan(fcoe_id, vlan_policy):
-    pcolor.Red(f'\n{"-"*108}\n\n  !!!Error!!!\n  The FCoE VLAN `{fcoe_id}` is already assigned to the VLAN Policy')
-    pcolor.Red(f'  {vlan_policy}.  Please choose a VLAN id that is not already in use.')
+    pcolor.Red(
+        f'\n{"-"*108}\n\n  !!!Error!!!\n  The FCoE VLAN `{fcoe_id}` is already assigned to the VLAN Policy')
+    pcolor.Red(
+        f'  {vlan_policy}.  Please choose a VLAN id that is not already in use.')
     pcolor.Red(f'\n{"-"*108}\n')
 
+
 def message_invalid_native_vlan(nativeVlan, VlanList):
-    pcolor.Red(f'\n{"-"*108}\n\n  !!!Error!!!\n  The Native VLAN `{nativeVlan}` was not in the VLAN Policy List.')
+    pcolor.Red(
+        f'\n{"-"*108}\n\n  !!!Error!!!\n  The Native VLAN `{nativeVlan}` was not in the VLAN Policy List.')
     pcolor.Red(f'  VLAN Policy List is: "{VlanList}"')
     pcolor.Red(f'\n{"-"*108}\n')
 
+
 def message_invalid_vxan():
-    pcolor.Red(f'\n{"-"*108}\n\n  !!!Error!!!\n  Invalid Entry.  Please Enter a valid ID in the range of 1-4094.')
+    pcolor.Red(
+        f'\n{"-"*108}\n\n  !!!Error!!!\n  Invalid Entry.  Please Enter a valid ID in the range of 1-4094.')
     pcolor.Red(f'\n{"-"*108}\n')
 
+
 def message_invalid_vsan_id(vsan_policy, vsan_id, vsan_list):
-    pcolor.Red(f'\n{"-"*108}\n\n  !!!Error!!!\n  The VSAN `{vsan_id}` is not in the VSAN Policy `{vsan_policy}`.')
+    pcolor.Red(
+        f'\n{"-"*108}\n\n  !!!Error!!!\n  The VSAN `{vsan_id}` is not in the VSAN Policy `{vsan_policy}`.')
     pcolor.Red(f'  Options are: {vsan_list}.\n\n{"-"*108}\n')
+
 
 def message_starting_over(policy_type):
     pcolor.Yellow(f'\n{"-"*54}\n\n  Starting `{policy_type}` Section over.')
     pcolor.Yellow(f'\n{"-"*54}\n')
-

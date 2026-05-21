@@ -1,9 +1,10 @@
-#=============================================================================
+# =============================================================================
 # Source Modules
-#=============================================================================
-def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
+# =============================================================================
 import sys
 from pathlib import Path
+def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
+
 
 SCRIPT_PATH = Path(__file__).resolve().parent
 CLASSES_PATH = SCRIPT_PATH / 'src'
@@ -22,162 +23,221 @@ try:
     from json_ref_dict import materialize, RefDict
     from OpenSSL import crypto
     from pathlib import Path
-    import importlib, importlib.util, itertools, json, logging, os, platform
-    import re, yaml
+    import importlib
+    import importlib.util
+    import itertools
+    import json
+    import logging
+    import os
+    import platform
+    import re
+    import yaml
 except ImportError as e:
     prRed(f'src/shared_functions.py - !!! ERROR !!!\n{e.__class__.__name__}')
     prRed(f' Module {e.name} is required to run this script')
     prRed(f' Install the module using the following: `pip install {e.name}`')
     sys.exit(1)
-#=============================================================================
+# =============================================================================
 # Log levels 0 = None, 1 = Class only, 2 = Line
-#=============================================================================
+# =============================================================================
 log_level = 2
-#=============================================================================
+# =============================================================================
 # Exception Classes and YAML dumper
-#=============================================================================
-class insufficient_args(Exception): pass
+# =============================================================================
+
+
+class insufficient_args(Exception):
+    pass
+
 
 class yaml_dumper(yaml.Dumper):
     def increase_indent(self, flow=False, indentless=False):
         return super(yaml_dumper, self).increase_indent(flow, False)
 
-#=============================================================================
+# =============================================================================
 # Function - Basic Setup for the Majority of the modules
-#=============================================================================
+# =============================================================================
+
+
 def base_script_settings(kwargs):
-    #=========================================================================
+    # =========================================================================
     # Configure logger and Build kwargs
-    #=========================================================================
+    # =========================================================================
     script_name = (sys.argv[0].split(os.sep)[-1]).split('.')[0]
-    dest_dir    = f'{Path.home()}{os.sep}Logs'
-    dest_file   = script_name + '.log'
+    dest_dir = f'{Path.home()}{os.sep}Logs'
+    dest_file = script_name + '.log'
     Path(dest_dir).mkdir(parents=True, exist_ok=True)
     Path(os.path.join(dest_dir, dest_file)).touch(exist_ok=True)
     FORMAT = '%(asctime)-15s [%(levelname)s] [%(filename)s:%(lineno)s] %(message)s'
-    logging.basicConfig(filename=f'{dest_dir}{os.sep}{script_name}.log', filemode='a', format=FORMAT, level=logging.DEBUG )
+    logging.basicConfig(
+        filename=f'{dest_dir}{os.sep}{script_name}.log',
+        filemode='a',
+        format=FORMAT,
+        level=logging.DEBUG)
     logger = logging.getLogger('openapi')
-    #=========================================================================
+    # =========================================================================
     # Mirror all print()/pcolor output to the log file
-    #=========================================================================
+    # =========================================================================
     pcolor.init_log(os.path.join(dest_dir, dest_file))
-    #=========================================================================
+    # =========================================================================
     # Determine the Script Path
-    #=========================================================================
+    # =========================================================================
     args_dict = vars(kwargs.args)
-    for k,v in args_dict.items():
-        if type(v) == str and v != None: os.environ[k] = v
-    kwargs.script_name   = (sys.argv[0].split(os.sep)[-1]).split('.')[0]
-    kwargs.script_path   = os.path.dirname(os.path.realpath(sys.argv[0]))
-    kwargs.schema_path   = str(REPO_ROOT / 'schema')
-    kwargs.args.dir      = os.path.abspath(kwargs.args.dir)
-    kwargs.home          = Path.home()
-    kwargs.logger        = logger
-    kwargs.op_system     = platform.system()
+    for k, v in args_dict.items():
+        if isinstance(v, str) and v is not None:
+            os.environ[k] = v
+    kwargs.script_name = (sys.argv[0].split(os.sep)[-1]).split('.')[0]
+    kwargs.script_path = os.path.dirname(os.path.realpath(sys.argv[0]))
+    kwargs.schema_path = str(REPO_ROOT / 'schema')
+    kwargs.args.dir = os.path.abspath(kwargs.args.dir)
+    kwargs.home = Path.home()
+    kwargs.logger = logger
+    kwargs.op_system = platform.system()
     kwargs.imm_dict.orgs = DotMap()
-    kwargs.type_dotmap   = type(DotMap())
-    kwargs.type_none     = type(None)
-    #=========================================================================
+    kwargs.type_dotmap = type(DotMap())
+    kwargs.type_none = type(None)
+    # =========================================================================
     # Import Stored Parameters and Add to kwargs
-    #=========================================================================
+    # =========================================================================
     with open(os.path.join(kwargs.schema_path, 'cisco-ai-pods.json'), encoding='utf8') as f:
         ezdata = json.load(f)
     ezdata.pop('$ref')
-    with open(os.path.join(kwargs.schema_path, 'temp.json'), 'w') as f: json.dump(ezdata, f, indent=4)
-    ezdata = materialize(RefDict(os.path.join(kwargs.schema_path, 'temp.json'), 'r', encoding='utf8'))
+    with open(os.path.join(kwargs.schema_path, 'temp.json'), 'w') as f:
+        json.dump(ezdata, f, indent=4)
+    ezdata = materialize(
+        RefDict(
+            os.path.join(
+                kwargs.schema_path,
+                'temp.json'),
+            'r',
+            encoding='utf8'))
     if os.path.exists(os.path.join(kwargs.schema_path, 'temp.json')):
         os.remove(os.path.join(kwargs.schema_path, 'temp.json'))
-    script_tag      = script_name.replace('ez', 'easy-')
-    kwargs.ez_tags  = [{'key':'Provisioned via -','value':script_tag},{'key':f'{script_tag} version -','value':ezdata['version']}]
-    kwargs.ezdata   = DotMap(ezdata['definitions'])
+    script_tag = script_name.replace('ez', 'easy-')
+    kwargs.ez_tags = [{'key': 'Provisioned via -', 'value': script_tag},
+                      {'key': f'{script_tag} version -', 'value': ezdata['version']}]
+    kwargs.ezdata = DotMap(ezdata['definitions'])
     kwargs.ezwizard = DotMap(ezdata['wizard'])
     kwargs.intersight_object_map = DotMap()
-    for k,v in kwargs.ezdata.items():
+    for k, v in kwargs.ezdata.items():
         vkeys = list(v.keys())
         if 'intersight.' in k and 'object_type' in vkeys:
-            if re.search('^intersight\.(policies|pools|profiles|system|templates)\.', k):
-                ptype = re.search('^intersight\.([a-z_]+)\.', k).group(1)
+            if re.search(
+                '^intersight\\.(policies|pools|profiles|system|templates)\\.',
+                    k):
+                ptype = re.search('^intersight\\.([a-z_]+)\\.', k).group(1)
                 if not kwargs.intersight_object_map.get(v.object_type):
-                    kwargs.intersight_object_map[v.object_type] = k.replace(f'intersight.{ptype}.', '')
-                    kwargs.intersight_object_map[k.replace(f'intersight.{ptype}.', '')] = v.object_type
-    kwargs.intersight_object_map = DotMap(sorted(kwargs.intersight_object_map.toDict().items()))
-    #=========================================================================
+                    kwargs.intersight_object_map[v.object_type] = k.replace(
+                        f'intersight.{ptype}.', '')
+                    kwargs.intersight_object_map[k.replace(
+                        f'intersight.{ptype}.', '')] = v.object_type
+    kwargs.intersight_object_map = DotMap(
+        sorted(kwargs.intersight_object_map.toDict().items()))
+    # =========================================================================
     # Get Intersight Configuration
     # - apikey
     # - endpoint
     # - keyfile
-    #=========================================================================
+    # =========================================================================
     if kwargs.args.intersight_secret_key:
-        if '~' in kwargs.args.intersight_secret_key: kwargs.args.intersight_secret_key = os.path.expanduser(kwargs.args.intersight_secret_key)
-    if os.getenv('intersight_fqdn'): kwargs.args.intersight_fqdn = os.getenv('intersight_fqdn')
-    if kwargs.args.intersight_fqdn and 'api/v1/iam/Users' in kwargs.args.intersight_fqdn: kwargs.args.intersight_fqdn = ((kwargs.args.intersight_fqdn).replace('https://', '')).split('/')[0]
-    elif os.getenv('intersight_fqdn'): kwargs.args.intersight_fqdn = os.getenv('intersight_fqdn')
-    #=========================================================================
+        if '~' in kwargs.args.intersight_secret_key:
+            kwargs.args.intersight_secret_key = os.path.expanduser(
+                kwargs.args.intersight_secret_key)
+    if os.getenv('intersight_fqdn'):
+        kwargs.args.intersight_fqdn = os.getenv('intersight_fqdn')
+    if kwargs.args.intersight_fqdn and 'api/v1/iam/Users' in kwargs.args.intersight_fqdn:
+        kwargs.args.intersight_fqdn = (
+            (kwargs.args.intersight_fqdn).replace(
+                'https://', '')).split('/')[0]
+    elif os.getenv('intersight_fqdn'):
+        kwargs.args.intersight_fqdn = os.getenv('intersight_fqdn')
+    # =========================================================================
     # Check Folder Structure for Illegal Characters
-    #=========================================================================
+    # =========================================================================
     for folder in kwargs.args.dir.split(os.sep):
-        if folder == '': pass
+        if folder == '':
+            pass
         elif not re.search(r'^[\w\@\-\.\:\/\\]+$', folder):
             pcolor.Red(f'\n{"-"*108}\n\n  !!ERROR!!')
-            pcolor.Red(f'  The Directory structure can only contain the following characters:')
-            pcolor.Red(f'  letters(a-z, A-Z), numbers(0-9), hyphen(-), period(.), colon(:), and underscore(-).')
-            pcolor.Red(f'  It can be a short path or a fully qualified path.  `{folder}` does not qualify.')
+            pcolor.Red(
+                f'  The Directory structure can only contain the following characters:')
+            pcolor.Red(
+                f'  letters(a-z, A-Z), numbers(0-9), hyphen(-), period(.), colon(:), and underscore(-).')
+            pcolor.Red(
+                f'  It can be a short path or a fully qualified path.  `{folder}` does not qualify.')
             pcolor.Red(f'  Exiting...\n\n{"-"*108}\n')
             raise ValueError(f'Invalid directory component: {folder}')
     return kwargs
 
-#=========================================================================
+# =========================================================================
 # Function - Lookup Certificate and Private Key Files, Check for Validity, and Return Contents
-#=========================================================================
+# =========================================================================
+
+
 def cert_file_check(expected_type, file_path):
     # Expand ~ to home directory
     file_path = os.path.expanduser(file_path)
     if not isinstance(file_path, str) or len(file_path.strip()) == 0:
-        pcolor.Red(f'!!! ERROR !!! `{expected_type}` file path is empty for Intersight Secret Key.')
+        pcolor.Red(
+            f'!!! ERROR !!! `{expected_type}` file path is empty for Intersight Secret Key.')
         sys.exit(1)
     if not os.path.isfile(file_path):
-        pcolor.Red(f'!!! ERROR !!! `{expected_type}` file `{file_path}` was not found for Intersight Secret Key.')
+        pcolor.Red(
+            f'!!! ERROR !!! `{expected_type}` file `{file_path}` was not found for Intersight Secret Key.')
         sys.exit(1)
     try:
         with open(file_path, 'r', encoding='utf-8') as cert_file:
             cert_content = cert_file.read()
     except OSError as exc:
-        pcolor.Red(f'!!! ERROR !!! Failed to read `{expected_type}` file `{file_path}` for Intersight Secret Key: {exc}')
+        pcolor.Red(
+            f'!!! ERROR !!! Failed to read `{expected_type}` file `{file_path}` for Intersight Secret Key: {exc}')
         sys.exit(1)
 
     if 'PRIVATE KEY' in cert_content:
         try:
             crypto.load_privatekey(crypto.FILETYPE_PEM, cert_content)
         except Exception as exc:
-            pcolor.Red(f'!!! ERROR !!! `{file_path}` is not a valid PEM private key: {exc}')
+            pcolor.Red(
+                f'!!! ERROR !!! `{file_path}` is not a valid PEM private key: {exc}')
             sys.exit(1)
         detected_type = 'private_key'
     else:
-        pcolor.Red(f'!!! ERROR !!! `{file_path}` is not a valid private key file.')
+        pcolor.Red(
+            f'!!! ERROR !!! `{file_path}` is not a valid private key file.')
         sys.exit(1)
     if detected_type != expected_type:
-        pcolor.Red(f'!!! ERROR !!! `{file_path}` contains a `{detected_type}` but `{expected_type}` was expected.')
+        pcolor.Red(
+            f'!!! ERROR !!! `{file_path}` contains a `{detected_type}` but `{expected_type}` was expected.')
         sys.exit(1)
 
 
-#=============================================================================
+# =============================================================================
 # Function - Prompt User for the Intersight Configurtion
-#=============================================================================
+# =============================================================================
 def intersight_config(kwargs):
-    #=========================================================================
+    # =========================================================================
     # Prompt User for Intersight API Key
-    #=========================================================================
-    if '~' in kwargs.args.intersight_secret_key: kwargs.args.intersight_secret_key = os.path.expanduser(kwargs.args.intersight_secret_key)
-    cert_file_check(expected_type='private_key', file_path=kwargs.args.intersight_secret_key)
-    #=========================================================================
+    # =========================================================================
+    if '~' in kwargs.args.intersight_secret_key:
+        kwargs.args.intersight_secret_key = os.path.expanduser(
+            kwargs.args.intersight_secret_key)
+    cert_file_check(expected_type='private_key',
+                    file_path=kwargs.args.intersight_secret_key)
+    # =========================================================================
     # Prompt User for Intersight FQDN
-    #=========================================================================
+    # =========================================================================
     non_interactive = bool(getattr(kwargs.args, 'non_interactive', False))
-    loaded_fqdn = kwargs.get('intersight', DotMap()).get('script_settings', DotMap()).get('intersight_fqdn')
+    loaded_fqdn = kwargs.get(
+        'intersight',
+        DotMap()).get(
+        'script_settings',
+        DotMap()).get('intersight_fqdn')
     if (not kwargs.args.intersight_fqdn) and loaded_fqdn:
         kwargs.args.intersight_fqdn = loaded_fqdn
     if kwargs.args.intersight_fqdn and 'api/v1/iam/Users' in kwargs.args.intersight_fqdn:
-        kwargs.args.intersight_fqdn = ((kwargs.args.intersight_fqdn).replace('https://', '')).split('/')[0]
+        kwargs.args.intersight_fqdn = (
+            (kwargs.args.intersight_fqdn).replace(
+                'https://', '')).split('/')[0]
 
     valid = False
     while valid == False:
@@ -185,39 +245,54 @@ def intersight_config(kwargs):
         valid = False
         if varValue is not None:
             varName = 'Intersight FQDN'
-            if re.search(r'^[a-zA-Z0-9]{1,4}:', varValue): valid = validating.ip_address(varName, varValue)
-            elif re.search(r'[a-zA-Z]', varValue): valid = validating.dns_name(varName, varValue)
-            elif re.search(r'^([0-9]{1,3}\.){3}[0-9]{1,3}$', varValue): valid = validating.ip_address(varName, varValue)
-            else: pcolor.Red(f'\n{"-"*108}\n\n  "{varValue}" is not a valid address.\n\n{"-"*108}\n')
-        if valid == False:
+            if re.search(r'^[a-zA-Z0-9]{1,4}:', varValue):
+                valid = validating.ip_address(varName, varValue)
+            elif re.search(r'[a-zA-Z]', varValue):
+                valid = validating.dns_name(varName, varValue)
+            elif re.search(r'^([0-9]{1,3}\.){3}[0-9]{1,3}$', varValue):
+                valid = validating.ip_address(varName, varValue)
+            else:
+                pcolor.Red(
+                    f'\n{"-"*108}\n\n  "{varValue}" is not a valid address.\n\n{"-"*108}\n')
+        if not valid:
             if non_interactive:
-                pcolor.Red('!!! ERROR !!! Non-interactive mode requires a valid Intersight FQDN/IP via CLI/env or loaded variables.')
-                pcolor.Red('  Expected: --intersight-fqdn or env `intersight_fqdn` or `intersight.script_settings.intersight_fqdn` in loaded config.')
+                pcolor.Red(
+                    '!!! ERROR !!! Non-interactive mode requires a valid Intersight FQDN/IP via CLI/env or loaded variables.')
+                pcolor.Red(
+                    '  Expected: --intersight-fqdn or env `intersight_fqdn` or `intersight.script_settings.intersight_fqdn` in loaded config.')
                 sys.exit(1)
             kwargs.jdata = kwargs.ezdata['abstract.hostname_ip_or_ipv6']
-            kwargs.jdata.update(DotMap(
-                description = 'Hostname of the Intersight Fully Qualified Domain Name (FQDN) or IP Address.',
-                default = kwargs.args.intersight_fqdn or 'intersight.com', title = 'Intersight FQDN/IP'
-            ))
+            kwargs.jdata.update(
+                DotMap(
+                    description='Hostname of the Intersight Fully Qualified Domain Name (FQDN) or IP Address.',
+                    default=kwargs.args.intersight_fqdn or 'intersight.com',
+                    title='Intersight FQDN/IP'))
             kwargs.args.intersight_fqdn = variable_prompt(kwargs)
     kwargs.args.url = 'https://%s' % (kwargs.args.intersight_fqdn)
     # Return kwargs
     return kwargs
 
-#=============================================================================
+# =============================================================================
 # Function - Load Previous YAML Files
-#=============================================================================
+# =============================================================================
+
+
 def load_configurations(kwargs):
     def normalize_value(value):
         if isinstance(value, dict):
-            return DotMap({key: normalize_value(item) for key, item in value.items()})
+            return DotMap({key: normalize_value(item)
+                          for key, item in value.items()})
         if isinstance(value, list):
             return [normalize_value(item) for item in value]
         return deepcopy(value)
 
     def deep_merge_dicts(dest, src):
         for key, value in src.items():
-            if key in dest and isinstance(dest[key], dict) and isinstance(value, dict):
+            if key in dest and isinstance(
+                    dest[key],
+                    dict) and isinstance(
+                    value,
+                    dict):
                 deep_merge_dicts(dest[key], value)
             elif key in dest and isinstance(dest[key], list) and isinstance(value, list):
                 dest[key].extend(normalize_value(value))
@@ -247,41 +322,66 @@ def load_configurations(kwargs):
             data = yaml.safe_load(yfile)
         if not data or not isinstance(data, dict):
             continue
-        for top_key in ['intersight', 'openshift', 'everpure', 'shared_services']:
+        for top_key in [
+            'intersight',
+            'openshift',
+            'everpure',
+                'shared_services']:
             if data.get(top_key) and isinstance(data[top_key], dict):
                 deep_merge_dicts(kwargs[top_key], data[top_key])
 
-    # Backward compatibility for existing workflows that consume kwargs.imm_dict.orgs.
-    if kwargs.intersight.get('config') and isinstance(kwargs.intersight.config, dict):
+    # Backward compatibility for existing workflows that consume
+    # kwargs.imm_dict.orgs.
+    if kwargs.intersight.get('config') and isinstance(
+            kwargs.intersight.config, dict):
         if not kwargs.imm_dict.get('orgs'):
             kwargs.imm_dict.orgs = DotMap()
         deep_merge_dicts(kwargs.imm_dict.orgs, kwargs.intersight.config)
-    if kwargs.intersight.get('configure') and isinstance(kwargs.intersight.configure, dict):
+    if kwargs.intersight.get('configure') and isinstance(
+            kwargs.intersight.configure, dict):
         if not kwargs.imm_dict.get('orgs'):
             kwargs.imm_dict.orgs = DotMap()
         deep_merge_dicts(kwargs.imm_dict.orgs, kwargs.intersight.configure)
-    if kwargs.intersight.get('system') and isinstance(kwargs.intersight.system, dict):
+    if kwargs.intersight.get('system') and isinstance(
+            kwargs.intersight.system, dict):
         if not kwargs.imm_dict.get('system'):
             kwargs.imm_dict.system = DotMap()
         deep_merge_dicts(kwargs.imm_dict.system, kwargs.intersight.system)
-    # Validate required sensitive environment variables referenced by the loaded model.
+    # Validate required sensitive environment variables referenced by the
+    # loaded model.
     try:
-        validator_path = os.path.join(kwargs.script_path, 'src', 'validate_sensitive_variables.py')
+        validator_path = os.path.join(
+            kwargs.script_path,
+            'src',
+            'validate_sensitive_variables.py')
         module_name = 'validate_sensitive_variables'
-        spec = importlib.util.spec_from_file_location(module_name, validator_path)
+        spec = importlib.util.spec_from_file_location(
+            module_name, validator_path)
         if spec is None or spec.loader is None:
-            raise ImportError(f'Unable to load module spec from {validator_path}')
+            raise ImportError(
+                f'Unable to load module spec from {validator_path}')
         validator = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(validator)
         model = {
-            'intersight': kwargs.intersight.toDict() if hasattr(kwargs.intersight, 'toDict') else kwargs.intersight,
-            'openshift': kwargs.openshift.toDict() if hasattr(kwargs.openshift, 'toDict') else kwargs.openshift,
-            'everpure': kwargs.everpure.toDict() if hasattr(kwargs.everpure, 'toDict') else kwargs.everpure,
+            'intersight': kwargs.intersight.toDict() if hasattr(
+                kwargs.intersight,
+                'toDict') else kwargs.intersight,
+            'openshift': kwargs.openshift.toDict() if hasattr(
+                kwargs.openshift,
+                'toDict') else kwargs.openshift,
+            'everpure': kwargs.everpure.toDict() if hasattr(
+                kwargs.everpure,
+                'toDict') else kwargs.everpure,
         }
-        schema_path = Path(os.path.join(kwargs.schema_path, 'cisco-ai-pods.json'))
-        success, missing_vars, error_messages, sensitive_vars = validator.validate_all_sensitive_variables(model, schema_path)
+        schema_path = Path(
+            os.path.join(
+                kwargs.schema_path,
+                'cisco-ai-pods.json'))
+        success, missing_vars, error_messages, sensitive_vars = validator.validate_all_sensitive_variables(
+            model, schema_path)
         if not success:
-            pcolor.Red(f'\n!!! ERROR !!! Missing {len(missing_vars)} sensitive environment variable(s).')
+            pcolor.Red(
+                f'\n!!! ERROR !!! Missing {len(missing_vars)} sensitive environment variable(s).')
             for message in error_messages:
                 # Preserve per-line formatting/colors from validator output.
                 print(message, file=sys.stderr)
@@ -289,163 +389,239 @@ def load_configurations(kwargs):
         else:
             kwargs.sensitive_vars = DotMap(sensitive_vars)
     except Exception as error:
-        pcolor.Red(f'\n!!! ERROR !!! validate_sensitive_variables failed during load_configurations: {error}')
+        pcolor.Red(
+            f'\n!!! ERROR !!! validate_sensitive_variables failed during load_configurations: {error}')
         pcolor.Red(f'shared_functions.py line 893')
         raise
 
     # Return kwargs
     return kwargs
 
-#=============================================================================
+# =============================================================================
 # Function - Prompt for Answer to Question from List
-#=============================================================================
+# =============================================================================
+
+
 def variable_from_list(kwargs):
-    #=========================================================================
+    # =========================================================================
     # Set Function Variables
-    #=========================================================================
-    default     = kwargs.jdata.default
+    # =========================================================================
+    default = kwargs.jdata.default
     description = kwargs.jdata.description
-    optional    = False
-    title       = kwargs.jdata.title
-    if not kwargs.jdata.get('multi_select'): kwargs.jdata.multi_select = False
-    #=========================================================================
+    optional = False
+    title = kwargs.jdata.title
+    if not kwargs.jdata.get('multi_select'):
+        kwargs.jdata.multi_select = False
+    # =========================================================================
     # Sort the Variables
-    #=========================================================================
-    if kwargs.jdata.get('sort') == False: vars = kwargs.jdata.enum
-    else: vars = sorted(kwargs.jdata.enum, key=str.casefold)
+    # =========================================================================
+    if kwargs.jdata.get('sort') == False:
+        vars = kwargs.jdata.enum
+    else:
+        vars = sorted(kwargs.jdata.enum, key=str.casefold)
     valid = False
     while valid == False:
         pcolor.LightPurple(f'\n{"-"*108}\n')
         if '\n' in description:
             description = description.split('\n')
-            for line in description: pcolor.LightGray(line)
-        else: pcolor.LightGray(description)
-        if kwargs.jdata.get('multi_select') == True:
-            pcolor.Yellow('\n     Note: Answer can be:\n       * Single: 1\n       * Multiple: `1,2,3` or `1-3,5-6`')
-        if kwargs.jdata.get('multi_select') == True: pcolor.Yellow(f'    Select Option(s) Below:')
-        else: pcolor.Yellow(f'\n    Select an Option Below:')
+            for line in description:
+                pcolor.LightGray(line)
+        else:
+            pcolor.LightGray(description)
+        if kwargs.jdata.get('multi_select'):
+            pcolor.Yellow(
+                '\n     Note: Answer can be:\n       * Single: 1\n       * Multiple: `1,2,3` or `1-3,5-6`')
+        if kwargs.jdata.get('multi_select'):
+            pcolor.Yellow(f'    Select Option(s) Below:')
+        else:
+            pcolor.Yellow(f'\n    Select an Option Below:')
         for index, value in enumerate(vars):
             index += 1
-            if value == default: default_index = index
-            if   index < 10:  pcolor.Cyan(f'      {index}. {value}')
-            elif index < 100: pcolor.Cyan(f'     {index}. {value}')
-            elif index > 99:  pcolor.Cyan(f'    {index}. {value}')
-        if kwargs.jdata.get('multi_select') == True:
-            if kwargs.jdata.get('optional') == True:
+            if value == default:
+                default_index = index
+            if index < 10:
+                pcolor.Cyan(f'      {index}. {value}')
+            elif index < 100:
+                pcolor.Cyan(f'     {index}. {value}')
+            elif index > 99:
+                pcolor.Cyan(f'    {index}. {value}')
+        if kwargs.jdata.get('multi_select'):
+            if kwargs.jdata.get('optional'):
                 optional = True
-                var_selection   = input(f'\nPlease Enter the Option Number(s) to select for {title}.  [press enter to skip]: ')
+                var_selection = input(
+                    f'\nPlease Enter the Option Number(s) to select for {title}.  [press enter to skip]: ')
             elif not default == '':
-                var_selection   = input(f'\nPlease Enter the Option Number(s) to select for {title}.  [{default_index}]: ')
-            else: var_selection = input(f'\nPlease Enter the Option Number(s) to select for {title}: ')
+                var_selection = input(
+                    f'\nPlease Enter the Option Number(s) to select for {title}.  [{default_index}]: ')
+            else:
+                var_selection = input(
+                    f'\nPlease Enter the Option Number(s) to select for {title}: ')
         else:
-            if kwargs.jdata.get('optional') == True:
+            if kwargs.jdata.get('optional'):
                 optional = True
-                var_selection   = input(f'\nPlease Enter the Option Number to select for {title}.  [press enter to skip]: ')
+                var_selection = input(
+                    f'\nPlease Enter the Option Number to select for {title}.  [press enter to skip]: ')
             elif not default == '':
-                var_selection   = input(f'\nPlease Enter the Option Number to select for {title}.  [{default_index}]: ')
-            else: var_selection = input(f'\nPlease Enter the Option Number to select for {title}: ')
-        if   kwargs.jdata.get('optional') == True and var_selection == '' and kwargs.jdata.multi_select == False: return '', True
-        elif kwargs.jdata.get('optional') == True and var_selection == '' and kwargs.jdata.multi_select == True:  return [], True
+                var_selection = input(
+                    f'\nPlease Enter the Option Number to select for {title}.  [{default_index}]: ')
+            else:
+                var_selection = input(
+                    f'\nPlease Enter the Option Number to select for {title}: ')
+        if kwargs.jdata.get(
+                'optional') and var_selection == '' and kwargs.jdata.multi_select == False:
+            return '', True
+        elif kwargs.jdata.get('optional') and var_selection == '' and kwargs.jdata.multi_select:
+            return [], True
         elif not default == '' and var_selection == '':
             var_selection = default_index
-        if kwargs.jdata.multi_select == False and re.search(r'^[0-9]+$', str(var_selection)):
+        if kwargs.jdata.multi_select == False and re.search(
+                r'^[0-9]+$', str(var_selection)):
             for index, value in enumerate(vars):
                 index += 1
-                if int(var_selection) == index: selection = value; valid = True
-        elif kwargs.jdata.multi_select == True and re.search(r'(^[0-9]+$|^[0-9\-,]+[0-9]$)', str(var_selection)):
-            if kwargs.jdata.keep_order == True:
+                if int(var_selection) == index:
+                    selection = value
+                    valid = True
+        elif kwargs.jdata.multi_select and re.search(r'(^[0-9]+$|^[0-9\-,]+[0-9]$)', str(var_selection)):
+            if kwargs.jdata.keep_order:
                 var_list = var_selection.split(',')
                 kwargs.selection_list = var_list
-            else: var_list = vlan_list_full(var_selection)
+            else:
+                var_list = vlan_list_full(var_selection)
             var_length = int(len(var_list))
-            var_count  = 0
-            selection  = []
+            var_count = 0
+            selection = []
             for index, value in enumerate(vars):
                 index += 1
                 for vars in var_list:
-                    if int(vars) == index: var_count += 1; selection.append(value)
-            if var_count == var_length: valid = True
-            else: pcolor.Red(f'\n{"-"*108}\n\n  The list of Vars {var_list} did not match the available list.\n\n{"-"*108}\n')
-        if valid == False: notifications.message_invalid_selection()
+                    if int(vars) == index:
+                        var_count += 1
+                        selection.append(value)
+            if var_count == var_length:
+                valid = True
+            else:
+                pcolor.Red(
+                    f'\n{"-"*108}\n\n  The list of Vars {var_list} did not match the available list.\n\n{"-"*108}\n')
+        if not valid:
+            notifications.message_invalid_selection()
     return selection, valid
 
-#=============================================================================
+# =============================================================================
 # Function - Prompt User for Answer to Question
-#=============================================================================
+# =============================================================================
+
+
 def variable_prompt(kwargs):
-    #=========================================================================
+    # =========================================================================
     # Improper Value Notifications
-    #=========================================================================
+    # =========================================================================
     def invalid_boolean(title, answer):
-        pcolor.Red(f'\n{"-"*108}\n   `{title}` value of `{answer}` is Invalid!!! Please enter `Y` or `N`.\n{"-"*108}\n')
+        pcolor.Red(
+            f'\n{"-"*108}\n   `{title}` value of `{answer}` is Invalid!!! Please enter `Y` or `N`.\n{"-"*108}\n')
+
     def invalid_integer(title, answer):
-        pcolor.Red(f'\n{"-"*108}\n   `{title}` value of `{answer}` is Invalid!!!  Valid range is `{minimum}-{maximum}`.\n{"-"*108}\n')
+        pcolor.Red(
+            f'\n{"-"*108}\n   `{title}` value of `{answer}` is Invalid!!!  Valid range is `{minimum}-{maximum}`.\n{"-"*108}\n')
+
     def invalid_string(title, answer):
-        pcolor.Red(f'\n{"-"*108}\n   `{title}` value of `{answer}` is Invalid!!!\n{"-"*108}\n')
-    #=========================================================================
+        pcolor.Red(
+            f'\n{"-"*108}\n   `{title}` value of `{answer}` is Invalid!!!\n{"-"*108}\n')
+    # =========================================================================
     # Set Function Variables
-    #=========================================================================
-    default     = kwargs.jdata.default
+    # =========================================================================
+    default = kwargs.jdata.default
     description = kwargs.jdata.description
-    optional    = False
-    title       = kwargs.jdata.title
-    #=========================================================================
+    optional = False
+    title = kwargs.jdata.title
+    # =========================================================================
     # Print `description` if not enum
-    #=========================================================================
-    if not kwargs.jdata.get('enum'): pcolor.LightPurple(f'\n{"-"*108}\n'); pcolor.LightGray(f'{description}\n')
-    #=========================================================================
+    # =========================================================================
+    if not kwargs.jdata.get('enum'):
+        pcolor.LightPurple(f'\n{"-"*108}\n')
+        pcolor.LightGray(f'{description}\n')
+    # =========================================================================
     # Prompt User for Answer
-    #=========================================================================
+    # =========================================================================
     valid = False
     while valid == False:
-        if kwargs.jdata.get('enum'):  answer, valid = variable_from_list(kwargs)
+        if kwargs.jdata.get('enum'):
+            answer, valid = variable_from_list(kwargs)
         elif kwargs.jdata.type == 'boolean':
-            if default == True: default = 'Y'
-            else: default = 'N'
-            answer = input(f'\nEnter `Y` for `True` or `N` for `False` for `{title}`. [{default}]: ')
+            if default:
+                default = 'Y'
+            else:
+                default = 'N'
+            answer = input(
+                f'\nEnter `Y` for `True` or `N` for `False` for `{title}`. [{default}]: ')
             if answer == '':
-                if default == 'Y': answer = True
-                elif default == 'N': answer = False
+                if default == 'Y':
+                    answer = True
+                elif default == 'N':
+                    answer = False
                 valid = True
-            elif answer == 'N': answer = False; valid = True
-            elif answer == 'Y': answer = True;  valid = True
-            else: invalid_boolean(title, answer)
+            elif answer == 'N':
+                answer = False
+                valid = True
+            elif answer == 'Y':
+                answer = True
+                valid = True
+            else:
+                invalid_boolean(title, answer)
         elif kwargs.jdata.type == 'integer':
             maximum = kwargs.jdata.maximum
             minimum = kwargs.jdata.minimum
-            if kwargs.jdata.get('optional') == True:
+            if kwargs.jdata.get('optional'):
                 optional = True
-                answer = input(f'Enter the value for {title} [press enter to skip]: ')
-            else: answer = input(f'Enter the Value for {title}. [{default}]: ')
-            if optional == True and answer == '': valid = True
-            elif answer == '': answer = default
-            if optional == False:
+                answer = input(
+                    f'Enter the value for {title} [press enter to skip]: ')
+            else:
+                answer = input(f'Enter the Value for {title}. [{default}]: ')
+            if optional and answer == '':
+                valid = True
+            elif answer == '':
+                answer = default
+            if not optional:
                 if re.fullmatch(r'^[0-9]+$', str(answer)):
                     if kwargs.jdata.title == 'snmp_port':
-                        valid = notifications.snmp_port(title, answer, minimum, maximum)
-                    else: valid = notifications.number_in_range(title, answer, minimum, maximum)
-                else: invalid_integer(title, answer)
+                        valid = notifications.snmp_port(
+                            title, answer, minimum, maximum)
+                    else:
+                        valid = notifications.number_in_range(
+                            title, answer, minimum, maximum)
+                else:
+                    invalid_integer(title, answer)
         elif kwargs.jdata.type == 'string':
-            if kwargs.jdata.get('optional') == True:
+            if kwargs.jdata.get('optional'):
                 optional = True
-                answer = input(f'Enter the value for {title} [press enter to skip]: ')
-            elif not default == '': answer = input(f'Enter the value for {title} [{default}]: ')
-            else: answer = input(f'Enter the value for {title}: ')
-            if optional == True and answer == '': valid = True
-            elif answer == '': answer = default; valid = True
+                answer = input(
+                    f'Enter the value for {title} [press enter to skip]: ')
+            elif not default == '':
+                answer = input(f'Enter the value for {title} [{default}]: ')
+            else:
+                answer = input(f'Enter the value for {title}: ')
+            if optional and answer == '':
+                valid = True
+            elif answer == '':
+                answer = default
+                valid = True
             elif not answer == '':
                 maxLength = kwargs.jdata.maxLength
                 minLength = kwargs.jdata.minLength
-                pattern   = kwargs.jdata.pattern
-                valid = notifications.length_and_regex(answer, minLength, maxLength, pattern, title)
-        else: invalid_string(title, answer)
-    if kwargs.jdata.get('optional'): kwargs.jdata.pop('optional')
-    if kwargs.jdata.get('multi_select'): kwargs.jdata.pop('multi_select')
+                pattern = kwargs.jdata.pattern
+                valid = notifications.length_and_regex(
+                    answer, minLength, maxLength, pattern, title)
+        else:
+            invalid_string(title, answer)
+    if kwargs.jdata.get('optional'):
+        kwargs.jdata.pop('optional')
+    if kwargs.jdata.get('multi_select'):
+        kwargs.jdata.pop('multi_select')
     return answer
 
-#=============================================================================
+# =============================================================================
 # Function - Collapse VLAN List
-#=============================================================================
+# =============================================================================
+
+
 def vlan_list_format(vlan_list_expanded):
     if not vlan_list_expanded:
         return ''
@@ -457,16 +633,24 @@ def vlan_list_format(vlan_list_expanded):
 
     for vlan_id in vlan_list:
         if vlan_id < 1 or vlan_id > 4094:
-            raise ValueError(f'VLAN ID `{vlan_id}` is out of valid range (1-4094)')
+            raise ValueError(
+                f'VLAN ID `{vlan_id}` is out of valid range (1-4094)')
 
-    vgroups = itertools.groupby(vlan_list, key=lambda item, c=itertools.count(): item - next(c))
+    vgroups = itertools.groupby(
+        vlan_list,
+        key=lambda item,
+        c=itertools.count(): item -
+        next(c))
     tempvlans = [list(g) for _, g in vgroups]
-    vlan_list = [str(x[0]) if len(x) == 1 else f'{x[0]}-{x[-1]}' for x in tempvlans]
+    vlan_list = [str(x[0]) if len(
+        x) == 1 else f'{x[0]}-{x[-1]}' for x in tempvlans]
     return ','.join(vlan_list)
 
-#=============================================================================
+# =============================================================================
 # Function - Expand VLAN List
-#=============================================================================
+# =============================================================================
+
+
 def vlan_list_full(vlan_list):
     full_vlan_list = []
     try:
@@ -479,7 +663,8 @@ def vlan_list_full(vlan_list):
                 a = int(a_str.strip())
                 b = int(b_str.strip())
                 if a > b:
-                    raise ValueError(f'Invalid VLAN range `{token}`: start must be <= end')
+                    raise ValueError(
+                        f'Invalid VLAN range `{token}`: start must be <= end')
                 for vlan_id in range(a, b + 1):
                     full_vlan_list.append(vlan_id)
             else:
@@ -489,7 +674,8 @@ def vlan_list_full(vlan_list):
 
     for vlan_id in full_vlan_list:
         if vlan_id < 1 or vlan_id > 4094:
-            raise ValueError(f'VLAN ID `{vlan_id}` is out of valid range (1-4094)')
+            raise ValueError(
+                f'VLAN ID `{vlan_id}` is out of valid range (1-4094)')
 
     # Remove duplicates while preserving insertion order.
     return list(dict.fromkeys(full_vlan_list))

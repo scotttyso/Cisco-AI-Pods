@@ -12,7 +12,9 @@
 
 ## Overview
 
-This directory contains comprehensive documentation and automation for integrating Splunk Observability Cloud with Cisco AI Pods infrastructure. Splunk Observability provides comprehensive visibility into the entire AI infrastructure stack, from compute and storage through applications running on OpenShift.
+This module provides comprehensive documentation and automation for integrating Splunk Observability Cloud with Cisco AI Pods infrastructure. Splunk Observability provides comprehensive visibility into the entire AI infrastructure stack, from compute and storage through applications running on OpenShift.
+
+Role-level reference: [roles/splunk_observability/README.md](../roles/splunk_observability/README.md)
 
 Cisco's AI-ready PODs combine the best of hardware and software technologies to create a robust, scalable, and efficient AI-ready infrastructure tailored to diverse needs.
 
@@ -89,11 +91,19 @@ ansible-galaxy collection install -r requirements.yaml
 
 ### Step 2: Prepare Variables
 
-1. Edit your active variables file:
+1. Edit your active variables file in Visual Studio Code:
 
 ```bash
-vi host_vars/splunk_observability/splunk_observability.ezai.yaml
+code host_vars/splunk_observability/splunk_observability.ezai.yaml
 ```
+
+Before editing, complete the Visual Studio Code setup and YAML schema steps:
+
+- [Prepare the Environment](guide_prepare_the_environment.md)
+- [Install Visual Studio Code Extensions](guide_prepare_the_environment.md#install-visual-studio-code-extensions)
+- [YAML Schema for auto-completion, Help, and Error Validation](guide_prepare_the_environment.md#yaml-schema-for-auto-completion-help-and-error-validation)
+
+Important: install the Red Hat YAML extension so schema validation catches invalid `.ezai.yaml` input before playbook execution.
 
 2. Configure your environment:
    - Cluster name
@@ -107,11 +117,13 @@ vi host_vars/splunk_observability/splunk_observability.ezai.yaml
 Set the required environment variables and run the playbook from the repository root:
 
 ```bash
-export openshift_token_id="<your-openshift-token>"
-export openshift_api_url="<your-openshift-api-url>"
-export splunk_observability_token="<your-splunk-observability-access-token>"
-export splunk_platform_token="<your-splunk-platform-hec-token>"
-export nexus_device_password="<your-nexus-device-password>"
+export intersight_api_key_id="<your_intersight_api_key_id>"
+export intersight_secret_key="<path_to_your_intersight_secret>"
+export nexus_device_password="<your_nexus_device_password>"
+export openshift_token_id="<your_openshift_token>"
+export openshift_api_url="<your_openshift_api_url>"
+export splunk_observability_token="<your_splunk_observability_access_token>"
+export splunk_platform_token="<your_splunk_platform_hec_token>"
 
 ansible-playbook playbooks/deploy_observability.yaml
 ```
@@ -123,11 +135,13 @@ ansible-playbook playbooks/deploy_ai_pod.yaml
 ```
 
 **Required Environment Variables:**
+- `intersight_api_key_id` - Intersight API Key ID (required if Intersight integration is enabled)
+- `intersight_secret_key` - Intersight API Secret Key (required if Intersight integration is enabled)
 - `openshift_token_id` - OpenShift API authentication token
 - `openshift_api_url` - OpenShift API server URL (e.g., https://api.cluster.example.com:6443)
+- `nexus_device_password` - Password for Nexus switch authentication (required if Nexus integration is enabled)
 - `splunk_observability_token` - Splunk Observability Cloud access token for authentication
 - `splunk_platform_token` - Splunk Platform HEC (HTTP Event Collector) token for log ingestion
-- `nexus_device_password` - Password for Nexus switch authentication (required if Nexus integration is enabled)
 
 ### [<ins>Back to Table of Contents<ins>](#table-of-contents)
 

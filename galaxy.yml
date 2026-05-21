@@ -13,7 +13,6 @@ description: >-
   integration for AI inferencing workloads.
 license:
   - Apache-2.0
-license_file: LICENSE.txt
 tags:
   - cisco
   - ai

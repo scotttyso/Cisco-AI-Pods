@@ -1,9 +1,10 @@
-#=============================================================================
+# =============================================================================
 # Source Modules
-#=============================================================================
-def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
+# =============================================================================
 import sys
 from pathlib import Path
+def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
+
 
 SCRIPT_PATH = Path(__file__).resolve().parent
 CLASSES_PATH = SCRIPT_PATH / 'src'
@@ -20,7 +21,14 @@ try:
     from roles.intersight_ucs_provision.library.src import notifications, pcolor
     from copy import deepcopy
     from dotmap import DotMap
-    import inspect, jinja2, json, os, re, requests, time, urllib3
+    import inspect
+    import jinja2
+    import json
+    import os
+    import re
+    import requests
+    import time
+    import urllib3
 except ImportError as e:
     prRed(f'src/bmc.py - !!! ERROR !!!\n{e.__class__.__name__}')
     prRed(f" Module {e.name} is required to run this script")
@@ -36,39 +44,50 @@ print_response_on_fail = True
 # Log levels 0 = None, 1 = Class only, 2 = Line
 log_level = 2
 
-#=============================================================================
+# =============================================================================
 # Configure C885A BMC Settings
-#=============================================================================
+# =============================================================================
+
+
 class api(object):
     def __init__(self, category=None, type=None):
         self.category = category
         self.type = type
 
-    #=========================================================================
+    # =========================================================================
     # Function - API Authentication
-    #=========================================================================
+    # =========================================================================
     @staticmethod
     def auth(kwargs):
-        url      = f"https://{kwargs.hostname}"
+        url = f"https://{kwargs.hostname}"
         s = requests.Session()
         s.auth = (kwargs.username, kwargs.password)
         auth = ''
         while auth == '':
-            try: auth = s.post(url, verify=False)
+            try:
+                auth = s.post(url, verify=False)
             except requests.exceptions.ConnectionError as e:
-                pcolor.Red("Connection error, pausing before retrying. Error: %s" % (e))
+                pcolor.Red(
+                    "Connection error, pausing before retrying. Error: %s" %
+                    (e))
                 time.sleep(5)
             except Exception as e:
                 pcolor.Red(f'{url}')
-                pcolor.Red(f"!!! ERROR !!! Method {(inspect.currentframe().f_code.co_name).upper()} Failed. Exception: {e}\n")
+                pcolor.Red(
+                    f"!!! ERROR !!! Method {(inspect.currentframe().f_code.co_name).upper()} Failed. Exception: {e}\n")
                 raise
         return s, url
 
-    #=========================================================================
+    # =========================================================================
     # Function - API Request Wrapper
-    #=========================================================================
+    # =========================================================================
     @staticmethod
-    def _request(method, kwargs, ok_statuses, payload_mode=None, allow_empty=False):
+    def _request(
+            method,
+            kwargs,
+            ok_statuses,
+            payload_mode=None,
+            allow_empty=False):
         s, url = api.auth(kwargs)
         r = ''
         while r == '':
@@ -83,10 +102,12 @@ class api(object):
                 r = getattr(s, method)(full_url, **req_kwargs)
 
                 if print_response_always:
-                    pcolor.Purple(f"     * {method}: {r.status_code} success with {kwargs.uri}")
+                    pcolor.Purple(
+                        f"     * {method}: {r.status_code} success with {kwargs.uri}")
 
                 if r.status_code not in ok_statuses:
-                    notifications.error_requests(method, r.status_code, r.text, kwargs.uri)
+                    notifications.error_requests(
+                        method, r.status_code, r.text, kwargs.uri)
 
                 if r.status_code == 204:
                     return {}
@@ -94,57 +115,95 @@ class api(object):
                     return {}
                 return r.json()
             except requests.exceptions.ConnectionError as e:
-                pcolor.Red(f"Connection error, pausing before retrying. Error: {e}")
+                pcolor.Red(
+                    f"Connection error, pausing before retrying. Error: {e}")
                 time.sleep(5)
             except Exception as e:
                 pcolor.Red(f'{url}/{kwargs.uri}')
-                pcolor.Red(f"!!! ERROR !!! Method {method.upper()} Failed. Exception: {e}\n")
+                pcolor.Red(
+                    f"!!! ERROR !!! Method {method.upper()} Failed. Exception: {e}\n")
                 raise
 
-    #=========================================================================
+    # =========================================================================
     # Function - API - GET
-    #=========================================================================
+    # =========================================================================
     @staticmethod
     def get(kwargs):
         return api._request('get', kwargs, ok_statuses={200, 404})
 
-    #=========================================================================
+    # =========================================================================
     # Function - API - PATCH
-    #=========================================================================
+    # =========================================================================
     @staticmethod
     def patch(kwargs):
-        return api._request('patch', kwargs, ok_statuses={200, 201, 202, 203, 204}, payload_mode='json', allow_empty=True)
+        return api._request(
+            'patch',
+            kwargs,
+            ok_statuses={
+                200,
+                201,
+                202,
+                203,
+                204},
+            payload_mode='json',
+            allow_empty=True)
 
-    #=========================================================================
+    # =========================================================================
     # Function - API - POST
-    #=========================================================================
+    # =========================================================================
     @staticmethod
     def post(kwargs):
-        return api._request('post', kwargs, ok_statuses={200, 201, 202, 203, 204}, payload_mode='data')
+        return api._request(
+            'post',
+            kwargs,
+            ok_statuses={
+                200,
+                201,
+                202,
+                203,
+                204},
+            payload_mode='data')
 
-    #=========================================================================
+    # =========================================================================
     # Function - API - PUT
-    #=========================================================================
+    # =========================================================================
     @staticmethod
     def put(kwargs):
-        return api._request('put', kwargs, ok_statuses={200, 201, 202, 203, 204}, payload_mode='json')
+        return api._request(
+            'put',
+            kwargs,
+            ok_statuses={
+                200,
+                201,
+                202,
+                203,
+                204},
+            payload_mode='json')
 
-#=============================================================================
+# =============================================================================
 # Configure C885A BMC Settings
-#=============================================================================
+# =============================================================================
+
+
 class build(object):
     def __init__(self, category=None, type=None):
         self.category = category
         self.type = type
 
-    #=========================================================================
+    # =========================================================================
     # Function - Shared: GET → compare → PATCH helper
-    #=========================================================================
-    def get_compare_patch(self, uri, item, kwargs, method='patch', type_override=None):
+    # =========================================================================
+    def get_compare_patch(
+            self,
+            uri,
+            item,
+            kwargs,
+            method='patch',
+            type_override=None):
         kwargs.uri = uri
-        result   = api.get(kwargs)
+        result = api.get(kwargs)
         api_body = self.create_api_body(item, kwargs)
-        changed  = self.compare_body_result(api_body, result)
+        changed = self.compare_body_result(api_body, result)
         if changed:
             kwargs.payload = api_body
             patch_type = type_override or self.type
@@ -154,81 +213,97 @@ class build(object):
                 api(category=self.category, type=patch_type).put(kwargs)
         return changed, kwargs
 
-    #=========================================================================
+    # =========================================================================
     # UCS - System - BIOS
-    #=========================================================================
+    # =========================================================================
     def bios(self, item, kwargs):
         notifications.section_begin(self.category, self.type)
         ikeys = item.keys()
         if 'bios_template' in ikeys:
             template_name = item.bios_template
-            templates     = kwargs.ezdata[f'intersight.{self.category}.{self.type}'].allOf[1].properties.bios_template.enum
-            btemplates    = kwargs.ezdata[f'intersight.{self.category}.{self.type}.templates'].properties
+            templates = kwargs.ezdata[f'intersight.{self.category}.{self.type}'].allOf[1].properties.bios_template.enum
+            btemplates = kwargs.ezdata[f'intersight.{self.category}.{self.type}.templates'].properties
             if template_name not in templates:
-                pcolor.Red(f'!!! ERROR !!! Bios Template "{template_name}" was not found in "intersight.{self.category}.{self.type}.templates".')
-                pcolor.Red(f'Available templates are: {", ".join(sorted(list(templates.keys())))}')
-                raise ValueError(f'BIOS template "{template_name}" was not found in "intersight.{self.category}.{self.type}.templates"')
-            btemplate  = btemplates[re.sub(r'-tpm$', '', item.bios_template, flags=re.IGNORECASE)]
+                pcolor.Red(
+                    f'!!! ERROR !!! Bios Template "{template_name}" was not found in "intersight.{self.category}.{self.type}.templates".')
+                pcolor.Red(
+                    f'Available templates are: {", ".join(sorted(list(templates.keys())))}')
+                raise ValueError(
+                    f'BIOS template "{template_name}" was not found in "intersight.{self.category}.{self.type}.templates"')
+            btemplate = btemplates[re.sub(
+                r'-tpm$', '', item.bios_template, flags=re.IGNORECASE)]
             if '-tpm' in (item.bios_template).lower():
                 item = btemplate | btemplates.tpm | item
-            else: item = btemplate | item
+            else:
+                item = btemplate | item
         kwargs.uri = '/redfish/v1/Systems/system/Bios'
-        result   = api.get(kwargs)
+        result = api.get(kwargs)
         api_body = self.create_api_body(item, kwargs)
-        changed  = self.compare_body_result(api_body, result)
+        changed = self.compare_body_result(api_body, result)
         if changed:
             kwargs.uri = '/redfish/v1/Systems/system/Bios/Settings'
             kwargs.payload = api_body
             api.patch(kwargs)
             kwargs.reboot_required = True
         notifications.section_end(self.category, self.type)
-        #=====================================================================
+        # =====================================================================
         # return kwargs
-        #=====================================================================
+        # =====================================================================
         return kwargs
 
-    #=========================================================================
+    # =========================================================================
     # Function - Create API Request Body
-    #=========================================================================
+    # =========================================================================
     def create_api_body(self, item, kwargs):
         if re.search(r'bios|certificate_management', self.type):
             item = getattr(self, self.type)(item, kwargs)
 
-        template_dir  = os.path.join(os.path.dirname(kwargs.script_path), 'templates', 'c88xA', f'{self.category}')
+        template_dir = os.path.join(
+            os.path.dirname(
+                kwargs.script_path),
+            'templates',
+            'c88xA',
+            f'{self.category}')
         template_name = f'{self.type}.json.j2'
-        template_env  = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir), autoescape=False)
+        template_env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader(template_dir),
+            autoescape=False)
 
         render_item = item.toDict() if hasattr(item, 'toDict') else item
-        rendered    = template_env.get_template(template_name).render(
-            item           = render_item,
-            sensitive_vars = kwargs.sensitive_vars
+        rendered = template_env.get_template(template_name).render(
+            item=render_item,
+            sensitive_vars=kwargs.sensitive_vars
         )
         try:
             api_body = json.loads(rendered)
         except json.JSONDecodeError as exc:
-            policy_title = notifications.mod_pol_description((self.type.replace('_', ' ')).capitalize())
+            policy_title = notifications.mod_pol_description(
+                (self.type.replace('_', ' ')).capitalize())
             pcolor.Red(
                 f'!!! ERROR !!! Failed to parse rendered JSON for {policy_title} template '
-                f'`{template_name}` (line {exc.lineno}, column {exc.colno}).'
-            )
+                f'`{template_name}` (line {exc.lineno}, column {exc.colno}).')
             start = max(1, exc.lineno - 2)
             end = min(len(rendered.splitlines()), exc.lineno + 2)
             for line_no in range(start, end + 1):
                 marker = '>>' if line_no == exc.lineno else '  '
-                pcolor.Yellow(f'{marker} {line_no:4}: {rendered.splitlines()[line_no - 1]}')
+                pcolor.Yellow(
+                    f'{marker} {line_no:4}: {rendered.splitlines()[line_no - 1]}')
             raise
-        if type(api_body) != dict:
-            policy_title = notifications.mod_pol_description((self.type.replace('_', ' ')).capitalize())
-            pcolor.Red(f'!!! ERROR !!! {policy_title} template did not render to a dictionary payload.')
-            raise ValueError(f'{policy_title} template did not render to a dictionary payload')
+        if not isinstance(api_body, dict):
+            policy_title = notifications.mod_pol_description(
+                (self.type.replace('_', ' ')).capitalize())
+            pcolor.Red(
+                f'!!! ERROR !!! {policy_title} template did not render to a dictionary payload.')
+            raise ValueError(
+                f'{policy_title} template did not render to a dictionary payload')
         return api_body
 
-    #=========================================================================
+    # =========================================================================
     # Function - Compare Body Result for Differences
-    #=========================================================================
+    # =========================================================================
     def compare_body_result(self, api_body, result):
         expected = deepcopy(api_body)
-        current  = deepcopy(result)
+        current = deepcopy(result)
         differences = []
 
         def list_sort_key(value):
@@ -254,10 +329,11 @@ class build(object):
             return value
 
         expected = normalize_for_compare(expected)
-        current  = normalize_for_compare(current)
+        current = normalize_for_compare(current)
 
         def is_sensitive_path(path, key_name=''):
-            check = f'{path}.{key_name}'.lower() if key_name else str(path).lower()
+            check = f'{path}.{key_name}'.lower(
+            ) if key_name else str(path).lower()
             sensitive_terms = (
                 'password',
                 'passphrase',
@@ -286,16 +362,24 @@ class build(object):
                 return f"{text[:177]}..."
             return text
 
-        def record_diff(path, expected_value, current_value, reason='value mismatch', key_name=''):
-            expected_display = sanitize_for_display(expected_value, path, key_name)
-            current_display  = sanitize_for_display(current_value, path, key_name)
+        def record_diff(
+                path,
+                expected_value,
+                current_value,
+                reason='value mismatch',
+                key_name=''):
+            expected_display = sanitize_for_display(
+                expected_value, path, key_name)
+            current_display = sanitize_for_display(
+                current_value, path, key_name)
             differences.append(
                 f"{path or '<root>'}: {reason} | expected={format_value(expected_display)} | current={format_value(current_display)}"
             )
 
         def values_differ(v1, v2, path='', key_name=''):
             # Sensitive/write-only fields (passwords, tokens, keys, etc.) are
-            # not reliably returned by GET, so exclude them from equality checks.
+            # not reliably returned by GET, so exclude them from equality
+            # checks.
             if is_sensitive_path(path, key_name):
                 return False
             changed = False
@@ -321,7 +405,8 @@ class build(object):
                     record_diff(path, v1, v2, 'type mismatch', key_name)
                     return True
                 if len(v2) < len(v1):
-                    record_diff(path, v1, v2, 'list length/type mismatch', key_name)
+                    record_diff(
+                        path, v1, v2, 'list length/type mismatch', key_name)
                     changed = True
                 for idx, item in enumerate(v1):
                     if idx >= len(v2):
@@ -338,137 +423,187 @@ class build(object):
 
         changed = values_differ(expected, current)
         if changed and len(differences) > 0:
-            pcolor.Yellow(f'     - Differences found for `{self.category}` -> {self.type} ({len(differences)}):')
+            pcolor.Yellow(
+                f'     - Differences found for `{self.category}` -> {self.type} ({len(differences)}):')
             max_show = 1024
             for diff in differences[:max_show]:
                 pcolor.Yellow(f'       * {diff}')
             if len(differences) > max_show:
-                pcolor.Yellow(f'       * ... {len(differences) - max_show} additional differences omitted')
+                pcolor.Yellow(
+                    f'       * ... {len(differences) - max_show} additional differences omitted')
         return changed
 
-    #=========================================================================
+    # =========================================================================
     # Function - UCS C880/C885 BMC - Nodes
-    #=========================================================================
+    # =========================================================================
     def configure_server(self, kwargs):
         def run_policy_setup(item, policy, kwargs):
-            if hasattr(item, f'{policy}_policy') and getattr(item, f'{policy}_policy') is not None:
-                indx = next((i for i, p in enumerate(kwargs.imm_dict.orgs[kwargs.org].policies[policy]) if p['name'] == getattr(item, f'{policy}_policy')), None)
+            if hasattr(
+                    item,
+                    f'{policy}_policy') and getattr(
+                    item,
+                    f'{policy}_policy') is not None:
+                indx = next((i for i, p in enumerate(
+                    kwargs.imm_dict.orgs[kwargs.org].policies[policy]) if p['name'] == getattr(item, f'{policy}_policy')), None)
                 if indx is not None:
                     pitem = kwargs.imm_dict.orgs[kwargs.org].policies[policy][indx]
-                    getattr(build(category=self.type, type=policy), f'{policy}')(pitem, kwargs)
+                    getattr(
+                        build(
+                            category=self.type,
+                            type=policy),
+                        f'{policy}')(
+                        pitem,
+                        kwargs)
             return kwargs
         policy_list = ['ipmi_over_lan', 'local_user', 'ldap', 'power', 'bios']
-        reconcile_resources = list({t.name:p | t for p in kwargs.resources for t in p.targets}.values())
-        for v in reconcile_resources: v.pop('targets', None)
+        reconcile_resources = list(
+            {t.name: p | t for p in kwargs.resources for t in p.targets}.values())
+        for v in reconcile_resources:
+            v.pop('targets', None)
         for item in reconcile_resources:
             kwargs.server_item = item
-            password = kwargs.sensitive_vars.get(f'local_user_password_{item.password}', '')
-            kwargs = kwargs | DotMap(username = item.username, password = password, reboot_required = False)
-            kwargs = build(category=self.type, type='device_connector').device_connector(item, kwargs)
+            password = kwargs.sensitive_vars.get(
+                f'local_user_password_{item.password}', '')
+            kwargs = kwargs | DotMap(
+                username=item.username,
+                password=password,
+                reboot_required=False)
+            kwargs = build(
+                category=self.type,
+                type='device_connector').device_connector(
+                item,
+                kwargs)
             for e in policy_list:
                 kwargs = run_policy_setup(item, e, kwargs)
-            #=================================================================
+            # =================================================================
             # Reboot Server if required
-            #=================================================================
+            # =================================================================
             if kwargs.reboot_required is True:
-                pcolor.Cyan(f"     * {item.server_address} requires a reboot to apply changes.")
+                pcolor.Cyan(
+                    f"     * {item.server_address} requires a reboot to apply changes.")
                 self.reboot_system(item, kwargs)
-            #=================================================================
+            # =================================================================
             # return kwargs
-            #=================================================================
+            # =================================================================
         return kwargs
 
-    #=========================================================================
+    # =========================================================================
     # Function - UCS - BMC Managers - DNS
-    #=========================================================================
+    # =========================================================================
     def dns(self, item, kwargs):
         notifications.section_begin(self.category, self.type)
-        self.get_compare_patch('/redfish/v1/Managers/bmc/EthernetInterfaces/eth0', item, kwargs)
-        pcolor.Cyan(f"     * Pausing to allow time for DNS settings to take effect before claiming in Intersight.")
+        self.get_compare_patch(
+            '/redfish/v1/Managers/bmc/EthernetInterfaces/eth0', item, kwargs)
+        pcolor.Cyan(
+            f"     * Pausing to allow time for DNS settings to take effect before claiming in Intersight.")
         time.sleep(10)
         notifications.section_end(self.category, self.type)
 
-    #=========================================================================
+    # =========================================================================
     # Function - UCS - Device Connector - Registration
-    #=========================================================================
+    # =========================================================================
     def device_connector(self, item, kwargs):
-        #=====================================================================
+        # =====================================================================
         # Load Variables and Send Begin Notification
-        #=====================================================================
+        # =====================================================================
         notifications.section_begin(self.category, self.type)
         kwargs.uri = '/connector/Systems'
         sys_data = api.get(kwargs)
         if sys_data[0]['AccountOwnershipState'] != 'Claimed':
-            #=================================================================
+            # =================================================================
             # Configure Shared Services (DNS, NTP, Proxy) if specified in YAML before claiming in Intersight
-            #=================================================================
+            # =================================================================
             ntp = DotMap()
             if item.get('ntp_policy', None):
-                indx = next((i for i, p in enumerate(kwargs.imm_dict.orgs[kwargs.org].policies.ntp) if p['name'] == item.ntp_policy), None)
+                indx = next((i for i, p in enumerate(
+                    kwargs.imm_dict.orgs[kwargs.org].policies.ntp) if p['name'] == item.ntp_policy), None)
                 if indx is not None:
                     ntp = kwargs.imm_dict.orgs[kwargs.org].policies.ntp[indx]
             pdata = DotMap(
-                domain_name = ('.').join(item.name.split('.')[1:]),
-                hostname    = item.name,
-                dns_servers = kwargs.shared_services.get('dns_servers'),
-                ntp_servers = ntp.get('ntp_servers', []),
+                domain_name=('.').join(item.name.split('.')[1:]),
+                hostname=item.name,
+                dns_servers=kwargs.shared_services.get('dns_servers'),
+                ntp_servers=ntp.get('ntp_servers', []),
             )
-            if kwargs.shared_services.get('dns_servers') and len(kwargs.shared_services.dns_servers) > 0:
+            if kwargs.shared_services.get('dns_servers') and len(
+                    kwargs.shared_services.dns_servers) > 0:
                 build(category=self.category, type='dns').dns(pdata, kwargs)
-            if isinstance(ntp, DotMap) and ntp.get('ntp_servers', None) and len(ntp.ntp_servers) > 0:
+            if isinstance(
+                    ntp, DotMap) and ntp.get(
+                    'ntp_servers', None) and len(
+                    ntp.ntp_servers) > 0:
                 build(category=self.category, type='ntp').ntp(ntp, kwargs)
-            if kwargs.shared_services.get('proxy_servers') and len(kwargs.shared_services.proxy_servers) > 0:
+            if kwargs.shared_services.get('proxy_servers') and len(
+                    kwargs.shared_services.proxy_servers) > 0:
                 pdata = kwargs.shared_services.get('proxy_servers')
-                build(category=self.category, type='proxy_settings').proxy_settings(pdata, kwargs)
+                build(
+                    category=self.category,
+                    type='proxy_settings').proxy_settings(
+                    pdata,
+                    kwargs)
             kwargs.uri = '/connector/DeviceIdentifiers'
-            #=================================================================
+            # =================================================================
             # Claim in Intersight if not already Claimed
-            #=================================================================
-            id         = api.get(kwargs)
-            valid_time   = 0
+            # =================================================================
+            id = api.get(kwargs)
+            valid_time = 0
             max_attempts = 10
-            attempt      = 0
+            attempt = 0
             while valid_time < 60:
                 if attempt >= max_attempts:
-                    raise TimeoutError(f"Security token for {item.server_address} never reached 60 s after {max_attempts} attempts.")
+                    raise TimeoutError(
+                        f"Security token for {item.server_address} never reached 60 s after {max_attempts} attempts.")
                 kwargs.uri = '/connector/SecurityTokens'
-                token      = api.get(kwargs)
+                token = api.get(kwargs)
                 valid_time = token[0]['Duration']
                 if valid_time < 60:
-                    pcolor.Cyan(f"     * Waiting for Security Token to be valid for at least 60 seconds.")
-                    pcolor.Cyan(f"     * Current Security Token Duration: {valid_time} seconds")
+                    pcolor.Cyan(
+                        f"     * Waiting for Security Token to be valid for at least 60 seconds.")
+                    pcolor.Cyan(
+                        f"     * Current Security Token Duration: {valid_time} seconds")
                     time.sleep(60)
                 attempt += 1
-            pcolor.Cyan(f"     * {item.server_address} is not Claimed, claiming in Intersight Now.")
-            kwargs = kwargs | DotMap(api_body = {'SecurityToken': token[0]['Token'], 'SerialNumber': id[0]['Id']}, method = 'post', uri = 'asset/DeviceClaims')
-            kwargs = intersight_api(category='system', type='device_claim').calls(kwargs)
-        else: pcolor.Cyan(f"     * {item.server_address} is already claimed in Intersight.")
-        #=====================================================================
+            pcolor.Cyan(
+                f"     * {item.server_address} is not Claimed, claiming in Intersight Now.")
+            kwargs = kwargs | DotMap(
+                api_body={
+                    'SecurityToken': token[0]['Token'],
+                    'SerialNumber': id[0]['Id']},
+                method='post',
+                uri='asset/DeviceClaims')
+            kwargs = intersight_api(
+                category='system',
+                type='device_claim').calls(kwargs)
+        else:
+            pcolor.Cyan(
+                f"     * {item.server_address} is already claimed in Intersight.")
+        # =====================================================================
         # return kwargs
-        #=====================================================================
+        # =====================================================================
         return kwargs
 
-    #=========================================================================
+    # =========================================================================
     # Function - UCS - BMC Managers - Accounts - IPMI over LAN
-    #=========================================================================
+    # =========================================================================
     def ipmi_over_lan(self, item, kwargs):
         notifications.section_begin(self.category, self.type)
-        self.get_compare_patch('/redfish/v1/Managers/bmc/NetworkProtocol', item, kwargs)
+        self.get_compare_patch(
+            '/redfish/v1/Managers/bmc/NetworkProtocol', item, kwargs)
         notifications.section_end(self.category, self.type)
         return kwargs
 
-    #=========================================================================
+    # =========================================================================
     # Function - UCS - BMC Managers - Accounts - LDAP
-    #=========================================================================
+    # =========================================================================
     def ldap(self, item, kwargs):
         notifications.section_begin(self.category, self.type)
         self.get_compare_patch('/redfish/v1/AccountService', item, kwargs)
         notifications.section_end(self.category, self.type)
         return kwargs
 
-    #=========================================================================
+    # =========================================================================
     # Function - UCS - BMC Managers - Accounts - Local User
-    #=========================================================================
+    # =========================================================================
     def local_user(self, item, kwargs):
         notifications.section_begin(self.category, self.type)
         kwargs.uri = '/redfish/v1/AccountService/Accounts'
@@ -480,35 +615,42 @@ class build(object):
         notifications.section_end(self.category, self.type)
         return kwargs
 
-    #=========================================================================
+    # =========================================================================
     # Function - UCS - BMC Managers - Network Protocols - NTP
-    #=========================================================================
+    # =========================================================================
     def ntp(self, item, kwargs):
         notifications.section_begin(self.category, self.type)
-        for k, v in {'ntp': '/redfish/v1/Managers/bmc/NetworkProtocol', 'timezone': '/redfish/v1/Managers/bmc'}.items():
+        for k, v in {'ntp': '/redfish/v1/Managers/bmc/NetworkProtocol',
+                     'timezone': '/redfish/v1/Managers/bmc'}.items():
             self.get_compare_patch(v, item, kwargs, type_override=k)
-        pcolor.Cyan(f"     * Pausing to allow time for NTP settings to take effect before claiming in Intersight.")
+        pcolor.Cyan(
+            f"     * Pausing to allow time for NTP settings to take effect before claiming in Intersight.")
         time.sleep(10)
         notifications.section_end(self.category, self.type)
 
-    #=========================================================================
+    # =========================================================================
     # Function - UCS - Device Connector -> Proxy Settings
-    #=========================================================================
+    # =========================================================================
     def proxy_settings(self, item, kwargs):
         notifications.section_begin(self.category, self.type)
-        self.get_compare_patch('connector/HttpProxies', item, kwargs, method='put')
-        pcolor.Cyan(f"     * Pausing to allow time for Proxy settings to take effect before claiming in Intersight.")
+        self.get_compare_patch(
+            'connector/HttpProxies',
+            item,
+            kwargs,
+            method='put')
+        pcolor.Cyan(
+            f"     * Pausing to allow time for Proxy settings to take effect before claiming in Intersight.")
         time.sleep(20)
         notifications.section_end(self.category, self.type)
 
-    #=========================================================================
+    # =========================================================================
     # Function - Reboot the System
-    #=========================================================================
+    # =========================================================================
     def reboot_system(self, item, kwargs):
         kwargs = kwargs | DotMap(
-            method  = 'post',
-            payload = {"ResetType": "GracefulRestart"},
-            uri     = '/redfish/v1/Systems/system/Actions/ComputerSystem.Reset'
+            method='post',
+            payload={"ResetType": "GracefulRestart"},
+            uri='/redfish/v1/Systems/system/Actions/ComputerSystem.Reset'
         )
         rdata = api.post(kwargs)
         if print_response_always:
@@ -516,24 +658,27 @@ class build(object):
         if print_response_on_fail and rdata.get('error', None):
             err_msg = rdata.get('error', {}).get('message', 'Unknown Error')
             pcolor.Red(f"!!! ERROR !!! POST Failed. Exception: {err_msg}")
-            raise RuntimeError(f"Reboot POST failed for {item.server_address}: {err_msg}")
-        pcolor.Cyan(f"     * Rebooting {item.server_address} to apply Changes.")
+            raise RuntimeError(
+                f"Reboot POST failed for {item.server_address}: {err_msg}")
+        pcolor.Cyan(
+            f"     * Rebooting {item.server_address} to apply Changes.")
 
-    #=========================================================================
+    # =========================================================================
     # Function - UCS - System - Power Restore
-    #=========================================================================
+    # =========================================================================
     def power(self, item, kwargs):
         notifications.section_begin(self.category, self.type)
-        _, kwargs = self.get_compare_patch('/redfish/v1/Systems/system', item, kwargs)
+        _, kwargs = self.get_compare_patch(
+            '/redfish/v1/Systems/system', item, kwargs)
         notifications.section_end(self.category, self.type)
         return kwargs
 
-    #=========================================================================
+    # =========================================================================
     # Function - UCS - BMC Managers - Accounts - SSH
-    #=========================================================================
+    # =========================================================================
     def ssh(self, item, kwargs):
         notifications.section_begin(self.category, self.type)
-        self.get_compare_patch('/redfish/v1/Managers/bmc/NetworkProtocol', item, kwargs)
+        self.get_compare_patch(
+            '/redfish/v1/Managers/bmc/NetworkProtocol', item, kwargs)
         notifications.section_end(self.category, self.type)
         return kwargs
-

@@ -26,7 +26,8 @@ SSH_PUBLIC_KEY_TYPE_PATTERN = re.compile(r"^(ssh-|ecdsa-|sk-)")
 _SENSITIVE_SCHEMA_PROPS: Dict[str, Any] = {}
 
 # Relative path from this file to the JSON schema.
-_SCHEMA_PATH = Path(__file__).parent.parent.parent.parent / "schema" / "cisco-ai-pods.json"
+_SCHEMA_PATH = Path(__file__).parent.parent.parent.parent / \
+    "schema" / "cisco-ai-pods.json"
 
 
 def load_schema() -> None:
@@ -43,7 +44,8 @@ def load_schema() -> None:
             else {}
         )
     except (FileNotFoundError, json.JSONDecodeError) as exc:
-        print(f"Warning: Could not load schema for sensitive variable validation: {exc}")
+        print(
+            f"Warning: Could not load schema for sensitive variable validation: {exc}")
         _SENSITIVE_SCHEMA_PROPS = {}
 
 
@@ -90,10 +92,10 @@ def _validate_sensitive_value(
         error_msg = (
             f"Missing required environment variable '{env_var_name}' for {context}.\n"
             f"\n  To fix this, run:\n"
-            f"    export {env_var_name}='<your_value_here>'"
-        )
+            f"    export {env_var_name}='<your_value_here>'")
         if schema_key and sensitive_properties and schema_key in sensitive_properties:
-            error_msg += _format_sensitive_constraints(schema_key, sensitive_properties[schema_key])
+            error_msg += _format_sensitive_constraints(
+                schema_key, sensitive_properties[schema_key])
         raise ValueError(error_msg)
 
     if not isinstance(schema_rule, dict):
@@ -109,14 +111,12 @@ def _validate_sensitive_value(
         raise ValueError(
             f"Environment variable '{env_var_name}' for {context} is too short "
             f"({len(text_value)} < {min_length}). Value is sensitive and hidden."
-            f"{constraint_info}"
-        )
+            f"{constraint_info}")
     if isinstance(max_length, int) and len(text_value) > max_length:
         raise ValueError(
             f"Environment variable '{env_var_name}' for {context} is too long "
             f"({len(text_value)} > {max_length}). Value is sensitive and hidden."
-            f"{constraint_info}"
-        )
+            f"{constraint_info}")
     if isinstance(pattern, str) and pattern:
         try:
             compiled = re.compile(pattern)
@@ -128,8 +128,7 @@ def _validate_sensitive_value(
             raise ValueError(
                 f"Environment variable '{env_var_name}' for {context} does not match "
                 f"the schema pattern. Value is sensitive and hidden."
-                f"{constraint_info}"
-            )
+                f"{constraint_info}")
 
 
 def _resolve_sensitive_identifier(
@@ -164,10 +163,10 @@ def _resolve_sensitive_identifier(
         error_msg = (
             f"Missing required environment variable '{env_var_name}' for {context}.\n"
             f"\n  To fix this, run:\n"
-            f"    export {env_var_name}='<your_value_here>'"
-        )
+            f"    export {env_var_name}='<your_value_here>'")
         if schema_key and schema_key in sensitive_properties:
-            error_msg += _format_sensitive_constraints(schema_key, sensitive_properties[schema_key])
+            error_msg += _format_sensitive_constraints(
+                schema_key, sensitive_properties[schema_key])
         raise ValueError(error_msg)
 
     if schema_key:
@@ -200,7 +199,8 @@ def _resolve_sensitive_var(
     return resolved[env_var_name]
 
 
-def merge_dicts(base: Dict[str, Any], new_data: Dict[str, Any]) -> Dict[str, Any]:
+def merge_dicts(base: Dict[str, Any],
+                new_data: Dict[str, Any]) -> Dict[str, Any]:
     """Recursively merge two dictionaries, with new_data taking precedence."""
     merged = dict(base)
     for key, value in new_data.items():
@@ -224,7 +224,8 @@ def load_yaml_mapping(vars_file: Path) -> Dict[str, Any]:
         sys.exit(1)
 
     if not isinstance(data, dict):
-        print(f"Error: vars file must contain a top-level mapping: {vars_file}")
+        print(
+            f"Error: vars file must contain a top-level mapping: {vars_file}")
         sys.exit(1)
 
     return data
@@ -270,13 +271,17 @@ def get_servers(config: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 def get_dns_servers(config: Dict[str, Any]) -> List[str]:
     """Return configured DNS servers or a default pair."""
-    dns_servers = get_bare_metal_config(config).get("cluster_networking", {}).get("dns_servers", [])
+    dns_servers = get_bare_metal_config(config).get(
+        "cluster_networking", {}).get(
+        "dns_servers", [])
     return dns_servers if dns_servers else ["8.8.8.8", "8.8.4.4"]
 
 
 def get_cluster_routes(config: Dict[str, Any]) -> List[Dict[str, str]]:
     """Return bare metal cluster routes."""
-    routes = get_bare_metal_config(config).get("cluster_networking", {}).get("routes", [])
+    routes = get_bare_metal_config(config).get(
+        "cluster_networking", {}).get(
+        "routes", [])
     return routes if isinstance(routes, list) else []
 
 
@@ -317,7 +322,10 @@ def get_first_interface_ip(server: Dict[str, Any]) -> Optional[str]:
     return None
 
 
-def applicable_routes(interface_ipv4: str, cluster_routes: List[Dict[str, str]]) -> List[Dict[str, str]]:
+def applicable_routes(interface_ipv4: str,
+                      cluster_routes: List[Dict[str,
+                                                str]]) -> List[Dict[str,
+                                                                    str]]:
     """Return routes whose gateway is on the same network as the interface IP."""
     if not interface_ipv4:
         return []
@@ -335,7 +343,8 @@ def applicable_routes(interface_ipv4: str, cluster_routes: List[Dict[str, str]])
             continue
         try:
             if ip_address(gateway) in network:
-                matched_routes.append({"destination": destination, "gateway": gateway})
+                matched_routes.append(
+                    {"destination": destination, "gateway": gateway})
         except ValueError:
             continue
     return matched_routes
@@ -344,7 +353,10 @@ def applicable_routes(interface_ipv4: str, cluster_routes: List[Dict[str, str]])
 def extract_ethernet_groups(server: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Normalize ethernet interfaces into grouped template objects."""
     groups: List[Dict[str, Any]] = []
-    for index, interface in enumerate(server.get("interfaces", {}).get("ethernet", []), 1):
+    for index, interface in enumerate(
+        server.get(
+            "interfaces", {}).get(
+            "ethernet", []), 1):
         groups.append(
             {
                 "group": index,
@@ -361,7 +373,10 @@ def extract_ethernet_groups(server: Dict[str, Any]) -> List[Dict[str, Any]]:
 def extract_bond_groups(server: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Normalize bond interfaces into grouped template objects."""
     groups: List[Dict[str, Any]] = []
-    for index, bond in enumerate(server.get("interfaces", {}).get("bond", []), 1):
+    for index, bond in enumerate(
+        server.get(
+            "interfaces", {}).get(
+            "bond", []), 1):
         groups.append(
             {
                 "group": index,
@@ -375,18 +390,21 @@ def extract_bond_groups(server: Dict[str, Any]) -> List[Dict[str, Any]]:
     return groups
 
 
-def build_route_entries(groups: List[Dict[str, Any]], config: Dict[str, Any]) -> List[Dict[str, Any]]:
+def build_route_entries(
+        groups: List[Dict[str, Any]], config: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Build route loop context for nmstate templates."""
     route_entries: List[Dict[str, Any]] = []
     cluster_routes = get_cluster_routes(config)
     for group in groups:
         routes = applicable_routes(group.get("ipv4", ""), cluster_routes)
         for route_index, _route in enumerate(routes, 1):
-            route_entries.append({"group": group["group"], "route_index": route_index})
+            route_entries.append(
+                {"group": group["group"], "route_index": route_index})
     return route_entries
 
 
-def build_ethernet_context(server: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
+def build_ethernet_context(
+        server: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
     """Build Jinja context for ethernet nmstate template."""
     groups = extract_ethernet_groups(server)
     return {
@@ -396,7 +414,8 @@ def build_ethernet_context(server: Dict[str, Any], config: Dict[str, Any]) -> Di
     }
 
 
-def build_bond_context(server: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
+def build_bond_context(
+        server: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
     """Build Jinja context for bond nmstate template."""
     bond_groups = extract_bond_groups(server)
     physical_interfaces: List[Dict[str, Any]] = []
@@ -405,9 +424,11 @@ def build_bond_context(server: Dict[str, Any], config: Dict[str, Any]) -> Dict[s
     for group in bond_groups:
         member_indices: List[int] = []
         for member_index, _member in enumerate(group.get("members", []), 1):
-            physical_interfaces.append({"group": group["group"], "member": member_index})
+            physical_interfaces.append(
+                {"group": group["group"], "member": member_index})
             member_indices.append(member_index)
-        interfaces.append({"group": group["group"], "member_indices": member_indices})
+        interfaces.append(
+            {"group": group["group"], "member_indices": member_indices})
 
     return {
         "physical_interfaces": physical_interfaces,
@@ -417,7 +438,10 @@ def build_bond_context(server: Dict[str, Any], config: Dict[str, Any]) -> Dict[s
     }
 
 
-def render_jinja_template(env: Environment, template_name: str, context: Dict[str, Any]) -> Optional[str]:
+def render_jinja_template(env: Environment,
+                          template_name: str,
+                          context: Dict[str,
+                                        Any]) -> Optional[str]:
     """Render and normalize a Jinja template."""
     try:
         template = env.get_template(template_name)
@@ -431,7 +455,8 @@ def render_jinja_template(env: Environment, template_name: str, context: Dict[st
     return "\n".join(lines) + "\n"
 
 
-def build_profile(server: Dict[str, Any], config: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def build_profile(
+        server: Dict[str, Any], config: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Build a stable profile for unique nmstate generation."""
     template_type = determine_template_type(server)
     if not template_type:
@@ -440,24 +465,33 @@ def build_profile(server: Dict[str, Any], config: Dict[str, Any]) -> Optional[Di
     cluster_routes = get_cluster_routes(config)
     if template_type == "ethernet":
         groups = extract_ethernet_groups(server)
-        route_shape = tuple(len(applicable_routes(group.get("ipv4", ""), cluster_routes)) for group in groups)
+        route_shape = tuple(len(applicable_routes(
+            group.get("ipv4", ""), cluster_routes)) for group in groups)
         key: Tuple[Any, ...] = (template_type, len(groups), route_shape)
-        route_suffix = "-".join(str(item) for item in route_shape) if route_shape else "0"
+        route_suffix = "-".join(str(item)
+                                for item in route_shape) if route_shape else "0"
         filename = f"nmstate_ethernet_{len(groups)}_r{route_suffix}.yaml"
         template_name = "iserver-nmstate-ethernet.yaml.j2"
         context = build_ethernet_context(server, config)
     else:
         groups = extract_bond_groups(server)
         member_shape = tuple(len(group.get("members", [])) for group in groups)
-        route_shape = tuple(len(applicable_routes(group.get("ipv4", ""), cluster_routes)) for group in groups)
+        route_shape = tuple(len(applicable_routes(
+            group.get("ipv4", ""), cluster_routes)) for group in groups)
         key = (template_type, len(groups), member_shape, route_shape)
-        member_suffix = "-".join(str(item) for item in member_shape) if member_shape else "0"
-        route_suffix = "-".join(str(item) for item in route_shape) if route_shape else "0"
+        member_suffix = "-".join(str(item)
+                                 for item in member_shape) if member_shape else "0"
+        route_suffix = "-".join(str(item)
+                                for item in route_shape) if route_shape else "0"
         filename = f"nmstate_bond_{len(groups)}_m{member_suffix}_r{route_suffix}.yaml"
         template_name = "iserver-nmstate-bond.yaml.j2"
         context = build_bond_context(server, config)
 
-    return {"key": key, "filename": filename, "template_name": template_name, "context": context}
+    return {
+        "key": key,
+        "filename": filename,
+        "template_name": template_name,
+        "context": context}
 
 
 def generate_unique_nmstate_templates(
@@ -474,12 +508,14 @@ def generate_unique_nmstate_templates(
         hostname = server.get("hostname", "unknown")
         profile = build_profile(server, config)
         if not profile:
-            print(f"Warning: Could not determine nmstate profile for {hostname}")
+            print(
+                f"Warning: Could not determine nmstate profile for {hostname}")
             continue
 
         key = profile["key"]
         if key not in profile_to_filename:
-            content = render_jinja_template(env, profile["template_name"], profile["context"])
+            content = render_jinja_template(
+                env, profile["template_name"], profile["context"])
             if not content:
                 print(f"Warning: Failed to render nmstate for {hostname}")
                 continue
@@ -499,21 +535,23 @@ def cleanup_existing_nmstate_templates(output_dir: Path) -> None:
         file_path.unlink(missing_ok=True)
 
 
-
 def validate_ssh_public_key_value(value: str, context: str) -> None:
     """Validate that a value looks like an SSH public key."""
     parts = value.strip().split()
     if len(parts) < 2:
-        raise ValueError(f"Invalid SSH public key for {context}: expected '<type> <base64> [comment]'")
+        raise ValueError(
+            f"Invalid SSH public key for {context}: expected '<type> <base64> [comment]'")
 
     key_type, key_data = parts[0], parts[1]
     if not SSH_PUBLIC_KEY_TYPE_PATTERN.match(key_type):
-        raise ValueError(f"Invalid SSH public key type for {context}: {key_type}")
+        raise ValueError(
+            f"Invalid SSH public key type for {context}: {key_type}")
 
     try:
         base64.b64decode(key_data.encode("ascii"), validate=True)
     except (binascii.Error, UnicodeEncodeError) as error:
-        raise ValueError(f"Invalid SSH public key payload for {context}") from error
+        raise ValueError(
+            f"Invalid SSH public key payload for {context}") from error
 
 
 def resolve_ssh_public_key(config: Dict[str, Any]) -> str:
@@ -529,14 +567,16 @@ def resolve_ssh_public_key(config: Dict[str, Any]) -> str:
     return value
 
 
-def collect_required_credential_env_vars(servers: List[Dict[str, Any]], config: Dict[str, Any]) -> Tuple[Set[str], List[str]]:
+def collect_required_credential_env_vars(
+        servers: List[Dict[str, Any]], config: Dict[str, Any]) -> Tuple[Set[str], List[str]]:
     """Collect required credential env var names and configuration issues."""
     required_env_vars: Set[str] = set()
     config_issues: List[str] = []
 
     ssh_public_key_suffix = get_ssh_public_key_suffix(config)
     if ssh_public_key_suffix in (None, ""):
-        config_issues.append("missing openshift.install.bare_metal.ssh_public_key sensitive variable suffix")
+        config_issues.append(
+            "missing openshift.install.bare_metal.ssh_public_key sensitive variable suffix")
     else:
         required_env_vars.add(f"ssh_public_key_{ssh_public_key_suffix}")
 
@@ -573,10 +613,13 @@ def collect_required_credential_env_vars(servers: List[Dict[str, Any]], config: 
     return required_env_vars, config_issues
 
 
-def validate_credential_env_vars(servers: List[Dict[str, Any]], config: Dict[str, Any]) -> None:
+def validate_credential_env_vars(
+        servers: List[Dict[str, Any]], config: Dict[str, Any]) -> None:
     """Fail fast with a complete list of missing credential env vars."""
-    required_env_vars, config_issues = collect_required_credential_env_vars(servers, config)
-    missing_env_vars = sorted(env_name for env_name in required_env_vars if not os.getenv(env_name))
+    required_env_vars, config_issues = collect_required_credential_env_vars(
+        servers, config)
+    missing_env_vars = sorted(
+        env_name for env_name in required_env_vars if not os.getenv(env_name))
 
     ssh_key_issue: Optional[str] = None
     if not config_issues and not missing_env_vars:
@@ -603,7 +646,8 @@ def validate_credential_env_vars(servers: List[Dict[str, Any]], config: Dict[str
     sys.exit(1)
 
 
-def generate_ssh_public_key_file(output_dir: Path, config: Dict[str, Any]) -> bool:
+def generate_ssh_public_key_file(
+        output_dir: Path, config: Dict[str, Any]) -> bool:
     """Generate assisted-installer/ssh.pub from the SSH public key environment variable."""
     ssh_public_key = resolve_ssh_public_key(config)
     file_path = output_dir / "ssh.pub"
@@ -630,8 +674,7 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help=(
             "Validate required fi_password_<suffix> and redfish_password_<suffix> "
-            "environment variables and exit without generating files."
-        ),
+            "environment variables and exit without generating files."),
     )
     return parser.parse_args()
 
@@ -657,8 +700,10 @@ def _safe_extract_tar(archive_path: Path, destination: Path) -> None:
     with tarfile.open(archive_path, "r:gz") as tar_handle:
         for member in tar_handle.getmembers():
             member_path = (destination / member.name).resolve()
-            if os.path.commonpath([str(destination_resolved), str(member_path)]) != str(destination_resolved):
-                raise ValueError(f"Unsafe path in archive member: {member.name}")
+            if os.path.commonpath([str(destination_resolved), str(
+                    member_path)]) != str(destination_resolved):
+                raise ValueError(
+                    f"Unsafe path in archive member: {member.name}")
         tar_handle.extractall(destination)
 
 
@@ -668,9 +713,8 @@ def download_and_extract_latest_iserver_release(output_dir: Path) -> None:
     If an iServer Linux tar.gz already exists in the output directory, skip downloading
     and extract from the existing local archive.
     """
-    existing_archives = sorted(
-        path for path in output_dir.glob("*.tar.gz") if "iserver" in path.name.lower() and "linux" in path.name.lower()
-    )
+    existing_archives = sorted(path for path in output_dir.glob(
+        "*.tar.gz") if "iserver" in path.name.lower() and "linux" in path.name.lower())
 
     if existing_archives:
         archive_path = existing_archives[0]
@@ -680,7 +724,8 @@ def download_and_extract_latest_iserver_release(output_dir: Path) -> None:
         try:
             release_data = _github_request(release_api)
         except (HTTPError, URLError, TimeoutError) as error:
-            raise RuntimeError(f"Failed to fetch latest release metadata from {release_api}: {error}") from error
+            raise RuntimeError(
+                f"Failed to fetch latest release metadata from {release_api}: {error}") from error
 
         assets = release_data.get("assets", [])
         linux_tar_asset = None
@@ -691,12 +736,14 @@ def download_and_extract_latest_iserver_release(output_dir: Path) -> None:
                 break
 
         if not linux_tar_asset:
-            raise RuntimeError("No Linux .tar.gz asset found in latest datacenter/iserver release")
+            raise RuntimeError(
+                "No Linux .tar.gz asset found in latest datacenter/iserver release")
 
         download_url = linux_tar_asset.get("browser_download_url")
         asset_name = linux_tar_asset.get("name", "iserver-linux.tar.gz")
         if not download_url:
-            raise RuntimeError("Latest release Linux asset is missing browser_download_url")
+            raise RuntimeError(
+                "Latest release Linux asset is missing browser_download_url")
 
         archive_path = output_dir / asset_name
         try:
@@ -709,21 +756,26 @@ def download_and_extract_latest_iserver_release(output_dir: Path) -> None:
             with urlopen(request, timeout=120) as response, open(archive_path, "wb") as file_handle:
                 file_handle.write(response.read())
         except (HTTPError, URLError, TimeoutError) as error:
-            raise RuntimeError(f"Failed to download asset {asset_name}: {error}") from error
+            raise RuntimeError(
+                f"Failed to download asset {asset_name}: {error}") from error
 
-        print(f"Downloaded latest iServer Linux release archive: {archive_path}")
+        print(
+            f"Downloaded latest iServer Linux release archive: {archive_path}")
 
     try:
         _safe_extract_tar(archive_path, output_dir)
     except (tarfile.TarError, ValueError) as error:
-        raise RuntimeError(f"Failed to extract asset {archive_path}: {error}") from error
+        raise RuntimeError(
+            f"Failed to extract asset {archive_path}: {error}") from error
 
     print(f"Extracted iServer Linux release asset into: {output_dir}")
 
 
-def resolve_fabric_interconnect(fi_ref: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
+def resolve_fabric_interconnect(
+        fi_ref: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
     """Resolve fabric interconnect reference against bare metal fabric_interconnects list."""
-    fabric_interconnects = get_bare_metal_config(config).get("fabric_interconnects", [])
+    fabric_interconnects = get_bare_metal_config(
+        config).get("fabric_interconnects", [])
     identifier = fi_ref.get("id")
 
     if isinstance(identifier, int):
@@ -746,7 +798,8 @@ def resolve_fabric_interconnect(fi_ref: Dict[str, Any], config: Dict[str, Any]) 
     return {}
 
 
-def resolve_redfish(server: Dict[str, Any], config: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def resolve_redfish(
+        server: Dict[str, Any], config: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Build redfish dictionary for server.json."""
     hostname = server.get("hostname", "unknown-host")
 
@@ -756,16 +809,22 @@ def resolve_redfish(server: Dict[str, Any], config: Dict[str, Any]) -> Optional[
         if not fi_entry:
             return None
         return {
-            "endpoint_ip": fi_entry.get("ip", ""),
+            "endpoint_ip": fi_entry.get(
+                "ip",
+                ""),
             "endpoint_type": "fi",
-            "inventory_id": fi_ref.get("inventory_id", ""),
+            "inventory_id": fi_ref.get(
+                "inventory_id",
+                ""),
             "password": _resolve_sensitive_var(
                 fi_entry.get("password"),
                 "fabric_interconnect_password",
                 "fabric_interconnect_password",
                 f"host {hostname} fabric_interconnect {fi_entry.get('ip', '')}",
             ),
-            "username": fi_entry.get("username", ""),
+            "username": fi_entry.get(
+                "username",
+                ""),
         }
 
     if server.get("redfish"):
@@ -785,7 +844,8 @@ def resolve_redfish(server: Dict[str, Any], config: Dict[str, Any]) -> Optional[
     return None
 
 
-def build_server_interfaces_and_groups(server: Dict[str, Any], config: Dict[str, Any]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+def build_server_interfaces_and_groups(
+        server: Dict[str, Any], config: Dict[str, Any]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """Build assisted-installer interface and group arrays from nested server definitions."""
     template_type = determine_template_type(server)
     interface_entries: List[Dict[str, Any]] = []
@@ -795,13 +855,14 @@ def build_server_interfaces_and_groups(server: Dict[str, Any], config: Dict[str,
     if template_type == "ethernet":
         groups = extract_ethernet_groups(server)
         for group in groups:
-            interface_entries.append(
-                {"name": group["name"], "mac": str(group.get("mac", "")).lower(), "group": group["group"]}
-            )
-            group_entry: Dict[str, Any] = {"id": group["group"], "ip": group.get("ipv4", "")}
+            interface_entries.append({"name": group["name"], "mac": str(
+                group.get("mac", "")).lower(), "group": group["group"]})
+            group_entry: Dict[str, Any] = {
+                "id": group["group"], "ip": group.get("ipv4", "")}
             routes = applicable_routes(group.get("ipv4", ""), cluster_routes)
             if routes:
-                group_entry["route"] = [{"cidr": route["destination"], "nh": route["gateway"]} for route in routes]
+                group_entry["route"] = [
+                    {"cidr": route["destination"], "nh": route["gateway"]} for route in routes]
             group_entries.append(group_entry)
     elif template_type == "bond":
         groups = extract_bond_groups(server)
@@ -817,15 +878,18 @@ def build_server_interfaces_and_groups(server: Dict[str, Any], config: Dict[str,
             group_entry = {"id": group["group"], "ip": group.get("ipv4", "")}
             routes = applicable_routes(group.get("ipv4", ""), cluster_routes)
             if routes:
-                group_entry["route"] = [{"cidr": route["destination"], "nh": route["gateway"]} for route in routes]
+                group_entry["route"] = [
+                    {"cidr": route["destination"], "nh": route["gateway"]} for route in routes]
             group_entries.append(group_entry)
 
     return interface_entries, group_entries
 
 
-def normalize_server_for_output(server: Dict[str, Any], nmstate_filename: str, config: Dict[str, Any]) -> Dict[str, Any]:
+def normalize_server_for_output(
+        server: Dict[str, Any], nmstate_filename: str, config: Dict[str, Any]) -> Dict[str, Any]:
     """Normalize one server into assisted-installer/server.json format."""
-    server_obj: Dict[str, Any] = {"hostname": server.get("hostname"), "role": server.get("role", "worker")}
+    server_obj: Dict[str, Any] = {"hostname": server.get(
+        "hostname"), "role": server.get("role", "worker")}
 
     if "rendezvous" in server:
         server_obj["kube"] = server.get("rendezvous")
@@ -840,7 +904,8 @@ def normalize_server_for_output(server: Dict[str, Any], nmstate_filename: str, c
 
     server_obj["vlan"] = server.get("vlan", 0)
 
-    interface_entries, group_entries = build_server_interfaces_and_groups(server, config)
+    interface_entries, group_entries = build_server_interfaces_and_groups(
+        server, config)
     server_obj["interface"] = interface_entries
     server_obj["group"] = group_entries
     server_obj["nmstate"] = nmstate_filename
@@ -860,7 +925,9 @@ def generate_server_json(
         nmstate_filename = server_to_filename.get(index)
         if not nmstate_filename:
             continue
-        output_data.append(normalize_server_for_output(server, nmstate_filename, config))
+        output_data.append(
+            normalize_server_for_output(
+                server, nmstate_filename, config))
 
     file_path = output_dir / "server.json"
     try:
@@ -911,8 +978,10 @@ def main() -> None:
     print(f"Found {len(servers)} server(s) in configuration")
 
     cleanup_existing_nmstate_templates(output_dir)
-    server_to_filename = generate_unique_nmstate_templates(servers, config, output_dir, env)
-    print(f"Mapped {len(server_to_filename)} server(s) to nmstate template profiles")
+    server_to_filename = generate_unique_nmstate_templates(
+        servers, config, output_dir, env)
+    print(
+        f"Mapped {len(server_to_filename)} server(s) to nmstate template profiles")
 
     print("Generating ssh.pub...", end=" ")
     try:
@@ -928,7 +997,11 @@ def main() -> None:
 
     print("Generating server.json...", end=" ")
     try:
-        if generate_server_json(servers, server_to_filename, output_dir, config):
+        if generate_server_json(
+                servers,
+                server_to_filename,
+                output_dir,
+                config):
             print("✓")
         else:
             print("✗")

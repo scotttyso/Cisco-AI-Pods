@@ -43,8 +43,8 @@ All workflows execute through centralized Ansible playbooks from the repository 
 
 3. **Everpure Storage and Portworx** (`playbooks/deploy_ai_pod.yml --tags everpure,portworx`)
    - Guide: [docs/everpure.md](docs/everpure.md)
-   - Array configuration: [docs/everpure_arrays.md](docs/everpure_arrays.md)
-   - Portworx CSI: [docs/everpure_portworx.md](docs/everpure_portworx.md)
+  - Role details: [roles/everpure/README.md](roles/everpure/README.md)
+  - Role details: [roles/portworx_csi/README.md](roles/portworx_csi/README.md)
 
 4. **OpenShift Platform** (`playbooks/deploy_openshift.yml` or `playbooks/deploy_ai_pod.yml --tags openshift`)
    - Guide: [docs/openshift.md](docs/openshift.md)
@@ -52,6 +52,7 @@ All workflows execute through centralized Ansible playbooks from the repository 
 
 5. **Splunk Observability** (`playbooks/deploy_ai_pod.yml --tags observability`)
    - Guide: [docs/splunk_observability.md](docs/splunk_observability.md)
+  - Role details: [roles/splunk_observability/README.md](roles/splunk_observability/README.md)
    - Full-stack monitoring and observability integration
 
 ## Repository Layout

@@ -18,7 +18,7 @@ Sensitive Variable Patterns:
 
 Usage:
   python3 validate_everpure_env_vars.py --config host_vars/everpure/everpure.ezai.yaml
-  
+
 Exit Codes:
   0 — All required sensitive variables validated successfully
   1 — Missing or invalid sensitive variables
@@ -44,47 +44,57 @@ def load_schema() -> None:
     global _SENSITIVE_SCHEMA_PROPS
     if not _SCHEMA_PATH.exists():
         raise FileNotFoundError(f"Schema not found at {_SCHEMA_PATH}")
-    
+
     with open(_SCHEMA_PATH) as f:
         schema = json.load(f)
-    
-    if "definitions" not in schema or "abstract.sensitive_variables" not in schema["definitions"]:
-        raise ValueError("Schema missing 'definitions.abstract.sensitive_variables'")
-    
-    _SENSITIVE_SCHEMA_PROPS = schema["definitions"]["abstract.sensitive_variables"].get("properties", {})
+
+    if "definitions" not in schema or "abstract.sensitive_variables" not in schema[
+            "definitions"]:
+        raise ValueError(
+            "Schema missing 'definitions.abstract.sensitive_variables'")
+
+    _SENSITIVE_SCHEMA_PROPS = schema["definitions"]["abstract.sensitive_variables"].get(
+        "properties", {})
 
 
 def _wrap_cli_text(text: str, indent: str = "  ", width: int = 100) -> str:
     """Wrap text to specified width with indentation for CLI output."""
-    return textwrap.fill(text, width=width, subsequent_indent=indent, break_long_words=False, break_on_hyphens=False)
+    return textwrap.fill(
+        text,
+        width=width,
+        subsequent_indent=indent,
+        break_long_words=False,
+        break_on_hyphens=False)
 
 
-def _format_sensitive_constraints(schema_key: str, schema_rule: Dict[str, Any]) -> str:
+def _format_sensitive_constraints(
+        schema_key: str, schema_rule: Dict[str, Any]) -> str:
     """Format schema constraints (description, pattern, min/max) as readable text block."""
     if not isinstance(schema_rule, dict):
         return ""
-    
+
     parts = []
-    
+
     description = schema_rule.get("description", "").strip()
     if description:
         wrapped_desc = _wrap_cli_text(description)
         parts.append(f"\n  Description:\n    {wrapped_desc}")
-    
+
     pattern = schema_rule.get("pattern")
     if isinstance(pattern, str) and pattern:
         parts.append(f"\n  Pattern: {pattern}")
-    
+
     min_length = schema_rule.get("minLength")
     max_length = schema_rule.get("maxLength")
     if isinstance(min_length, int) or isinstance(max_length, int):
         if isinstance(min_length, int) and isinstance(max_length, int):
-            parts.append(f"\n  Length: {min_length} to {max_length} characters")
+            parts.append(
+                f"\n  Length: {min_length} to {max_length} characters")
         elif isinstance(min_length, int):
             parts.append(f"\n  Minimum length: {min_length} characters")
         elif isinstance(max_length, int):
             parts.append(f"\n  Maximum length: {max_length} characters")
-    
+
     return "".join(parts)
 
 
@@ -101,10 +111,10 @@ def _validate_sensitive_value(
         error_msg = (
             f"Missing required environment variable '{env_var_name}' for {context}.\n"
             f"\n  To fix this, run:\n"
-            f"    export {env_var_name}='<your_value_here>'"
-        )
+            f"    export {env_var_name}='<your_value_here>'")
         if schema_key and sensitive_properties and schema_key in sensitive_properties:
-            error_msg += _format_sensitive_constraints(schema_key, sensitive_properties[schema_key])
+            error_msg += _format_sensitive_constraints(
+                schema_key, sensitive_properties[schema_key])
         raise ValueError(error_msg)
 
     if not isinstance(schema_rule, dict):
@@ -120,15 +130,13 @@ def _validate_sensitive_value(
         raise ValueError(
             f"Environment variable '{env_var_name}' for {context} is too short "
             f"({len(text_value)} < {min_length}). Value is sensitive and hidden."
-            f"{constraint_info}"
-        )
+            f"{constraint_info}")
 
     if isinstance(max_length, int) and len(text_value) > max_length:
         raise ValueError(
             f"Environment variable '{env_var_name}' for {context} is too long "
             f"({len(text_value)} > {max_length}). Value is sensitive and hidden."
-            f"{constraint_info}"
-        )
+            f"{constraint_info}")
 
     if isinstance(pattern, str) and pattern:
         try:
@@ -141,8 +149,7 @@ def _validate_sensitive_value(
             raise ValueError(
                 f"Environment variable '{env_var_name}' for {context} does not match "
                 f"the schema pattern. Value is sensitive and hidden."
-                f"{constraint_info}"
-            )
+                f"{constraint_info}")
 
 
 def _resolve_sensitive_identifier(
@@ -177,8 +184,7 @@ def _resolve_sensitive_identifier(
         error_msg = (
             f"Missing required environment variable '{env_var_name}' for {context}.\n"
             f"\n  To fix this, run:\n"
-            f"    export {env_var_name}='<your_value_here>'"
-        )
+            f"    export {env_var_name}='<your_value_here>'")
         if schema_key and schema_key in sensitive_properties:
             error_msg += _format_sensitive_constraints(
                 schema_key,
@@ -225,22 +231,22 @@ def validate_pure_api_token(config: Dict[str, Any]) -> None:
     for array_type in ["flash_arrays", "flash_blades"]:
         if array_type not in config.get("everpure", {}):
             continue
-        
+
         arrays = config["everpure"][array_type]
         if not isinstance(arrays, list):
             continue
-        
+
         for array in arrays:
             if not isinstance(array, dict):
                 continue
-            
+
             api_token_id = array.get("api_token_id")
             if api_token_id in (None, ""):
                 continue
-            
+
             fqdn = array.get("array_fqdn", f"{array_type}_array")
             context = f"everpure.{array_type}[{fqdn}].api_token_id"
-            
+
             _resolve_sensitive_identifier(
                 api_token_id,
                 "pure_api_token",
@@ -256,15 +262,21 @@ def validate_certificates(config: Dict[str, Any]) -> None:
     settings = config.get("everpure", {}).get("settings", {})
     if not isinstance(settings, dict):
         return
-    
-    certs = settings.get("security", {}).get("certificates", {}).get("array_certificates", [])
+
+    certs = settings.get(
+        "security",
+        {}).get(
+        "certificates",
+        {}).get(
+            "array_certificates",
+        [])
     if not isinstance(certs, list):
         return
-    
+
     for idx, cert in enumerate(certs):
         if not isinstance(cert, dict):
             continue
-        
+
         # Validate certificate
         cert_id = cert.get("certificate")
         if cert_id not in (None, "", 0):
@@ -277,7 +289,7 @@ def validate_certificates(config: Dict[str, Any]) -> None:
                 _SENSITIVE_SCHEMA_PROPS,
                 {},
             )
-        
+
         # Validate intermediate certificate (optional)
         inter_cert_id = cert.get("intermediate_certificate")
         if inter_cert_id not in (None, "", 0):
@@ -290,7 +302,7 @@ def validate_certificates(config: Dict[str, Any]) -> None:
                 _SENSITIVE_SCHEMA_PROPS,
                 {},
             )
-        
+
         # Validate private key
         key_id = cert.get("private_key")
         if key_id not in (None, "", 0):
@@ -303,7 +315,7 @@ def validate_certificates(config: Dict[str, Any]) -> None:
                 _SENSITIVE_SCHEMA_PROPS,
                 {},
             )
-        
+
         # Validate passphrase (if private key is encrypted)
         passphrase_id = cert.get("key_passphrase")
         if passphrase_id not in (None, "", 0):
@@ -323,15 +335,21 @@ def validate_directory_service(config: Dict[str, Any]) -> None:
     settings = config.get("everpure", {}).get("settings", {})
     if not isinstance(settings, dict):
         return
-    
-    dir_service = settings.get("security", {}).get("directory_service", {}).get("configuration", [])
+
+    dir_service = settings.get(
+        "security",
+        {}).get(
+        "directory_service",
+        {}).get(
+            "configuration",
+        [])
     if not isinstance(dir_service, list):
         return
-    
+
     for idx, config_item in enumerate(dir_service):
         if not isinstance(config_item, dict):
             continue
-        
+
         bind_pwd_id = config_item.get("bind_password")
         if bind_pwd_id not in (None, "", 0):
             context = f"everpure.settings.security.directory_service.configuration[{idx}].bind_password"
@@ -350,15 +368,15 @@ def validate_local_users(config: Dict[str, Any]) -> None:
     settings = config.get("everpure", {}).get("settings", {})
     if not isinstance(settings, dict):
         return
-    
+
     users = settings.get("security", {}).get("users", [])
     if not isinstance(users, list):
         return
-    
+
     for idx, user in enumerate(users):
         if not isinstance(user, dict):
             continue
-        
+
         pwd_id = user.get("password")
         if pwd_id not in (None, "", 0):
             username = user.get("username", f"user[{idx}]")
@@ -378,18 +396,24 @@ def validate_snmp(config: Dict[str, Any]) -> None:
     settings = config.get("everpure", {}).get("settings", {})
     if not isinstance(settings, dict):
         return
-    
-    monitoring = settings.get("system", {}).get("monitoring", {}).get("snmp", {})
+
+    monitoring = settings.get(
+        "system",
+        {}).get(
+        "monitoring",
+        {}).get(
+            "snmp",
+        {})
     if not isinstance(monitoring, dict):
         return
-    
+
     # Validate SNMP v2c community strings
     v2c_managers = monitoring.get("add_snmp_manager", {}).get("v2c", [])
     if isinstance(v2c_managers, list):
         for idx, manager in enumerate(v2c_managers):
             if not isinstance(manager, dict):
                 continue
-            
+
             community_id = manager.get("community")
             if community_id not in (None, "", 0):
                 context = f"everpure.settings.system.monitoring.snmp.add_snmp_manager.v2c[{idx}].community"
@@ -401,14 +425,14 @@ def validate_snmp(config: Dict[str, Any]) -> None:
                     _SENSITIVE_SCHEMA_PROPS,
                     {},
                 )
-    
+
     # Validate SNMP v3 auth and privacy passphrases
     v3_managers = monitoring.get("add_snmp_manager", {}).get("v3", [])
     if isinstance(v3_managers, list):
         for idx, manager in enumerate(v3_managers):
             if not isinstance(manager, dict):
                 continue
-            
+
             auth_id = manager.get("auth_passphrase")
             if auth_id not in (None, "", 0):
                 context = f"everpure.settings.system.monitoring.snmp.add_snmp_manager.v3[{idx}].auth_passphrase"
@@ -420,7 +444,7 @@ def validate_snmp(config: Dict[str, Any]) -> None:
                     _SENSITIVE_SCHEMA_PROPS,
                     {},
                 )
-            
+
             priv_id = manager.get("privacy_passphrase")
             if priv_id not in (None, "", 0):
                 context = f"everpure.settings.system.monitoring.snmp.add_snmp_manager.v3[{idx}].privacy_passphrase"
@@ -432,7 +456,7 @@ def validate_snmp(config: Dict[str, Any]) -> None:
                     _SENSITIVE_SCHEMA_PROPS,
                     {},
                 )
-    
+
     # Validate edit SNMP agent
     edit_agent = monitoring.get("edit_snmp_agent", {})
     if isinstance(edit_agent, dict):
@@ -447,7 +471,7 @@ def validate_snmp(config: Dict[str, Any]) -> None:
                 _SENSITIVE_SCHEMA_PROPS,
                 {},
             )
-        
+
         community_id = edit_agent.get("community")
         if community_id not in (None, "", 0):
             context = "everpure.settings.system.monitoring.snmp.edit_snmp_agent.community"
@@ -459,7 +483,7 @@ def validate_snmp(config: Dict[str, Any]) -> None:
                 _SENSITIVE_SCHEMA_PROPS,
                 {},
             )
-        
+
         priv_id = edit_agent.get("privacy_passphrase")
         if priv_id not in (None, "", 0):
             context = "everpure.settings.system.monitoring.snmp.edit_snmp_agent.privacy_passphrase"
@@ -485,7 +509,7 @@ def validate_all(config: Dict[str, Any]) -> None:
 if __name__ == "__main__":
     import argparse
     import yaml
-    
+
     parser = argparse.ArgumentParser(
         description="Validate Everpure environment variables",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -497,24 +521,26 @@ if __name__ == "__main__":
         help="Path to Everpure YAML configuration file",
         required=True,
     )
-    
+
     args = parser.parse_args()
-    
+
     try:
         load_schema()
-        
+
         config_path = Path(args.config)
         if not config_path.exists():
-            print(f"ERROR: Configuration file not found: {config_path}", file=sys.stderr)
+            print(
+                f"ERROR: Configuration file not found: {config_path}",
+                file=sys.stderr)
             sys.exit(1)
-        
+
         with open(config_path) as f:
             config = yaml.safe_load(f) or {}
-        
+
         validate_all(config)
         print("✓ All Everpure sensitive environment variables validated successfully.")
         sys.exit(0)
-    
+
     except FileNotFoundError as e:
         print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)

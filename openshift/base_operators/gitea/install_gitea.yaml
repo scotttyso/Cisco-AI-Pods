@@ -10,7 +10,7 @@
     openshift_token: "{{ lookup('ansible.builtin.env', 'openshift_token_id') }}"
 
   module_defaults:
-    group/kubernetes.core.all:
+    group/kubernetes.core.k8s:
       host: "{{ openshift_api_url }}"
       api_key: "{{ openshift_token }}"
       validate_certs: "{{ validate_certificates }}"

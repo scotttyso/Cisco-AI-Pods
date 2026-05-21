@@ -41,8 +41,8 @@
       tags: [storage, everpure]
       when: (everpure.flash_arrays is defined or everpure.flash_blades is defined) and everpure.settings is defined
 
-    # - role: cisco.ai_pods.intersight_provision
-    - role: intersight_provision
+    # - role: cisco.ai_pods.intersight_ucs_provision
+    - role: intersight_ucs_provision
       tags: [intersight, compute]
       when: intersight | length > 0
 

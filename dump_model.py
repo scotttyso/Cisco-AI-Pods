@@ -8,16 +8,18 @@ import sys
 from pathlib import Path
 import yaml
 
+
 def load_yaml_files(model_dir):
     """Load and merge all YAML model files."""
     merged = {}
-    
+
     # Find all .yaml and .yml files in the model directory
-    yaml_files = sorted(Path(model_dir).glob('*.ezai.yaml')) + sorted(Path(model_dir).glob('*.yaml'))
+    yaml_files = sorted(Path(model_dir).glob('*.ezai.yaml')) + \
+        sorted(Path(model_dir).glob('*.yaml'))
     yaml_files = [f for f in yaml_files if f.is_file()]
-    
+
     print(f"Found {len(yaml_files)} YAML files in {model_dir}")
-    
+
     for yaml_file in yaml_files:
         print(f"  Loading: {yaml_file.name}")
         try:
@@ -27,40 +29,47 @@ def load_yaml_files(model_dir):
                     # Merge recursively
                     def deep_merge(base, update):
                         for key, value in update.items():
-                            if isinstance(value, dict) and key in base and isinstance(base[key], dict):
+                            if isinstance(
+                                    value,
+                                    dict) and key in base and isinstance(
+                                    base[key],
+                                    dict):
                                 deep_merge(base[key], value)
                             elif isinstance(value, list) and key in base and isinstance(base[key], list):
                                 base[key].extend(value)
                             else:
                                 base[key] = value
-                    
+
                     deep_merge(merged, data)
         except Exception as e:
             print(f"  Error loading {yaml_file}: {e}")
             continue
-    
+
     return merged
+
 
 def main():
     # Model directory
-    model_dir = Path('/home/tyscott@rich.ciscolabs.com/scotttyso/Cisco-AI-Pods/intersight/policies')
-    
+    model_dir = Path(
+        '/home/tyscott@rich.ciscolabs.com/scotttyso/Cisco-AI-Pods/intersight/policies')
+
     if not model_dir.exists():
         print(f"Error: Model directory not found: {model_dir}")
         sys.exit(1)
-    
+
     print(f"Loading models from: {model_dir}\n")
-    
+
     merged = load_yaml_files(model_dir)
-    
+
     # Output to JSON file
-    output_file = Path('/home/tyscott@rich.ciscolabs.com/scotttyso/Cisco-AI-Pods/model_structure.json')
-    
+    output_file = Path(
+        '/home/tyscott@rich.ciscolabs.com/scotttyso/Cisco-AI-Pods/model_structure.json')
+
     with open(output_file, 'w') as f:
         json.dump(merged, f, indent=2, default=str)
-    
+
     print(f"\nModel structure saved to: {output_file}")
-    
+
     # Print a summary of top-level keys
     if 'intersight' in merged:
         print("\nTop-level Intersight structure:")
@@ -74,14 +83,17 @@ def main():
                 print(f"  intersight.{key}: list with {len(value)} items")
             else:
                 print(f"  intersight.{key}: {type(value).__name__}")
-    
+
     # Check for profiles/templates
     if 'intersight' in merged:
         print("\nProfiles and Templates structure:")
         if 'profiles' in merged['intersight']:
-            print(f"  intersight.profiles: {list(merged['intersight']['profiles'].keys())}")
+            print(
+                f"  intersight.profiles: {list(merged['intersight']['profiles'].keys())}")
         if 'templates' in merged['intersight']:
-            print(f"  intersight.templates: {list(merged['intersight']['templates'].keys())}")
+            print(
+                f"  intersight.templates: {list(merged['intersight']['templates'].keys())}")
+
 
 if __name__ == '__main__':
     main()
