@@ -1,10 +1,10 @@
 # Intersight Name Prefix and Suffix Support
 
-This document describes how name prefix and suffix values are applied by these playbooks:
+This document describes how name prefix and suffix values are applied by the Intersight provisioning roles:
 
-- `configure_intersight_pools.yaml`
-- `configure_intersight_policies.yaml`
-- `configure_intersight_profiles.yaml`
+- `roles/intersight_policies/`: Applies name decoration to Intersight policies
+- `roles/intersight_pools/`: Applies name decoration to Intersight pools
+- `roles/intersight_profiles/`: Applies name decoration to Intersight profiles and templates
 
 ## Overview
 
@@ -21,18 +21,18 @@ If no prefix/suffix values are provided, names are unchanged.
 
 ## Where It Applies
 
-### configure_intersight_pools.yaml
+### Intersight Pools Role
 
 - Applies prefix/suffix to pool object names for:
   - MAC pools
   - UUID pools
   - IP pools
 
-### configure_intersight_policies.yaml
+### Intersight Policies Role
 
 - Applies `policies.name_prefix.default` and `policies.name_suffix.default` to all supported policy names.
 
-### configure_intersight_profiles.yaml
+### Intersight Profiles Role
 
 - Applies prefix/suffix to:
   - Domain profile names

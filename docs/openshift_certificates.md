@@ -1,39 +1,45 @@
 # Manage OpenShift Certificates (User CA, Ingress, API)
 
-This folder contains Ansible playbooks to apply custom certificates to an OpenShift cluster in a controlled order:
+This guide covers the role-based workflow to apply custom certificates to an OpenShift cluster in a controlled order:
 
 1. Load a user CA bundle and patch cluster proxy trust.
 2. Apply ingress wildcard certificate and key.
 3. Apply API server named certificate and key.
 
-It also includes validation playbooks for ingress and API certificate state.
+It also includes validation steps for ingress and API certificate state.
 
-**Back to OpenShift README:** [OpenShift Deployment Order](../README.md)
+**Back to OpenShift Deployment Order:** [OpenShift Deployment Order](openshift.md)
 
 ## Table of Contents
 
-- [Directory Structure](#directory-structure)
-- [Prerequisites](#prerequisites)
-- [Certificate Requirements](#certificate-requirements)
-- [Required Environment Variables](#required-environment-variables)
-- [Playbook Features & Improvements](#playbook-features--improvements)
-- [End-to-End Playbook](#end-to-end-playbook)
-- [Validation Playbooks](#validation-playbooks)
-- [Re-running the Playbook](#re-running-the-playbook)
-- [Manual CSR Generation](#manual-csr-generation)
-- [Manual Update Method](#manual-update-method)
-- [Troubleshooting](#troubleshooting)
-- [References](#references)
+- [Manage OpenShift Certificates (User CA, Ingress, API)](#manage-openshift-certificates-user-ca-ingress-api)
+  - [Table of Contents](#table-of-contents)
+  - [Directory Structure](#directory-structure)
+  - [Prerequisites](#prerequisites)
+  - [Certificate Requirements](#certificate-requirements)
+  - [Required Environment Variables](#required-environment-variables)
+  - [Playbook Features \& Improvements](#playbook-features--improvements)
+  - [How to Run](#how-to-run)
+  - [Validation](#validation)
+  - [Re-running the Playbook](#re-running-the-playbook)
+  - [Manual CSR Generation](#manual-csr-generation)
+    - [API CSR](#api-csr)
+    - [Ingress CSR](#ingress-csr)
+  - [Manual Update Method](#manual-update-method)
+    - [1. User CA Bundle](#1-user-ca-bundle)
+    - [2. Ingress Certificate](#2-ingress-certificate)
+    - [3. API Certificate](#3-api-certificate)
+  - [Troubleshooting](#troubleshooting)
+  - [References](#references)
 
 ## Directory Structure
 
-- load_certificates.yaml: Main end-to-end playbook (CA bundle, ingress cert, API cert)
-- validate_ingress_certificate.yaml: Verifies ingress patch and restarts router/oauth pods
-- validate_api_certificate.yaml: Waits until kube-apiserver rollout settles
-- templates/user-ca-bundle.yaml.j2: ConfigMap template for user CA bundle
-- templates/ingress-tls-secret.yaml.j2: Secret template for ingress TLS cert/key
-- templates/api-tls-secret.yaml.j2: Secret template for API TLS cert/key
-- backup/: Optional staging or backup files
+- playbooks/deploy_openshift.yaml: OpenShift entry point playbook
+- playbooks/deploy_ai_pod.yaml: Full-stack entry point playbook
+- roles/openshift_certificates/tasks/main.yaml: Role tasks for CA, ingress, and API certificate updates
+- roles/openshift_certificates/templates/user-ca-bundle.yaml.j2: ConfigMap template for user CA bundle
+- roles/openshift_certificates/templates/ingress-tls-secret.yaml.j2: Secret template for ingress TLS cert/key
+- roles/openshift_certificates/templates/api-tls-secret.yaml.j2: Secret template for API TLS cert/key
 
 [Back to Table of Contents](#table-of-contents)
 
@@ -71,18 +77,9 @@ The playbooks read values from environment variables.
 ```bash
 export openshift_api_url="https://api.<cluster>.<domain>:6443"
 export openshift_token_id="<token>"
-
-export user_ca_bundle_file="/path/to/user-ca-bundle.crt"
-
-export ingress_cert_chain_file="/path/to/ingress.fullchain.crt"
-export ingress_key_file="/path/to/ingress.key"
-
-export api_cert_chain_file="/path/to/api.fullchain.crt"
-export api_key_file="/path/to/api.key"
-export api_server_hostname="api.<cluster>.<domain>"
 ```
 
-Notes:
+Notes from the Model Data defined in `openshift.certificates`:
 
 - `user_ca_bundle_file` is used to build ConfigMap `user-ca-bundle` in `openshift-config`.
 - `ingress_*` values are used to create Secret `ingress-tls-secret` in `openshift-ingress`.
@@ -105,12 +102,24 @@ These improvements make certificate workflows safer to execute repeatedly and ea
 
 [Back to Table of Contents](#table-of-contents)
 
-## End-to-End Playbook
+## How to Run
 
-Run the full workflow:
+From the repository root. Running this role-specific command is optional:
 
 ```bash
-ansible-playbook load_certificates.yaml
+ansible-playbook playbooks/deploy_openshift.yaml --tags certificates
+```
+
+Run the full OpenShift workflow instead:
+
+```bash
+ansible-playbook playbooks/deploy_openshift.yaml
+```
+
+Run the full Cisco AI Pods workflow (all domains) instead:
+
+```bash
+ansible-playbook playbooks/deploy_ai_pod.yaml
 ```
 
 What it does:
@@ -133,18 +142,17 @@ The playbook is intentionally phased with pause prompts before ingress and API c
 
 [Back to Table of Contents](#table-of-contents)
 
-## Validation Playbooks
+## Validation
 
-Validate ingress certificate state and restart relevant pods:
-
-```bash
-ansible-playbook validate_ingress_certificate.yaml
-```
-
-Validate API certificate rollout state:
+Validate ingress and API certificate state:
 
 ```bash
-ansible-playbook validate_api_certificate.yaml
+oc get configmap user-ca-bundle -n openshift-config -o yaml
+oc get secret ingress-tls-secret -n openshift-ingress
+oc get secret api-tls-secret -n openshift-config
+oc get ingresscontroller.operator/default -n openshift-ingress-operator -o yaml
+oc get apiserver cluster -o yaml
+oc get clusteroperators kube-apiserver
 ```
 
 [Back to Table of Contents](#table-of-contents)
@@ -156,7 +164,7 @@ The end-to-end certificate workflow is safe to re-run. Existing ConfigMaps, Secr
 If a run stops at a prompt or fails during rollout, fix the issue and run again:
 
 ```bash
-ansible-playbook load_certificates.yaml
+ansible-playbook playbooks/deploy_openshift.yaml --tags certificates
 ```
 
 [Back to Table of Contents](#table-of-contents)
@@ -285,9 +293,9 @@ Important:
 - PEM parsing failure:
   - Confirm files are PEM encoded and contain complete `BEGIN/END` blocks.
 - Ingress still serving old cert:
-  - Run `ansible-playbook validate_ingress_certificate.yaml` to restart router/oauth pods and wait for readiness.
+  - Re-run `ansible-playbook playbooks/deploy_openshift.yaml --tags certificates` and wait for router/oauth pod readiness.
 - API not stabilized yet:
-  - Run `ansible-playbook validate_api_certificate.yaml` and watch kube-apiserver conditions.
+  - Re-run `ansible-playbook playbooks/deploy_openshift.yaml --tags certificates` and watch kube-apiserver conditions.
 - Verify applied resources:
 
 ```bash

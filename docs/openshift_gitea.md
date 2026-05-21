@@ -1,6 +1,6 @@
 # Install Red Hat Gitea Operator on OpenShift
 
-This folder contains an Ansible playbook that installs the Red Hat Gitea Operator and deploys a Gitea instance into a dedicated namespace.
+This guide covers the role-based workflow that installs the Red Hat Gitea Operator and deploys a Gitea instance into a dedicated namespace.
 
 ## Gitea Note
 
@@ -8,35 +8,39 @@ Use Gitea to create an internal Git source for onboarding repositories only when
 
 It is not recommended to use public Git repositories for this workflow, because much of the repository content is specific to each customer environment and can include sensitive infrastructure configuration details.
 
-**Back to Base Operators README:** [Base Operators Overview](../README.md)
+**Back to OpenShift Deployment Order:** [OpenShift Deployment Order](openshift.md)
 
 ## Table of Contents
 
-- [Directory Structure](#directory-structure)
-- [What the Playbook Does](#what-the-playbook-does)
-- [Prerequisites](#prerequisites)
-- [Playbook Features & Improvements](#playbook-features--improvements)
-- [Required Environment Variables](#required-environment-variables)
-- [How to Run](#how-to-run)
-- [Re-running the Playbook](#re-running-the-playbook)
-- [Validation](#validation)
-- [Installed Resources](#installed-resources)
-- [Template Defaults](#template-defaults)
-- [Troubleshooting](#troubleshooting)
+- [Install Red Hat Gitea Operator on OpenShift](#install-red-hat-gitea-operator-on-openshift)
+  - [Gitea Note](#gitea-note)
+  - [Table of Contents](#table-of-contents)
+  - [Directory Structure](#directory-structure)
+  - [What the Playbook Does](#what-the-playbook-does)
+  - [Prerequisites](#prerequisites)
+  - [Playbook Features \& Improvements](#playbook-features--improvements)
+  - [Required Environment Variables](#required-environment-variables)
+  - [How to Run](#how-to-run)
+  - [Re-running the Playbook](#re-running-the-playbook)
+  - [Validation](#validation)
+  - [Installed Resources](#installed-resources)
+  - [Template Defaults](#template-defaults)
+  - [Troubleshooting](#troubleshooting)
 
 ## Directory Structure
 
-- install_gitea.yaml: Main playbook
-- templates/operator-group.yaml.j2: OperatorGroup manifest
-- templates/catalog-source.yaml.j2: CatalogSource manifest (quay.io/rhpds/gitea-catalog:latest)
-- templates/subscription.yaml.j2: Operator subscription manifest
-- templates/instance.yaml.j2: Gitea custom resource instance manifest
+- playbooks/deploy_openshift.yaml: Main entry point playbook that orchestrates OpenShift roles
+- roles/openshift_gitea/tasks/main.yaml: Role tasks for Gitea operator and instance deployment
+- roles/openshift_gitea/templates/operator-group.yaml.j2: OperatorGroup manifest
+- roles/openshift_gitea/templates/catalog-source.yaml.j2: CatalogSource manifest (quay.io/rhpds/gitea-catalog:latest)
+- roles/openshift_gitea/templates/subscription.yaml.j2: Operator subscription manifest
+- roles/openshift_gitea/templates/instance.yaml.j2: Gitea custom resource instance manifest
 
 [Back to Table of Contents](#table-of-contents)
 
 ## What the Playbook Does
 
-The playbook in this folder performs the following workflow:
+The role performs the following workflow:
 
 1. Logs in to OpenShift using environment-provided token and API URL.
 2. Creates namespace gitea-operator.
@@ -96,10 +100,22 @@ Get token and API URL from the OpenShift web console:
 
 ## How to Run
 
-From this folder:
+From the repository root. Running this role-specific command is optional:
 
 ```bash
-ansible-playbook install_gitea.yaml
+ansible-playbook playbooks/deploy_openshift.yaml --tags gitea
+```
+
+Run the full OpenShift workflow instead:
+
+```bash
+ansible-playbook playbooks/deploy_openshift.yaml
+```
+
+Run the full Cisco AI Pods workflow (all domains) instead:
+
+```bash
+ansible-playbook playbooks/deploy_ai_pod.yaml
 ```
 
 [Back to Table of Contents](#table-of-contents)
@@ -111,7 +127,7 @@ This playbook is safe to re-run. Existing resources are reconciled rather than r
 If a run fails, correct the issue and run the same command again:
 
 ```bash
-ansible-playbook install_gitea.yaml
+ansible-playbook playbooks/deploy_openshift.yaml --tags gitea
 ```
 
 [Back to Table of Contents](#table-of-contents)
@@ -172,6 +188,12 @@ If needed, adjust templates before execution.
 
 ## Troubleshooting
 
+- Operator subscriptions do not install:
+  - Check cluster OperatorHub and catalog source availability.
+  - Confirm namespace and OperatorGroup prerequisites are present.
+  - Validate image registry reachability from cluster nodes.
+- CRDs are missing after install:
+  - Wait for the CSV to reach `Succeeded`, then re-check CRD registration.
 - oc login failure:
   - Confirm openshift_api_url and openshift_token_id are exported in the same shell.
 - Operator deployment never becomes ready:

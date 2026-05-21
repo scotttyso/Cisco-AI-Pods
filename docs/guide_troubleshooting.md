@@ -49,7 +49,7 @@ head -1 $intersight_secret_key
 # Should start with: -----BEGIN RSA PRIVATE KEY-----
 
 # Enable debug logging for detailed error information
-python3 deploy_intersight_ucs.py -dl 7
+ansible-playbook playbooks/deploy_ai_pod.yaml --tags intersight -vvv
 ```
 
 **Resolution:**
@@ -498,7 +498,7 @@ python3 deploy_intersight_ucs.py -dl 7
 in your Home Folder look under the Logs Directory
 
 # Ansible logs  
-ansible-playbook -vvv playbook.yml 2>&1 | tee ansible.log
+ansible-playbook -vvv playbook.yaml 2>&1 | tee ansible.log
 
 # Switch logs
 show logging

@@ -3,6 +3,18 @@
 #=============================================================================
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
 import sys
+from pathlib import Path
+
+SCRIPT_PATH = Path(__file__).resolve().parent
+CLASSES_PATH = SCRIPT_PATH / 'src'
+REPO_ROOT = SCRIPT_PATH.parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+if str(SCRIPT_PATH) not in sys.path:
+    sys.path.insert(1, str(SCRIPT_PATH))
+if str(CLASSES_PATH) not in sys.path:
+    sys.path.insert(2, str(CLASSES_PATH))
+
 try:
     from roles.intersight_ucs_provision.library.src import pcolor
     from dotmap import DotMap

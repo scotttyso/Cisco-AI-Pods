@@ -1,10 +1,10 @@
 # Configure Active Directory LDAP Authentication for OpenShift
 
-Ansible playbook that configures OpenShift OAuth to authenticate against Active Directory via LDAP/LDAPS, creates the `ldap-sync` project, deploys the LDAP group synchronization secret, RBAC, service account, and a CronJob that runs every hour to keep OpenShift groups in sync with AD.
+This guide covers the role-based workflow that configures OpenShift OAuth to authenticate against Active Directory via LDAP/LDAPS, creates the `ldap-sync` project, deploys the LDAP group synchronization secret, RBAC, service account, and a CronJob that runs every hour to keep OpenShift groups in sync with AD.
 
 **Reference:** [OpenShift LDAP Configuration](https://examples.openshift.pub/cluster-configuration/authentication/activedirectory-ldap/)
 
-**Back to OpenShift README:** [OpenShift Deployment Order](../README.md)
+**Back to OpenShift Deployment Order:** [OpenShift Deployment Order](openshift.md)
 
 ---
 
@@ -34,23 +34,16 @@ Ansible playbook that configures OpenShift OAuth to authenticate against Active 
 
 ## Directory Structure
 
-```
-openshift/
-├── examples/
-│   └── ldap.ezai.yaml                # Example variables file (source)
-├── script_vars/
-│   └── ldap.ezai.yaml                # Runtime variables consumed by playbooks
-└── oath_ldap/
-  ├── configure_oath_ldap.yaml      # Main Ansible playbook
-  ├── <path-to-ca.crt>              # PEM bundle of LDAP CA certificates (provide your own) for secure LDAP
-  └── templates/                    # Jinja2 templates
-    ├── active-directory.yaml.j2      # OpenShift OAuth identity provider config
-    ├── ldap-sync.yaml.j2             # LDAPSyncConfig for group synchronization
-    ├── ldap-cron.yaml.j2             # CronJob manifest (runs `oc adm groups sync` hourly)
-    ├── project.yaml.j2               # ldap-sync namespace manifest
-    ├── rbac-ldap-group-sync.yaml.j2  # ClusterRole for ldap-sync service account
-    └── whitelist.txt.j2              # Group DN whitelist for ldap-sync
-```
+- `playbooks/deploy_openshift.yaml`: OpenShift entry point playbook
+- `playbooks/deploy_ai_pod.yaml`: Full-stack entry point playbook
+- `host_vars/openshift/ldap.ezai.yaml`: Active LDAP variables file
+- `roles/openshift_auth/tasks/main.yaml`: Role tasks for LDAP OAuth and group sync resources
+- `roles/openshift_auth/templates/active-directory.yaml.j2`: OpenShift OAuth identity provider config
+- `roles/openshift_auth/templates/ldap-sync.yaml.j2`: LDAPSyncConfig for group synchronization
+- `roles/openshift_auth/templates/ldap-cron.yaml.j2`: CronJob manifest (runs `oc adm groups sync` hourly)
+- `roles/openshift_auth/templates/project.yaml.j2`: ldap-sync namespace manifest
+- `roles/openshift_auth/templates/rbac-ldap-group-sync.yaml.j2`: ClusterRole for ldap-sync service account
+- `roles/openshift_auth/templates/whitelist.txt.j2`: Group DN whitelist for ldap-sync
 
 ---
 
@@ -77,7 +70,7 @@ openssl s_client -showcerts -connect ldap-server.example.com:636 </dev/null 2>/d
 
 ## Playbook Features & Improvements
 
-The `configure_oath_ldap.yaml` playbook includes the following production-ready features:
+The role includes the following production-ready features:
 
 - **Pre-task Validation**: Verifies `oc` CLI availability and required environment variables before execution
 - **Configuration Validation**: Asserts all required LDAP configuration keys are present
@@ -94,13 +87,13 @@ The `configure_oath_ldap.yaml` playbook includes the following production-ready 
 
 ## Quick Start
 
-1. **Create the vars folder (if needed), then copy and edit the variables file:**
+1. **Create the host_vars folder (if needed) then Copy and Edit the LDAP variables file:**
 
-   ```bash
-  mkdir -p ../script_vars
-  cp ../examples/ldap.ezai.yaml ../script_vars/ldap.ezai.yaml
-  # edit ../script_vars/ldap.ezai.yaml with your environment values
-   ```
+  ```bash
+  mkdir host_vars/
+  cp -r examples/openshift
+  vi host_vars/openshift/ldap.ezai.yaml
+  ```
 
 2. **Export sensitive credentials as environment variables** — the playbook reads these at runtime and never writes them to disk:
 
@@ -116,11 +109,23 @@ The `configure_oath_ldap.yaml` playbook includes the following production-ready 
    ![Copy Login Command](images/openshift/copy_login_command.png)
    ![Display Token](images/openshift/display_token.png)
 
-3. **Run the playbook:**
+3. **Run only LDAP auth (optional):**
 
    ```bash
-   ansible-playbook configure_oath_ldap.yaml
+  ansible-playbook playbooks/deploy_openshift.yaml --tags auth
    ```
+
+  Run the full OpenShift workflow instead:
+
+  ```bash
+  ansible-playbook playbooks/deploy_openshift.yaml
+  ```
+
+  Run the full Cisco AI Pods workflow (all domains) instead:
+
+  ```bash
+  ansible-playbook playbooks/deploy_ai_pod.yaml
+  ```
 
 4. **Trigger the first sync manually** (LDAP groups must exist before assigning cluster roles):
 
@@ -140,12 +145,12 @@ The `configure_oath_ldap.yaml` playbook includes the following production-ready 
 
 The playbook is **fully idempotent** and safe to re-run at any time. If execution fails or you need to update configuration:
 
-1. Update your `../script_vars/ldap.ezai.yaml` with corrected settings
+1. Update your `host_vars/openshift/ldap.ezai.yaml` with corrected settings
 2. Re-export environment variables with updated values
 3. Run the playbook again:
 
    ```bash
-   ansible-playbook configure_oath_ldap.yaml
+  ansible-playbook playbooks/deploy_openshift.yaml --tags auth
    ```
 
 The playbook will detect existing resources and update them rather than attempting to create duplicates. All Kubernetes API operations include automatic retry logic (3 attempts with 5-second delays) to handle transient network issues.
@@ -156,7 +161,7 @@ The playbook will detect existing resources and update them rather than attempti
 
 ## Variables Reference
 
-All variables live under the top-level `openshift.ldap` object in `../script_vars/ldap.ezai.yaml`.
+All variables live under the top-level `openshift.ldap` object in `host_vars/openshift/ldap.ezai.yaml`.
 
 | Key | Required | Description |
 |-----|----------|-------------|
@@ -194,7 +199,7 @@ openshift:
 
 The playbook executes the following steps in order:
 
-1. Loads and recursively merges all YAML variables from `../script_vars/`
+1. Loads and recursively merges all YAML variables from `host_vars/openshift/*.ezai.yaml`
 2. Logs in to OpenShift using the token and API URL from environment variables
 3. Creates the `ldap-bind-password` Secret in `openshift-config`
 4. Creates the `ldap-ca-cert` ConfigMap in `openshift-config` (LDAPS only)

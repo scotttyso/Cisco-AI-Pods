@@ -18,21 +18,22 @@ def prRed(message: str) -> None:
 
 import sys
 from pathlib import Path
-from typing import Any
-
-from roles.intersight_ucs_provision.library.src import initialize, pcolor
 
 SCRIPT_PATH = Path(__file__).resolve().parent
 CLASSES_PATH = SCRIPT_PATH / 'src'
+REPO_ROOT = SCRIPT_PATH.parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 if str(SCRIPT_PATH) not in sys.path:
-    sys.path.insert(0, str(SCRIPT_PATH))
+    sys.path.insert(1, str(SCRIPT_PATH))
 if str(CLASSES_PATH) not in sys.path:
-    sys.path.insert(1, str(CLASSES_PATH))
+    sys.path.insert(2, str(CLASSES_PATH))
 
 try:
     import argparse, os
     from dotmap import DotMap
-    from roles.intersight_ucs_provision.library.src import shared_functions
+    from typing import Any
+    from roles.intersight_ucs_provision.library.src import initialize, pcolor, shared_functions
 except ImportError as error:
     prRed(f'Deploy UCS - !!! ERROR !!!\n{error.__class__.__name__}')
     prRed(f" Module {error.name} is required to run this script")

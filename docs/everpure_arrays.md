@@ -19,8 +19,8 @@ This guide covers Day 0 automation for Everpure FlashArray and FlashBlade config
 
 The array workflow configures settings on FlashArray and FlashBlade using task sets under:
 
-- `tasks/flash_array/`
-- `tasks/flash_blade/`
+- `roles/everpure/tasks/flash_array/`
+- `roles/everpure/tasks/flash_blade/`
 
 This includes network, security/access, system, users, and (for FlashBlade) optional notification integrations based on the values you provide.
 
@@ -28,33 +28,28 @@ This includes network, security/access, system, users, and (for FlashBlade) opti
 
 ## Prerequisites
 
-- Ansible collections installed from the repository root `requirements.yaml` (see [Prepare the Environment](../guide_prepare_the_environment.md#install-ansible-on-ubuntu))
-- Python dependencies installed from the repository root `requirements.txt` (see [Prepare the Environment](../guide_prepare_the_environment.md#install-ansible-on-ubuntu))
+- Ansible collections installed from the repository root `requirements.yaml` (see [Prepare the Environment](guide_prepare_the_environment.md#install-ansible-on-ubuntu))
+- Python dependencies installed from the repository root `requirements.txt` (see [Prepare the Environment](guide_prepare_the_environment.md#install-ansible-on-ubuntu))
 - Network connectivity from Ansible host to all array management endpoints
 - API tokens for each array entry in your variables
 
 Install dependencies:
 
 ```bash
-cd ..
 ansible-galaxy collection install -r requirements.yaml
 pip install -r requirements.txt
-cd everpure
 ```
 
 [Back to Table of Contents](#table-of-contents)
 
 ## Configuration Files
 
-Current files in this folder:
+Current files structure:
 
-- `script_vars/*.yaml`: variable definitions loaded by the playbook
-- `configure_everpure_arrays.yaml`: array configuration playbook
+- `host_vars/everpure/*.yaml`: variable definitions loaded by the playbook
+- `roles/everpure/tasks/main.yaml`: array configuration tasks
 
-> **Tip:** The `examples/` folder contains a sample input YAML file. Copy it to `script_vars/` and update the values for your environment:
-> ```bash
-> cp examples/everpure.ezai.yaml script_vars/
-> ```
+> **Tip:** Edit `host_vars/everpure/everpure.ezai.yaml` with your environment values.
 
 The playbook validates that `everpure` exists and that at least one of `everpure.flash_arrays` or `everpure.flash_blades` is defined before running tasks.
 
@@ -75,12 +70,18 @@ Additional environment variables may be required by your selected security/syste
 
 [Back to Table of Contents](#table-of-contents)
 
-## Run the Array Configuration Playbook
+## Run the Array Configuration
 
-From this folder:
+Run array configuration as part of full stack (optional):
 
 ```bash
-ansible-playbook configure_everpure_arrays.yaml
+ansible-playbook playbooks/deploy_ai_pod.yaml --tags everpure
+```
+
+Run the full Cisco AI Pods workflow instead:
+
+```bash
+ansible-playbook playbooks/deploy_ai_pod.yaml
 ```
 
 [Back to Table of Contents](#table-of-contents)
@@ -134,10 +135,10 @@ ansible localhost -m purestorage.flashblade.purefb_info -a "fb_url=<flashblade_f
 - Authentication errors:
   - Confirm `pure_api_token_<id>` environment variable names match `api_token_id` values.
 - Variable load failures:
-  - Confirm at least one YAML file exists in `script_vars/` and contains a `everpure` root key.
+  - Confirm at least one YAML file exists in `host_vars/everpure/` and contains an `everpure` root key.
 - Module import errors:
   - Reinstall required collections and Python packages from the repository root `requirements.yaml` and `requirements.txt`.
-  - See [Prepare the Environment](../guide_prepare_the_environment.md#install-ansible-on-ubuntu).
+  - See [Prepare the Environment](guide_prepare_the_environment.md#install-ansible-on-ubuntu).
 - Task skipped unexpectedly:
   - Check conditional keys like `everpure.settings.network`, `everpure.settings.security`, `everpure.settings.system`, and `everpure.notifications`.
 

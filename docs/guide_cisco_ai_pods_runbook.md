@@ -125,11 +125,11 @@ Cisco AI Pods is an automated deployment framework for Cisco FlashStack infrastr
 ## ⚠️ Environment Deployment Execution Order
 
 | Phase | Must Complete Before | Key Validation |
-|-------|---------------------|----------------|
+|-------|---------------------|-------------|
 | Network Foundation | Any automation scripts | Network connectivity test |
 | Intersight/UCS | Storage configuration | Server discovery in Intersight |
 | Everpure | Operating System installation | Portworx CSI volume management |
-| Red Hat OCP OS deploy | AI Software deployment | CNI / CSI validation |
+| Red Hat OCP Install/Config | AI Software deployment | CNI / CSI validation |
 | NVIDIA AI Enterprise | LLM deployment | All services operational |
 | Splunk Observability Cloud | N/A | Full Stack Visiblity |
 
@@ -179,25 +179,48 @@ If any phase fails, follow this rollback approach:
 
 [Cisco AI Pods Network Configuration Guide](./network/README.md#cisco-ai-pods-network-configuration-guide)
 
+## Cisco AI Pods Automation Playbooks
+
+All deployment automation is orchestrated through centralized Ansible playbooks in the repository root:
+
+- **Full Stack Deployment:** `playbooks/deploy_ai_pod.yaml` — Orchestrates all domains (Intersight, Everpure, Portworx, OpenShift, Splunk) in deployment order
+- **OpenShift Only:** `playbooks/deploy_openshift.yaml` — OpenShift cluster installation and configuration (auth, certificates, GitOps, ArgoCD, Gitea)
+- **Storage Only:** `playbooks/deploy_storage.yaml` — Everpure arrays and Portworx CSI deployment
+- **Intersight/UCS:** `playbooks/deploy_intersight_ucs.yaml` — Intersight policy provisioning and server deployment
+- **Observability:** `playbooks/deploy_observability.yaml` — Splunk Observability integration
+
+Run playbooks from the repository root:
+
+```bash
+# Full stack deployment
+ansible-playbook playbooks/deploy_ai_pod.yaml
+
+# OpenShift only
+ansible-playbook playbooks/deploy_openshift.yaml
+
+# Specific roles using tags
+ansible-playbook playbooks/deploy_ai_pod.yaml --tags certificates
+```
+
+Variables are automatically loaded from `host_vars/` subdirectories and merged at runtime.
+
 ## Cisco AI Pods Intersight Deployment Guide
 
 Follow the steps in the Intersight configuration section.
 
-[Cisco AI Pods Intersight Deployment Guide](./intersight/README.md#cisco-ai-pods-intersight-deployment-guide)
-
-## Cisco AI Pods C885A M8 Server Deployment Guide
+[Cisco AI Pods Intersight Deployment Guide](./intersight.md#cisco-ai-pods-intersight-deployment-guide)
 
 ## Cisco AI Pods Everpure Deployment Guide
 
 Follow the steps in the Everpure configuration section.
 
-[Cisco AI Pods Everpure Deployment Guide](./everpure/README.md#cisco-ai-pods-everpure-deployment-guide)
+[Cisco AI Pods Everpure Deployment Guide](./everpure.md#cisco-ai-pods-everpure-deployment-guide)
 
 ## Cisco AI Pods OpenShift Container Platform Deployment Guide
 
 Follow the steps in the OpenShift configuration section.
 
-[Cisco AI Pods OpenShift Container Platform Deployment Guide](./openshift/README.md#cisco-ai-pods-openshift-container-platform-deployment-guide)
+[Cisco AI Pods OpenShift Container Platform Deployment Guide](./openshift.md#cisco-ai-pods-openshift-container-platform-deployment-guide)
 
 ### [<ins>Back to Table of Contents<ins>](#table-of-contents)
 

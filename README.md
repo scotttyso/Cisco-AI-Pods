@@ -14,117 +14,209 @@ This repository contains automation and runbooks for Cisco AI Pods infrastructur
   - [Quick Start Workflow](#quick-start-workflow)
   - [Common Commands](#common-commands)
   - [Troubleshooting and Operations](#troubleshooting-and-operations)
+  - [Architecture](#architecture)
+  - [Support and Contribution](#support-and-contribution)
 
 ## Overview
 
-Current repository workflows are primarily:
+The repository provides centralized Ansible-based automation for complete Cisco AI Pods infrastructure deployment across:
 
-- Python-based automation for Intersight/UCS configuration
-- Ansible-based automation for Everpure, OpenShift, and observability integrations
+- **Intersight and UCS** - Policy provisioning, resource pool management, and server profile deployment
+- **Everpure Storage** - FlashArray and FlashBlade configuration with Portworx CSI integration
+- **Red Hat OpenShift** - Cluster installation, authentication, certificates, GitOps, and ArgoCD
+- **Splunk Observability** - Full-stack visibility and monitoring integration
 
-Legacy Terraform references were removed from this guide to reflect the current model.
+All workflows use centralized playbooks in `playbooks/` with tag-based conditional execution and variable auto-loading from `host_vars/`.
 
 ## Primary Workstreams
 
-1. Intersight and UCS deployment
-- Guide: [intersight/README.md](intersight/README.md)
-- Entry point: `intersight/deploy_intersight_ucs.py`
+All workflows execute through centralized Ansible playbooks from the repository root:
 
-2. Everpure storage and Portworx
-- Guide: [everpure/README.md](everpure/README.md)
-- Array and Portworx specifics: [everpure/README_everpure_arrays.md](everpure/README_everpure_arrays.md), [everpure/README_portworx.md](everpure/README_portworx.md)
+1. **Full Stack Deployment** (`playbooks/deploy_ai_pod.yml`)
+   - Orchestrates all domains in deployment order
+   - Automatically loads variables from `host_vars/` subdirectories
+   - Supports `--tags` for selective execution
 
-3. OpenShift lifecycle modules
-- Guide: [openshift/README.md](openshift/README.md)
+2. **Intersight and UCS** (`playbooks/deploy_ai_pod.yml --tags intersight`)
+   - Guide: [docs/intersight.md](docs/intersight.md)
+   - Includes policy, pool, and profile provisioning
 
-4. Splunk observability integration
-- Guide: [splunk-ai-pods/README.md](splunk-ai-pods/README.md)
+3. **Everpure Storage and Portworx** (`playbooks/deploy_ai_pod.yml --tags everpure,portworx`)
+   - Guide: [docs/everpure.md](docs/everpure.md)
+   - Array configuration: [docs/everpure_arrays.md](docs/everpure_arrays.md)
+   - Portworx CSI: [docs/everpure_portworx.md](docs/everpure_portworx.md)
 
-5. NetApp/Trident assets
-- Guide: [netapp/README.md](netapp/README.md)
+4. **OpenShift Platform** (`playbooks/deploy_openshift.yml` or `playbooks/deploy_ai_pod.yml --tags openshift`)
+   - Guide: [docs/openshift.md](docs/openshift.md)
+   - Includes authentication, certificates, GitOps, and ArgoCD
+
+5. **Splunk Observability** (`playbooks/deploy_ai_pod.yml --tags observability`)
+   - Guide: [docs/splunk_observability.md](docs/splunk_observability.md)
+   - Full-stack monitoring and observability integration
 
 ## Repository Layout
 
-Top-level structure (abbreviated):
+Top-level structure:
 
 ```text
 Cisco-AI-Pods/
-  best_practices/
-  everpure/
-  intersight/
-  netapp/
-  openshift/
-  playbooks/
-  roles/
-  schema/
-  splunk-ai-pods/
-  guide_cisco_ai_pods_runbook.md
-  guide_prepare_the_environment.md
-  guide_troubleshooting.md
-  requirements.txt
-  requirements.yaml
+  docs/                          # All documentation
+    intersight.md
+    openshift.md
+    everpure.md
+    splunk_observability.md
+    guide_cisco_ai_pods_runbook.md
+    guide_prepare_the_environment.md
+    guide_troubleshooting.md
+  playbooks/                     # Centralized Ansible playbooks
+    deploy_ai_pod.yml            # Full stack orchestration
+    deploy_openshift.yml         # OpenShift only
+    deploy_storage.yml           # Storage/Portworx only
+    deploy_intersight_ucs.yml    # Intersight only
+    deploy_observability.yml     # Splunk Observability only
+  roles/                         # Ansible roles
+    intersight_*/
+    openshift_*/
+    everpure/
+    portworx_csi/
+    splunk_observability/
+  host_vars/                     # Environment variables (auto-loaded)
+    everpure/
+    intersight/
+    openshift/
+    splunk_observability/
+  examples/                      # Example variable templates
+  schema/                        # YAML schema for validation
+  requirements.txt               # Python dependencies
+  requirements.yaml              # Ansible collection dependencies
 ```
 
 ## Runbook Documents
 
-- Main runbook: [guide_cisco_ai_pods_runbook.md](guide_cisco_ai_pods_runbook.md)
-- Environment preparation: [guide_prepare_the_environment.md](guide_prepare_the_environment.md)
-- Troubleshooting: [guide_troubleshooting.md](guide_troubleshooting.md)
-- Best-practice phases index: [best_practices/README.md](best_practices/README.md)
+All documentation is in the `docs/` folder:
+
+- **Start here:** [docs/guide_prepare_the_environment.md](docs/guide_prepare_the_environment.md) — Install dependencies and prepare your environment
+- **Main runbook:** [docs/guide_cisco_ai_pods_runbook.md](docs/guide_cisco_ai_pods_runbook.md) — Complete deployment workflow and playbook usage
+- **Troubleshooting:** [docs/guide_troubleshooting.md](docs/guide_troubleshooting.md) — Cross-component triage and solutions
+- **Domain-specific guides:**
+  - [docs/intersight.md](docs/intersight.md) — Intersight/UCS provisioning
+  - [docs/openshift.md](docs/openshift.md) — OpenShift deployment
+  - [docs/everpure.md](docs/everpure.md) — Storage configuration
+  - [docs/splunk_observability.md](docs/splunk_observability.md) — Observability integration
 
 ## Environment Preparation
 
 Prepare tools and dependencies first:
 
-1. Follow [guide_prepare_the_environment.md](guide_prepare_the_environment.md).
-2. Install Python dependencies from [requirements.txt](requirements.txt).
-3. Install Ansible collections from [requirements.yaml](requirements.yaml).
+1. Follow [docs/guide_prepare_the_environment.md](docs/guide_prepare_the_environment.md).
+2. Install Python dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Install Ansible collections:
+   ```bash
+   ansible-galaxy collection install -r requirements.yaml
+   ```
 
 ## Quick Start Workflow
 
-1. Prepare environment and credentials.
-2. Run Intersight/UCS automation:
+### 1. Prepare Environment
 
 ```bash
-cd intersight
-python3 deploy_intersight_ucs.py
+# Install dependencies
+pip install -r requirements.txt
+ansible-galaxy collection install -r requirements.yaml
+
+# Copy example variables to host_vars/ and customize for your environment
+mkdir -p host_vars
+cp -r examples/intersight host_vars/
+cp -r examples/openshift host_vars/
+cp -r examples/everpure host_vars/
+cp -r examples/splunk_observability host_vars/
 ```
 
-3. Run Everpure workflows as needed:
+### 2. Deploy Full Stack (All Domains)
 
 ```bash
-cd everpure
-ansible-playbook configure_everpure_arrays.yaml
-ansible-playbook create_pure_json.yaml
+ansible-playbook playbooks/deploy_ai_pod.yml
 ```
 
-4. Run OpenShift modules in order documented in [openshift/README.md](openshift/README.md).
+### 3. Deploy Specific Domains (Optional)
 
-5. Deploy observability components if required via [splunk-ai-pods/README.md](splunk-ai-pods/README.md).
+**Intersight and UCS only:**
+```bash
+ansible-playbook playbooks/deploy_ai_pod.yml --tags intersight
+```
+
+**Storage and Portworx only:**
+```bash
+ansible-playbook playbooks/deploy_ai_pod.yml --tags everpure,portworx
+```
+
+**OpenShift only:**
+```bash
+ansible-playbook playbooks/deploy_openshift.yml
+```
+
+**Splunk Observability only:**
+```bash
+ansible-playbook playbooks/deploy_ai_pod.yml --tags observability
+```
+
+For detailed procedures, see [docs/guide_cisco_ai_pods_runbook.md](docs/guide_cisco_ai_pods_runbook.md).
 
 ## Common Commands
 
-Install Python requirements:
+Run playbook in dry-run mode (check mode):
 
 ```bash
-python3 -m pip install -r requirements.txt
+ansible-playbook playbooks/deploy_ai_pod.yml --check
 ```
 
-Install Ansible collections:
+Run with verbose output for debugging:
 
 ```bash
-ansible-galaxy collection install -r requirements.yaml
+ansible-playbook playbooks/deploy_ai_pod.yml -vvv
 ```
 
-Run the Intersight deployment in check mode:
+List all available tags:
 
 ```bash
-cd intersight
-python3 deploy_intersight_ucs.py -c
+ansible-playbook playbooks/deploy_ai_pod.yml --list-tags
+```
+
+Run a specific role or tag:
+
+```bash
+ansible-playbook playbooks/deploy_ai_pod.yml --tags certificates
 ```
 
 ## Troubleshooting and Operations
 
-- Use [guide_troubleshooting.md](guide_troubleshooting.md) for cross-component triage.
-- For component-specific issues, start with the README in the corresponding top-level folder.
-- Keep model files and runbook documentation synchronized as workflows evolve.
+- **Cross-component triage:** [docs/guide_troubleshooting.md](docs/guide_troubleshooting.md)
+- **Domain-specific issues:**
+  - Intersight: [docs/intersight.md](docs/intersight.md)
+  - OpenShift: [docs/openshift.md](docs/openshift.md)
+  - Storage: [docs/everpure.md](docs/everpure.md)
+  - Observability: [docs/splunk_observability.md](docs/splunk_observability.md)
+- Keep `host_vars/` configurations and documentation synchronized as environments evolve
+- Variables are auto-loaded from `host_vars/` subdirectories at runtime — no manual file copying needed
+
+## Architecture
+
+The repository uses a centralized Ansible architecture:
+
+- **Playbooks** (`playbooks/deploy_*.yml`) — Orchestrate roles in dependency order
+- **Roles** (`roles/*/`) — Task implementations for each domain
+- **Variables** (`host_vars/<domain>/`) — Environment-specific configuration auto-loaded at runtime
+- **Tags** — Control which roles execute via `--tags` flag
+- **Examples** (`examples/`) — Template variable files for reference
+- **Schema** (`schema/`) — YAML validation for configuration files
+
+For detailed architecture information, see [docs/guide_cisco_ai_pods_runbook.md](docs/guide_cisco_ai_pods_runbook.md).
+
+## Support and Contribution
+
+For issues, feature requests, or contributions, please use the GitHub repository issue tracker.
+
+For detailed deployment procedures, consult the documentation in `docs/`.

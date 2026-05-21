@@ -38364,7 +38364,7 @@
         "url": "https://opensource.org/licenses/MIT"
     },
     "title": "Cisco AI Pods - JSON Schema",
-    "version": "2.1.1",
+    "version": "0.1.0",
     "wizard": {
         "domain": {
             "description": "Domain Profile Settings for build deployment wizard.",

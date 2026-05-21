@@ -3,10 +3,20 @@
 #=============================================================================
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
 import sys
+from pathlib import Path
 
-from roles.intersight_ucs_provision.library.src import notifications, pcolor
+SCRIPT_PATH = Path(__file__).resolve().parent
+CLASSES_PATH = SCRIPT_PATH / 'src'
+REPO_ROOT = SCRIPT_PATH.parents[3]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+if str(SCRIPT_PATH) not in sys.path:
+    sys.path.insert(1, str(SCRIPT_PATH))
+if str(CLASSES_PATH) not in sys.path:
+    sys.path.insert(2, str(CLASSES_PATH))
+
 try:
-    from roles.intersight_ucs_provision.library.src import validating
+    from roles.intersight_ucs_provision.library.src import notifications, pcolor, validating
     from copy import deepcopy
     from dotmap import DotMap
     from json_ref_dict import materialize, RefDict
@@ -59,7 +69,7 @@ def base_script_settings(kwargs):
         if type(v) == str and v != None: os.environ[k] = v
     kwargs.script_name   = (sys.argv[0].split(os.sep)[-1]).split('.')[0]
     kwargs.script_path   = os.path.dirname(os.path.realpath(sys.argv[0]))
-    kwargs.schema_path   = os.path.join(os.path.dirname(kwargs.script_path), 'schema')
+    kwargs.schema_path   = str(REPO_ROOT / 'schema')
     kwargs.args.dir      = os.path.abspath(kwargs.args.dir)
     kwargs.home          = Path.home()
     kwargs.logger        = logger

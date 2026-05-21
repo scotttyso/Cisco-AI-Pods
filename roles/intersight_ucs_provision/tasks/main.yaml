@@ -3,9 +3,9 @@
   ansible.builtin.set_fact:
     intersight_directory: "{{ playbook_dir.rstrip('/') | dirname }}/host_vars/intersight"
 
-- name: Validate + Generate Server and NMState Manifest Templates from Inventory
+- name: Intersight UCS Provisioning Python Module
   ansible.builtin.command:
-    cmd: "python3 {{ role_path }}/library/deploy_intersight.py -d {{ intersight_directory }}"
+    cmd: "python3 {{ role_path }}/library/deploy_intersight_ucs.py -d {{ intersight_directory }}"
   register: validation_result
   failed_when: validation_result.rc != 0
   changed_when: false

@@ -1,8 +1,8 @@
 # OpenShift Install — Manifest Generation
 
-This directory contains an Ansible playbook and supporting files to generate the manifests needed to deploy a bare-metal OpenShift cluster via **Cisco iServer** and the **OpenShift Assisted Installer**. It also includes a Python module for generating more complex output artifacts.
+This guide covers the role-based workflow and supporting files used to generate manifests needed to deploy a bare-metal OpenShift cluster via **Cisco iServer** and the **OpenShift Assisted Installer**. It also includes a Python module for generating more complex output artifacts.
 
-**Back to OpenShift README:** [OpenShift Deployment Order](../README.md)
+**Back to OpenShift Deployment Order:** [OpenShift Deployment Order](openshift.md)
 
 ## Table of Contents
 
@@ -10,7 +10,7 @@ This directory contains an Ansible playbook and supporting files to generate the
   - [Table of Contents](#table-of-contents)
   - [Directory Structure](#directory-structure)
   - [Prerequisites](#prerequisites)
-  - [Playbook Features & Improvements](#playbook-features--improvements)
+  - [Playbook Features \& Improvements](#playbook-features--improvements)
   - [Quick Start](#quick-start)
   - [Re-running the Playbook](#re-running-the-playbook)
   - [Variables Reference](#variables-reference)
@@ -30,41 +30,15 @@ This directory contains an Ansible playbook and supporting files to generate the
 
 ## Directory Structure
 
-```
-openshift/
-├── examples/
-│   ├── install.ezai.yaml                    # Example install variables file to copy
-│   └── operators.ezai.yaml                  # Example operators variables file to copy
-├── script_vars/
-│   ├── install.ezai.yaml                    # Active install variables consumed by this module
-│   └── operators.ezai.yaml                  # Active operators variables merged by this module
-└── install/
-  ├── create_install_manifest_files.yaml   # Main Ansible playbook
-  ├── generate_server_and_nmstate_templates.py  # Python module for complex assisted-installer output generation
-  ├── tasks/
-  │   ├── cilium.yaml                      # Cilium CNI manifest tasks
-  │   ├── persistent_net_rules.yaml        # NVIDIA Network Operator udev rule tasks
-  │   └── proxy.yaml                       # HTTP/HTTPS proxy manifest tasks
-  ├── templates/                           # Jinja2 templates
-  │   ├── cilium-config.yaml.j2            # CiliumConfig custom resource
-  │   ├── cilium-network.yaml.j2           # Cluster network config (kube-proxy replacement)
-  │   ├── cilium-subscription.yaml.j2      # Cilium operator subscription
-  │   ├── iserver-cluster.json.j2          # iServer cluster manifest
-  │   ├── iserver-proxy.json.j2            # iServer proxy manifest
-  │   ├── iserver-web.json.j2              # iServer ISO web server manifest
-  │   ├── 70-machine-config-udev-network.yaml.j2
-  │   ├── 70-persistent-net.rules.j2
-  │   ├── 99-kernel-arguments.yaml.j2
-  │   ├── 99-kubelet-config-memory.yaml.j2
-  │   ├── 99-node-disruption-policy.j2
-  │   ├── 99-nvme-nqn-generate.yaml.j2
-  │   └── 99-portworx-multipathd-config.yaml.j2
-  └── assisted-installer/                  # Generated output directory
-    ├── cluster.json
-    ├── ssh.pub
-    ├── web_server.json
-    └── manifests/                       # OpenShift manifests for Assisted Installer
-```
+- `playbooks/deploy_ai_pod.yaml`: Full-stack entry point playbook (includes install role)
+- `host_vars/openshift/install.ezai.yaml`: Active install variables file
+- `host_vars/openshift/operators.ezai.yaml`: Active operators variables merged for install-time manifests
+- `roles/openshift_install/tasks/main.yaml`: Main role tasks
+- `roles/openshift_install/tasks/cilium.yaml`: Cilium CNI manifest tasks
+- `roles/openshift_install/tasks/persistent_net_rules.yaml`: NVIDIA Network Operator udev rule tasks
+- `roles/openshift_install/tasks/proxy.yaml`: HTTP/HTTPS proxy manifest tasks
+- `roles/openshift_install/templates/`: Jinja2 templates used for iServer and install manifests
+- `roles/openshift_install/library/generate_server_and_nmstate_templates.py`: Python module for assisted-installer output generation
 
 [Back to Table of Contents](#table-of-contents)
 
@@ -85,9 +59,9 @@ openshift/
 
 ## Playbook Features & Improvements
 
-`create_install_manifest_files.yaml` now includes:
+The install role now includes:
 
-- Recursive merge loading from `../script_vars/*.yml|*.yaml`
+- Recursive merge loading from `host_vars/openshift/*.ezai.yaml`
 - Required install structure validation before manifest generation
 - SSH public key resolution from sensitive environment variables (`ssh_public_key_<suffix>`) instead of file path lookup
 - Validation that required SSH key environment variables are set before writing `assisted-installer/ssh.pub`
@@ -100,15 +74,14 @@ These updates align the Ansible manifest generator with the Python generator's s
 
 ## Quick Start
 
-1. **Create the shared vars folder if needed, then copy the required example variable files** and populate them with your environment's values:
+1. **Edit the required OpenShift variables files** and populate them with your environment's values:
 
    ```bash
-  mkdir -p ../script_vars
-  cp ../examples/install.ezai.yaml ../script_vars/install.ezai.yaml
-  cp ../examples/operators.ezai.yaml ../script_vars/operators.ezai.yaml
+  vi host_vars/openshift/install.ezai.yaml
+  vi host_vars/openshift/operators.ezai.yaml
    ```
 
-2. **Edit `../script_vars/install.ezai.yaml` and `../script_vars/operators.ezai.yaml`** — at a minimum configure:
+2. **At a minimum configure these settings**:
    - `openshift.install.bare_metal.cluster_name`
    - `openshift.install.bare_metal.base_dns_domain`
    - `openshift.install.bare_metal.cluster_version`
@@ -118,10 +91,22 @@ These updates align the Ansible manifest generator with the Python generator's s
    - `openshift.install.bare_metal.servers` (hostnames, roles, interfaces, MACs)
   - `openshift.operators` settings required for install-time generated manifests such as Cilium and persistent network rules
 
-3. **Run the playbook**:
+3. **Run install-only using the full-stack playbook tags (optional):**
+
+  ```bash
+  ansible-playbook playbooks/deploy_ai_pod.yaml --tags install
+  ```
+
+  Run the full Cisco AI Pods workflow (all domains) instead:
+
+  ```bash
+  ansible-playbook playbooks/deploy_ai_pod.yaml
+  ```
+
+  Run the OpenShift workflow instead (only if `openshift_install` role is enabled in `playbooks/deploy_openshift.yaml`):
 
    ```bash
-   ansible-playbook create_install_manifest_files.yaml
+  ansible-playbook playbooks/deploy_openshift.yaml --tags install
    ```
 
   Ensure `ssh_public_key_<suffix>` is exported for the suffix configured in `openshift.install.bare_metal.ssh_public_key`.
@@ -131,8 +116,6 @@ These updates align the Ansible manifest generator with the Python generator's s
     ### Example: export sensitive variables and validate only
 
     ```bash
-    cd openshift/install
-
     export redfish_password_1='replace-with-secret-1'
     export redfish_password_2='replace-with-secret-2'
     export fi_password_1='replace-with-fi-secret-1'
@@ -142,13 +125,13 @@ These updates align the Ansible manifest generator with the Python generator's s
     # Optional: helps avoid GitHub API rate-limit issues when downloading release metadata/assets
     export GITHUB_TOKEN='replace-with-github-token'
 
-    python generate_server_and_nmstate_templates.py --check-env
+    python libary/generate_server_and_nmstate_templates.py --check-env
     ```
 
     ### Example: export sensitive variables and generate output
 
     ```bash
-    cd openshift/install
+    cd roles/openshift_install
 
     export redfish_password_1='replace-with-secret-1'
     export redfish_password_2='replace-with-secret-2'
@@ -157,7 +140,7 @@ These updates align the Ansible manifest generator with the Python generator's s
     export ssh_public_key_1='ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI... your-user@example.com'
     export GITHUB_TOKEN='replace-with-github-token'  # optional
 
-    python generate_server_and_nmstate_templates.py
+    python libary/generate_server_and_nmstate_templates.py
     ```
 
 5. **Prepare the iServer environment**, following:  **🔗 [iServer Console Setup](https://github.com/datacenter/iserver/blob/main/doc/ocp/Console.md)**

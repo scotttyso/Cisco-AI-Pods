@@ -6,14 +6,26 @@
 # Source Modules
 #=============================================================================
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
-import re, sys
+import sys
+from pathlib import Path
 
-from roles.intersight_ucs_provision.library.src import bmc
+SCRIPT_PATH = Path(__file__).resolve().parent
+CLASSES_PATH = SCRIPT_PATH / 'src'
+REPO_ROOT = SCRIPT_PATH.parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+if str(SCRIPT_PATH) not in sys.path:
+    sys.path.insert(1, str(SCRIPT_PATH))
+if str(CLASSES_PATH) not in sys.path:
+    sys.path.insert(2, str(CLASSES_PATH))
+
 try:
+    from roles.intersight_ucs_provision.library.src import bmc
     from roles.intersight_ucs_provision.library.src import pcolor
     from roles.intersight_ucs_provision.library.src.intersight.api import api
     from roles.intersight_ucs_provision.library.src.intersight.configure import configure
     from roles.intersight_ucs_provision.library.src.intersight.system import system
+    import re
 except ImportError as e:
     prRed(f'src/intersight/functions_to_run.py - !!! ERROR !!!\n{e.__class__.__name__}')
     prRed(f" Module {e.name} is required to run this script")

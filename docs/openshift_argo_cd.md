@@ -1,8 +1,8 @@
 # Install OpenShift GitOps Operator
 
-This folder contains an Ansible playbook that installs the OpenShift GitOps Operator and related RBAC/operator resources.
+This guide covers the role-based workflow that installs the OpenShift GitOps Operator and related RBAC/operator resources.
 
-**Back to Base Operators README:** [Base Operators Overview](../README.md)
+**Back to OpenShift Deployment Order:** [OpenShift Deployment Order](openshift.md)
 
 ## Table of Contents
 
@@ -20,16 +20,17 @@ This folder contains an Ansible playbook that installs the OpenShift GitOps Oper
 
 ## Directory Structure
 
-- install_openshift_gitops.yaml: Main installation playbook
-- templates/operator-group.yaml.j2: OperatorGroup manifest
-- templates/rbac.yaml.j2: ClusterRoleBinding manifest for GitOps application controller
-- templates/subscription.yaml.j2: Operator subscription manifest
+- playbooks/deploy_openshift.yaml: Main entry point playbook that orchestrates OpenShift roles
+- roles/openshift_argo_cd/tasks/main.yaml: Role tasks for Argo CD operator installation and validation
+- roles/openshift_argo_cd/templates/operator-group.yaml.j2: OperatorGroup manifest
+- roles/openshift_argo_cd/templates/rbac.yaml.j2: ClusterRoleBinding manifest for GitOps application controller
+- roles/openshift_argo_cd/templates/subscription.yaml.j2: Operator subscription manifest
 
 [Back to Table of Contents](#table-of-contents)
 
 ## What the Playbook Does
 
-The playbook currently performs these steps:
+The role currently performs these steps:
 
 1. Logs in to OpenShift with token and API URL from environment variables.
 2. Creates namespace openshift-gitops-operator.
@@ -90,10 +91,22 @@ To get these in OpenShift web console:
 
 ## How to Run
 
-From this directory:
+From the repository root. Running this role-specific command is optional:
 
 ```bash
-ansible-playbook install_openshift_gitops.yaml
+ansible-playbook playbooks/deploy_openshift.yaml --tags argocd
+```
+
+Run the full OpenShift workflow instead:
+
+```bash
+ansible-playbook playbooks/deploy_openshift.yaml
+```
+
+Run the full Cisco AI Pods workflow (all domains) instead:
+
+```bash
+ansible-playbook playbooks/deploy_ai_pod.yaml
 ```
 
 [Back to Table of Contents](#table-of-contents)
@@ -105,7 +118,7 @@ This playbook is safe to re-run and will reconcile existing resources.
 If execution fails, resolve the root cause and run again:
 
 ```bash
-ansible-playbook install_openshift_gitops.yaml
+ansible-playbook playbooks/deploy_openshift.yaml --tags argocd
 ```
 
 [Back to Table of Contents](#table-of-contents)
@@ -125,6 +138,13 @@ oc get clusterrolebinding openshift-gitops-cluster-admin
 [Back to Table of Contents](#table-of-contents)
 
 ## Troubleshooting
+
+- Operator subscriptions do not install:
+  - Check cluster OperatorHub and catalog source availability.
+  - Confirm namespace and OperatorGroup prerequisites are present.
+  - Validate image registry reachability from cluster nodes.
+- CRDs are missing after install:
+  - Wait for the CSV to reach `Succeeded`, then re-check CRD registration.
 
 - Login failed:
   - Confirm openshift_api_url and openshift_token_id are exported in the same shell that runs ansible-playbook.

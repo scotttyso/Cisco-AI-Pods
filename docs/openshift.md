@@ -6,21 +6,69 @@ Use this guide to run the OpenShift workflow in the correct sequence.
 
 - [OpenShift Deployment Order](#openshift-deployment-order)
   - [Table of Contents](#table-of-contents)
+  - [Quick Start](#quick-start)
+  - [How to Run](#how-to-run)
   - [Variable Files](#variable-files)
   - [Run Order](#run-order)
   - [Troubleshooting](#troubleshooting)
 
+## Quick Start
+
+1. **Create the host_vars folder (if needed) then Copy and Edit the LDAP variables file:**
+
+  ```bash
+  mkdir host_vars/
+  cp -r examples/openshift
+  ```
+
+2. **Edit each of the *.ezai.yaml files in the host_vars/openshift folder.**
+
+3. **Export sensitive credentials as environment variables** — the playbook reads these at runtime and never writes them to disk.  Below are examples based on the example environment:
+
+   ```bash
+   export ldap_bind_password="<bind_password>"
+   export openshift_api_url="https://api.<cluster>.<domain>:6443"
+   export openshift_token_id="<token>"
+   export redfish_password_1='replace-with-secret-1'
+   export redfish_password_2='replace-with-secret-2'
+   export fi_password_1='replace-with-fi-secret-1'
+   export fi_password_2='replace-with-fi-secret-2'
+   export ssh_public_key_1='ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI... your-user@example.com'
+   ```
+
+   Obtain the token from the OpenShift web console:
+   - Click your username (top-right) → **Copy login command** → **Display Token**
+
+   ![Copy Login Command](images/openshift/copy_login_command.png)
+   ![Display Token](images/openshift/display_token.png)
+
+## How to Run
+
+Run all Cisco AI Pods domains:
+
+```bash
+ansible-playbook playbooks/deploy_ai_pod.yaml
+```
+
+Run only the OpenShift workflow:
+
+```bash
+ansible-playbook playbooks/deploy_openshift.yaml
+```
+
+[Back to Table of Contents](#table-of-contents)
+
 ## Variable Files
 
 - The [examples](examples) folder contains example variable files for each OpenShift module.
-- Create the [script_vars](script_vars) folder if it does not exist:
+- Create the [host_vars](host_vars) folder if it does not exist:
 
   ```bash
-  mkdir -p script_vars
+  mkdir -p host_vars
   ```
 
-- Copy the files you need from [examples](examples) into [script_vars](script_vars), then edit the copies with values for your environment.
-- The module playbooks in the Run Order section below read their active inputs from [script_vars](script_vars).
+- Copy the files you need from [examples](examples) into [host_vars](host_vars), then edit the copies with values for your environment.
+- The module playbooks in the Run Order section below read their active inputs from [host_vars](host_vars).
 
 Top-level project README:
 - [Cisco-AI-Pods README](../README.md)
@@ -47,9 +95,9 @@ Top-level project README:
 
 5. Base Operators
 - Installs foundational operators needed before higher-level platform automation.
-- [base_operators README](base_operators/README.md)
 - Note: Gitea is only required if another Git service is not available.
-- [base_operators/gitea README](openshift_argo_cd.md)
+- [Gitea README](openshift_gitea.md)
+- [OpenShift GitOps Operator README](openshift_argo_cd.md)
 
 6. OpenShift GitOps
 - Generates and stages GitOps repository content (Helm/OLM trees and rendered Argo CD applications) consumed by OpenShift GitOps.

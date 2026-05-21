@@ -79,25 +79,23 @@ Before deploying the Splunk monitoring solution, ensure you have:
 
 Install Ansible collections from the repository root requirements file by following:
 
-- [Prepare the Environment](../guide_prepare_the_environment.md#install-ansible-on-ubuntu)
+- [Prepare the Environment](guide_prepare_the_environment.md#install-ansible-on-ubuntu)
 
 Example:
 
 ```bash
-cd ..
 ansible-galaxy collection install -r requirements.yaml
-cd splunk-ai-pods
 ```
 
 ### Step 2: Prepare Variables
 
-1. Create the active variables file:
+1. Edit your active variables file:
 
 ```bash
-cp script_vars/vars.ezcai.example.yaml script_vars/vars.ezcai.yaml
+vi host_vars/splunk_observability/splunk_observability.ezai.yaml
 ```
 
-2. Edit `script_vars/vars.ezcai.yaml` and configure your environment:
+2. Configure your environment:
    - Cluster name
    - Environment designation
    - Splunk Observability realm and access token
@@ -106,7 +104,7 @@ cp script_vars/vars.ezcai.example.yaml script_vars/vars.ezcai.yaml
 
 ### Step 3: Deploy Using Ansible
 
-Set the required environment variables and run the playbook from this directory:
+Set the required environment variables and run the playbook from the repository root:
 
 ```bash
 export openshift_token_id="<your-openshift-token>"
@@ -115,7 +113,13 @@ export splunk_observability_token="<your-splunk-observability-access-token>"
 export splunk_platform_token="<your-splunk-platform-hec-token>"
 export nexus_device_password="<your-nexus-device-password>"
 
-ansible-playbook deploy_splunk_ai_pods.yaml
+ansible-playbook playbooks/deploy_observability.yaml
+```
+
+Or run the full Cisco AI Pods workflow (all domains) instead:
+
+```bash
+ansible-playbook playbooks/deploy_ai_pod.yaml
 ```
 
 **Required Environment Variables:**
@@ -129,7 +133,7 @@ ansible-playbook deploy_splunk_ai_pods.yaml
 
 ## Templates Reference
 
-The deployment playbook uses Jinja2 templates from the `templates/` folder to render Kubernetes resources dynamically based on values in `script_vars/vars.ezcai.yaml` and environment variables.
+The deployment playbook uses Jinja2 templates from the `roles/splunk_observability/templates/` folder to render Kubernetes resources dynamically based on values in `host_vars/splunk_observability/` and environment variables.
 
 ### Template files and usage
 
@@ -160,7 +164,7 @@ The deployment playbook uses Jinja2 templates from the `templates/` folder to re
 
 ### How templates are applied
 
-During `ansible-playbook deploy_splunk_ai_pods.yaml`:
+During `ansible-playbook playbooks/deploy_ai_pod.yaml --tags observability`:
 
 1. OpenTelemetry values are rendered and passed to the Helm chart installation.
 2. If Intersight integration is enabled, Intersight templates are rendered and applied as Kubernetes resources.

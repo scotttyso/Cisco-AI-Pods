@@ -29,4 +29,4 @@
   roles:
     # - role: cisco.ai_pods.intersight_ucs
     - role: intersight_ucs_provision
-      when: when intersight.system is defined or intersight.configure is defined
+      when: intersight.system is defined or intersight.configure is defined

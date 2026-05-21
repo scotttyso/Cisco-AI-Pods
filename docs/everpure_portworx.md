@@ -6,7 +6,7 @@ This guide covers the Portworx-specific flow in this folder:
 2. Install Portworx Operator and StorageCluster on OpenShift.
 3. Create Portworx storage classes from template values.
 
-**Back to OpenShift README:** [OpenShift Deployment Order](../openshift/README.md)
+**Back to OpenShift Deployment Order:** [OpenShift Deployment Order](openshift.md)
 
 ## Table of Contents
 
@@ -22,18 +22,16 @@ This guide covers the Portworx-specific flow in this folder:
 
 ## Prerequisites
 
-- Ansible collections installed from the repository root `requirements.yaml` (see [Prepare the Environment](../guide_prepare_the_environment.md#install-ansible-on-ubuntu))
-- Python dependencies installed from the repository root `requirements.txt` (see [Prepare the Environment](../guide_prepare_the_environment.md#install-ansible-on-ubuntu))
+- Ansible collections installed from the repository root `requirements.yaml` (see [Prepare the Environment](guide_prepare_the_environment.md#install-ansible-on-ubuntu))
+- Python dependencies installed from the repository root `requirements.txt` (see [Prepare the Environment](guide_prepare_the_environment.md#install-ansible-on-ubuntu))
 - OpenShift cluster access (`oc`) with sufficient privileges
 - Everpure API tokens for every array/blade listed in variables
 
 Install dependencies:
 
 ```bash
-cd ..
 ansible-galaxy collection install -r requirements.yaml
 pip install -r requirements.txt
-cd everpure
 ```
 
 [Back to Table of Contents](#table-of-contents)
@@ -42,13 +40,9 @@ cd everpure
 
 Primary variable input:
 
-- `script_vars/*.yaml`
+- `host_vars/everpure/*.yaml`
 
-> **Tip:** The `examples/` folder contains a sample input YAML file. Copy it to `script_vars/` and update the values for your environment:
-> ```bash
-> mkdir -p script_vars
-> cp examples/everpure.ezai.yaml script_vars/
-> ```
+> **Tip:** Edit `host_vars/everpure/everpure.ezai.yaml` with your environment values.
 
 Important keys:
 
@@ -66,19 +60,19 @@ Environment variables used by playbooks:
 export pure_api_token_1="<flasharray_token>"
 export pure_api_token_2="<flashblade_token>"
 
-# OpenShift access (for install_portworx.yaml)
+# OpenShift access (for Portworx deployment)
 export openshift_api_url="https://api.<cluster>.<domain>:6443"
 export openshift_token_id="<token>"
 ```
 
 [Back to Table of Contents](#table-of-contents)
 
-## Step 1: Create pure.json
+## Step 1-2: Create pure.json and Install Portworx
 
-Generate the Portworx credential payload:
+Generate Portworx credentials and install operator/storage (optional):
 
 ```bash
-ansible-playbook create_pure_json.yaml
+ansible-playbook playbooks/deploy_ai_pod.yaml --tags everpure,portworx
 ```
 
 What this does:
@@ -94,15 +88,13 @@ Expected output:
 
 [Back to Table of Contents](#table-of-contents)
 
-## Step 2: Install Portworx
-
-Deploy the operator and storage components:
+Run the full Cisco AI Pods workflow instead:
 
 ```bash
-ansible-playbook install_portworx.yaml
+ansible-playbook playbooks/deploy_ai_pod.yaml
 ```
 
-What this does:
+What the Portworx role does:
 
 1. Loads and validates required Portworx variables.
 2. Validates required OpenShift environment variables.
@@ -112,12 +104,8 @@ What this does:
 6. Creates or updates secret `px-pure-secret` from local `pure.json`.
 7. Creates Portworx subscription `portworx-certified` in `openshift-operators`.
 8. Waits for deployment `portworx-operator` to become ready.
-9. Applies `templates/storage-cluster.yaml.j2`.
-10. Applies one StorageClass per entry in `everpure.portworx.storage_classes` using `templates/storage-classes.yaml.j2`.
-
-Optional behavior:
-
-- Set `prompt_before_storagecluster_apply=true` to require interactive confirmation before StorageCluster apply.
+9. Applies StorageCluster manifest.
+10. Applies one StorageClass per entry in `everpure.portworx.storage_classes`.
 
 [Back to Table of Contents](#table-of-contents)
 
@@ -136,7 +124,7 @@ Replace `<portworx-namespace>` with the value in `everpure.portworx.namespace` (
 
 ## Step 4: Test PVC Provisioning
 
-Example manifests are in `examples/`.
+Example manifests are in `roles/portworx_csi/templates/`.
 
 ```bash
 cd examples
@@ -155,7 +143,7 @@ Confirm PVCs bind successfully and backing volumes are created.
 - Portworx operator not ready:
   - Check subscription and CSV in `openshift-operators`.
 - Secret exists but contains old values:
-  - Re-run `create_pure_json.yaml` then `install_portworx.yaml` to reconcile `px-pure-secret`.
+  - Re-run `ansible-playbook playbooks/deploy_ai_pod.yaml --tags portworx` to reconcile `px-pure-secret`.
 - StorageCluster not progressing:
   - Check events and describe the StorageCluster resource.
 

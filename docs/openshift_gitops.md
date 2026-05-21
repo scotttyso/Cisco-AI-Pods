@@ -1,8 +1,8 @@
 # OpenShift GitOps File Generator
 
-This directory contains the Ansible workflow that prepares GitOps content for OpenShift cluster add-on operators used by Cisco AI Pods. The playbook copies the local Helm and OLM catalog trees into a destination Git repository structure, then renders Argo CD Application manifests and supporting YAML from Jinja2 templates.
+This guide covers the role-based workflow that prepares GitOps content for OpenShift cluster add-on operators used by Cisco AI Pods. The role copies the local Helm and OLM catalog trees into a destination Git repository structure, then renders Argo CD Application manifests and supporting YAML from Jinja2 templates.
 
-**Back to OpenShift README:** [OpenShift Deployment Order](../README.md)
+**Back to OpenShift Deployment Order:** [OpenShift Deployment Order](openshift.md)
 
 ## Table of Contents
 
@@ -13,7 +13,7 @@ This directory contains the Ansible workflow that prepares GitOps content for Op
   - [Directory Structure](#directory-structure)
   - [Prerequisites](#prerequisites)
   - [Quick Start](#quick-start)
-  - [Playbook Features & Improvements](#playbook-features--improvements)
+  - [Playbook Features \& Improvements](#playbook-features--improvements)
   - [Variables Reference](#variables-reference)
     - [Core Variables](#core-variables)
     - [GitOps Settings](#gitops-settings)
@@ -32,11 +32,11 @@ This directory contains the Ansible workflow that prepares GitOps content for Op
 
 ## Overview
 
-The main entry point is `generate_openshift_gitops_files.yaml`. For this module, use `../script_vars/operators.ezai.yaml` (copied from `../examples/operators.ezai.yaml`) as the variables file. The playbook loads and recursively merges YAML variables from `../script_vars/`, copies the bundled `helm/` and `olm-catalog/` directories into `openshift.destination_directory`, and renders additional files from `templates/`.
+The main entry point is `playbooks/deploy_openshift.yaml` (or `playbooks/deploy_ai_pod.yaml` for full stack). Use `host_vars/openshift/operators.ezai.yaml` as the variables file. The role loads merged OpenShift variables, copies the bundled `roles/openshift_gitops/helm/` and `roles/openshift_gitops/olm_catalog/` directories into `openshift.destination_directory`, and renders additional files from `roles/openshift_gitops/templates/`.
 
 This workflow is used to build the GitOps repository content that OpenShift GitOps consumes later.
 
-> ⚠️ **Important:** If you are deploying the OpenTelemetry collector for observability, you must also deploy the [Splunk AI Pods](../../splunk-ai-pods/README.md) after the cluster operators are installed. The OpenTelemetry collector configuration depends on components and metrics configurations provided by the Splunk AI Pods deployment.
+> ⚠️ **Important:** If you are deploying the OpenTelemetry collector for observability, you must also deploy [Splunk Observability](splunk_observability.md) after the cluster operators are installed. The OpenTelemetry collector configuration depends on components and metrics configurations provided by that workflow.
 
 [Back to Table of Contents](#table-of-contents)
 
@@ -44,7 +44,7 @@ This workflow is used to build the GitOps repository content that OpenShift GitO
 
 Running the playbook performs these actions:
 
-- Loads and recursively merges YAML variables from `../script_vars/` (this module uses `operators.ezai.yaml`)
+- Loads merged YAML variables from `host_vars/openshift/*.ezai.yaml` (this role uses `operators.ezai.yaml`)
 - Creates the destination directory if it does not already exist
 - Copies the local `helm/` and `olm-catalog/` trees into the destination directory
 - Ensures `olm-catalog/operators/` exists in the destination directory
@@ -57,12 +57,13 @@ Running the playbook performs these actions:
 
 ## Directory Structure
 
-- `generate_openshift_gitops_files.yaml`: Main playbook
-- `../examples/operators.ezai.yaml`: Example variable file to copy and customize for this module
-- `../script_vars/operators.ezai.yaml`: Active variable file consumed by this module
-- `templates/`: Jinja2 templates used to render Argo CD Applications and related resources
-- `helm/`: Helm content copied into the destination GitOps directory
-- `olm-catalog/`: OLM and operator content copied into the destination GitOps directory
+- `playbooks/deploy_openshift.yaml`: OpenShift entry point playbook
+- `playbooks/deploy_ai_pod.yaml`: Full-stack entry point playbook
+- `host_vars/openshift/operators.ezai.yaml`: Active variables file consumed by this role
+- `roles/openshift_gitops/tasks/main.yaml`: Role tasks for GitOps content generation
+- `roles/openshift_gitops/templates/`: Jinja2 templates used to render Argo CD Applications and related resources
+- `roles/openshift_gitops/helm/`: Helm content copied into the destination GitOps directory
+- `roles/openshift_gitops/olm_catalog/`: OLM and operator content copied into the destination GitOps directory
 
 Current template stems include:
 
@@ -90,20 +91,19 @@ Current template stems include:
 - Ansible is installed and available in your shell
 - You have write access to the destination directory defined in the variables file
 - You have a GitOps repository URL to use in generated Argo CD `repoURL` fields
-- You have created `../script_vars/operators.ezai.yaml` from `../examples/operators.ezai.yaml`
+- You have populated `host_vars/openshift/operators.ezai.yaml` with environment-specific values
 
 [Back to Table of Contents](#table-of-contents)
 
 ## Quick Start
 
-1. Create the active variables folder and copy the module example file.
+1. Edit the active variables file.
 
 ```bash
-mkdir -p ../script_vars
-cp ../examples/operators.ezai.yaml ../script_vars/operators.ezai.yaml
+vi host_vars/openshift/operators.ezai.yaml
 ```
 
-2. Edit `../script_vars/operators.ezai.yaml` and define at least:
+2. Define at least:
 
 - `openshift.destination_directory`
 - `openshift.base_dns_domain`
@@ -112,10 +112,22 @@ cp ../examples/operators.ezai.yaml ../script_vars/operators.ezai.yaml
 - `openshift.operators.openshift_gitops.gitops_repo_url`
 - `openshift.operators.operators_to_install`
 
-3. Run the playbook from this directory.
+3. Run only GitOps generation (optional):
 
 ```bash
-ansible-playbook generate_openshift_gitops_files.yaml
+ansible-playbook playbooks/deploy_openshift.yaml --tags gitops
+```
+
+Run the full OpenShift workflow instead:
+
+```bash
+ansible-playbook playbooks/deploy_openshift.yaml
+```
+
+Run the full Cisco AI Pods workflow (all domains) instead:
+
+```bash
+ansible-playbook playbooks/deploy_ai_pod.yaml
 ```
 
 4. Review the generated content in your destination directory before committing it to your GitOps repository.
@@ -126,7 +138,7 @@ ansible-playbook generate_openshift_gitops_files.yaml
 
 The playbook includes these safeguards:
 
-- Recursive merge loading from `../script_vars/*.yml|*.yaml`
+- Recursive merge loading from `host_vars/openshift/*.ezai.yaml`
 - Required `openshift.operators.openshift_gitops.gitops_repo_url` validation before rendering
 - Safe runtime defaults for optional sections (`operators_to_install`, `mac_vlan`, cluster/domain values)
 - Deterministic operator/mac-vlan fact initialization before any conditional rendering tasks
@@ -254,12 +266,12 @@ grep -R "MacvlanNetwork" <destination>/helm/gpu-operator-installation/templates/
 
 ## Re-running the Playbook
 
-This playbook is safe to re-run. Existing generated files are reconciled with current inputs from `../script_vars/`.
+This playbook is safe to re-run. Existing generated files are reconciled with current inputs from `host_vars/openshift/`.
 
 If a run fails, correct the issue and run the same command again:
 
 ```bash
-ansible-playbook generate_openshift_gitops_files.yaml
+ansible-playbook playbooks/deploy_openshift.yaml --tags gitops
 ```
 
 [Back to Table of Contents](#table-of-contents)
@@ -267,9 +279,9 @@ ansible-playbook generate_openshift_gitops_files.yaml
 ## Troubleshooting
 
 - Playbook fails loading variables:
-  - Confirm `../script_vars/operators.ezai.yaml` exists.
+  - Confirm `host_vars/openshift/operators.ezai.yaml` exists.
 - Files are written to the wrong location:
-  - Verify `openshift.destination_directory` in `../script_vars/operators.ezai.yaml`.
+  - Verify `openshift.destination_directory` in `host_vars/openshift/operators.ezai.yaml`.
 - AAP console link has incorrect domain:
   - Define `openshift.base_dns_domain` in your variables file.
   - The playbook defaults to `example.com` if neither is specified.
@@ -285,7 +297,7 @@ ansible-playbook generate_openshift_gitops_files.yaml
 
 ## NVIDIA DCGM Metrics Collection Troubleshooting
 
-For detailed information on deploying and troubleshooting NVIDIA DCGM metrics collection, see the [NVIDIA DCGM Metrics README](../../splunk-ai-pods/nvidia-metrics-dcgm/README.md).
+For detailed information on deploying and troubleshooting NVIDIA DCGM metrics collection, see [docs/splunk_observability.md](splunk_observability.md).
 
 ### DCGM Exporter Pod Not Starting
 
