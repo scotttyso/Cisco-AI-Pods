@@ -20,6 +20,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from roles.intersight_ucs_provision.library.src import initialize, pcolor
+
 SCRIPT_PATH = Path(__file__).resolve().parent
 CLASSES_PATH = SCRIPT_PATH / 'src'
 if str(SCRIPT_PATH) not in sys.path:
@@ -30,7 +32,7 @@ if str(CLASSES_PATH) not in sys.path:
 try:
     import argparse, os
     from dotmap import DotMap
-    from src import initialize, pcolor, shared_functions
+    from roles.intersight_ucs_provision.library.src import shared_functions
 except ImportError as error:
     prRed(f'Deploy UCS - !!! ERROR !!!\n{error.__class__.__name__}')
     prRed(f" Module {error.name} is required to run this script")

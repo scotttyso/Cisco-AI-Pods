@@ -7,11 +7,13 @@
 #=============================================================================
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
 import re, sys
+
+from roles.intersight_ucs_provision.library.src import bmc
 try:
-    from src import bmc, pcolor
-    from src.intersight.api import api
-    from src.intersight.configure import configure
-    from src.intersight.system import system
+    from roles.intersight_ucs_provision.library.src import pcolor
+    from roles.intersight_ucs_provision.library.src.intersight.api import api
+    from roles.intersight_ucs_provision.library.src.intersight.configure import configure
+    from roles.intersight_ucs_provision.library.src.intersight.system import system
 except ImportError as e:
     prRed(f'src/intersight/functions_to_run.py - !!! ERROR !!!\n{e.__class__.__name__}')
     prRed(f" Module {e.name} is required to run this script")

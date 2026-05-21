@@ -1,6 +1,0 @@
----
-# Refactored from intersight/stages/configure_intersight_organizations.yaml
-# TODO: Move task content from intersight/stages/ into this file
-- name: Configure Intersight organizations
-  ansible.builtin.debug:
-    msg: "Placeholder — migrate content from intersight/stages/configure_intersight_organizations.yaml"

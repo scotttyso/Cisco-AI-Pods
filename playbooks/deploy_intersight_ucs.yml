@@ -1,9 +1,32 @@
 ---
 # Intersight-only provisioning
-- name: Provision Cisco Intersight for AI Pod
+- name: Provision Cisco Intersight Managed Servers and Standalone C880A/C885A Servers for AI Pod
   hosts: localhost
   connection: local
   gather_facts: false
 
+  pre_tasks:
+    - name: Find Variable Files Under host_vars
+      ansible.builtin.find:
+        paths: "{{ playbook_dir }}/../host_vars/intersight"
+        patterns:
+          - "*.ezai.yaml"
+        file_type: file
+        recurse: true
+      register: intersight_var_files
+
+    - name: Merge Variable Files Into a Single Dictionary
+      ansible.builtin.set_fact:
+        merged_vars: "{{ merged_vars | default({}) | combine((lookup('ansible.builtin.file', item.path) | from_yaml), recursive=True) }}"
+      loop: "{{ intersight_var_files.files | sort(attribute='path') }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+
+    - name: Set Merged Intersight Object
+      ansible.builtin.set_fact:
+        intersight: "{{ merged_vars.intersight | default({}) }}"
+
   roles:
-    - role: cisco.ai_pods.intersight_provision
+    # - role: cisco.ai_pods.intersight_ucs
+    - role: intersight_ucs_provision
+      when: when intersight.system is defined or intersight.configure is defined

@@ -4,7 +4,7 @@
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
 import sys
 try:
-    from src import pcolor
+    from roles.intersight_ucs_provision.library.src import pcolor
     from dotmap import DotMap
     import json, re
 except ImportError as e:

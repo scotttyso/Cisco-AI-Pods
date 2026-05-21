@@ -1,9 +1,9 @@
 ---
 galaxy_info:
-  role_name: intersight_provision
+  role_name: intersight_ucs_provision
   author: Tyson Scott
   company: Cisco Systems
-  description: Provision Cisco Intersight organizations, pools, policies, and server profiles for AI Pod compute nodes.
+  description: Provision Cisco Intersight System Settings (Organizations|Resource Groups) and Configuration (Pools|Policies|Profiles|Templates).
   license: Apache-2.0
   min_ansible_version: '2.15'
   platforms:

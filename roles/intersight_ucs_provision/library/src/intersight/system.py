@@ -6,8 +6,10 @@
 #=============================================================================
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
 import sys
+
+from .. import notifications
 try:
-    from .. import notifications, pcolor
+    from .. import pcolor
     from .api import api
     from copy import deepcopy
     from dotmap import DotMap
@@ -69,7 +71,7 @@ class system(object):
             item = getattr(self, self.type)(item, kwargs)
         item  = configure(category=self.category, type=self.type).merge_tags(item, kwargs)
         
-        template_dir  = os.path.join(kwargs.script_path, 'templates', 'intersight', f'{self.category}')
+        template_dir  = os.path.join(os.path.dirname(kwargs.script_path), 'templates', 'intersight', f'{self.category}')
         template_name = f'{self.type}.json.j2'
         template_env  = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir), autoescape=False)
 

@@ -7,8 +7,10 @@
 #=============================================================================
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
 import sys
+
+from .. import notifications, pcolor
 try:
-    from .. import notifications, pcolor, shared_functions
+    from .. import shared_functions
     from .api import api
     from OpenSSL import crypto
     from copy import deepcopy
@@ -593,7 +595,7 @@ class configure(object):
 
         item  = self.merge_tags(item, kwargs)
         
-        template_dir  = os.path.join(kwargs.script_path, 'templates', 'intersight', f'{self.category}')
+        template_dir  = os.path.join(os.path.dirname(kwargs.script_path), 'templates', 'intersight', f'{self.category}')
         template_name = f'{self.type}.json.j2'
         template_env  = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir), autoescape=False)
 

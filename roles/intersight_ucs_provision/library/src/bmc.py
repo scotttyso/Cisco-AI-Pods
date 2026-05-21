@@ -3,9 +3,11 @@
 #=============================================================================
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
 import sys
+
+from roles.intersight_ucs_provision.library.src import notifications
 try:
     from src.intersight import api as intersight_api
-    from src import notifications, pcolor
+    from roles.intersight_ucs_provision.library.src import pcolor
     from copy import deepcopy
     from dotmap import DotMap
     import inspect, jinja2, json, os, re, requests, time, urllib3
@@ -182,7 +184,7 @@ class build(object):
         if re.search(r'bios|certificate_management', self.type):
             item = getattr(self, self.type)(item, kwargs)
 
-        template_dir  = os.path.join(kwargs.script_path, 'templates', 'c88xA', f'{self.category}')
+        template_dir  = os.path.join(os.path.dirname(kwargs.script_path), 'templates', 'c88xA', f'{self.category}')
         template_name = f'{self.type}.json.j2'
         template_env  = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir), autoescape=False)
 

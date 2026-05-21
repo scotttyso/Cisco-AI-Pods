@@ -1,0 +1,11 @@
+---
+- name: Set Intersight Variable Folder Fact
+  ansible.builtin.set_fact:
+    intersight_directory: "{{ playbook_dir.rstrip('/') | dirname }}/host_vars/intersight"
+
+- name: Validate + Generate Server and NMState Manifest Templates from Inventory
+  ansible.builtin.command:
+    cmd: "python3 {{ role_path }}/library/deploy_intersight.py -d {{ intersight_directory }}"
+  register: validation_result
+  failed_when: validation_result.rc != 0
+  changed_when: false

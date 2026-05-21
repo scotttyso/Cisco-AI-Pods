@@ -6,8 +6,10 @@
 #=============================================================================
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
 import sys
+
+from .. import notifications, pcolor
 try:
-    from .. import notifications, pcolor, shared_functions
+    from .. import shared_functions
     from copy import deepcopy
     from dotmap import DotMap
     from intersight_auth import IntersightAuth, repair_pem
