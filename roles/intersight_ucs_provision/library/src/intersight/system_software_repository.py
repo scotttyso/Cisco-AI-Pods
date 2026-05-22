@@ -362,8 +362,11 @@ class system_software_repository(object):
                 kwargs = api(self.type).calls(kwargs)
                 kwargs.imm_dict.orgs[kwargs.org].wizard.server_profiles[x].os_install = DotMap(
                     moid=kwargs.pmoid, workflow='')
-        names = [e.os_install.moid for e in kwargs.imm_dict.orgs[kwargs.org]
-                 .wizard.server_profiles if v.os_installed == False and len(e.os_install.moid) > 0]
+        names = [
+            e.os_install.moid
+            for e in kwargs.imm_dict.orgs[kwargs.org].wizard.server_profiles
+            if not v.os_installed and len(e.os_install.moid) > 0
+        ]
         if install_flag:
             pcolor.Cyan(
                 f'\n{"-" * 108}\n\n    Sleeping for 30 Minutes to pause for Workflow/Infos Lookup.')
@@ -385,7 +388,7 @@ class system_software_repository(object):
             if indx is not None:
                 v.os_install.workflow = install_results[indx].WorkflowInfo.Moid
                 install_complete = False
-                while install_complete == False:
+                while not install_complete:
                     kwargs = kwargs | DotMap(
                         method='get_by_moid',
                         pmoid=v.os_install.workflow,
@@ -435,7 +438,7 @@ class system_software_repository(object):
                         tag_server_profile=v.name)
                     kwargs.uri = f'{v.object_type}s'.replace('.', '/')
                     kwargs = api('update_tags').calls(kwargs)
-            elif v.os_installed == False:
+            elif not v.os_installed:
                 os_install_fail_count += 1
                 pcolor.Red(
                     f'      * Something went wrong with the OS Install Request for {v.name}. Please Validate the Server.')

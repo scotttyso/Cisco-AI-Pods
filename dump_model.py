@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
 """
 Dump Intersight model structure to JSON for inspection.
 """

@@ -302,7 +302,8 @@ class configure(object):
         else:
             if check_flag:
                 pcolor.Cyan(
-                    f"     * Running Check Mode: Organization: `{org}`; Non-Check mode would create new {ptitle}: `{parent_name}` - {child_title}: `{api_body[pkey]}`.")
+                    f"     * Running Check Mode: Organization: `{org}`; Non-Check mode would create new {ptitle}: "
+                    f"`{parent_name}` - {child_title}: `{api_body[pkey]}`.")
             else:
                 kwargs.bulk_list.append(deepcopy(api_body))
         return kwargs
@@ -2982,8 +2983,8 @@ class configure(object):
             template_cfg = configure(category='templates', type=ttype)
             for org in orgs:
                 if ttype == 'domain.switch':
-                    names = [f'{e}-{l}' for e in kwargs.templates[org].keys()
-                             for l in ['A', 'B'] if len(e.toDict()) == 0]
+                    names = [f'{e}-{suffix}' for e in kwargs.templates[org].keys()
+                             for suffix in ['A', 'B'] if len(e.toDict()) == 0]
                 else:
                     names = [
                         e for e in kwargs.templates[org].keys() if len(

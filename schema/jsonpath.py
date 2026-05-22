@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
 
 # jsonpath.py <json_file> | grep -i <key>
 """
