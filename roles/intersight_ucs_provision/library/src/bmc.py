@@ -1,3 +1,5 @@
+"""BMC API wrapper for Intersight UCS provisioning."""
+# pylint: disable=invalid-name,missing-class-docstring,missing-function-docstring,too-many-arguments,too-many-positional-arguments,too-many-return-statements,too-many-branches,too-many-statements,too-many-locals
 # =============================================================================
 # Source Modules
 # =============================================================================
@@ -6,7 +8,7 @@ from pathlib import Path
 
 
 def prRed(skk):
-    print("\033[91m {}\033[00m".format(skk))
+    print(f"\033[91m {skk}\033[00m")
 
 
 SCRIPT_PATH = Path(__file__).resolve().parent
@@ -52,8 +54,8 @@ log_level = 2
 # =============================================================================
 
 
-class api(object):
-    def __init__(self, category=None, type=None):
+class api:
+    def __init__(self, category=None, type=None):  # pylint: disable=redefined-builtin
         self.category = category
         self.type = type
 
@@ -71,8 +73,7 @@ class api(object):
                 auth = s.post(url, verify=False)
             except requests.exceptions.ConnectionError as e:
                 pcolor.Red(
-                    "Connection error, pausing before retrying. Error: %s" %
-                    (e))
+                    f"Connection error, pausing before retrying. Error: {e}")
                 time.sleep(5)
             except Exception as e:
                 pcolor.Red(f'{url}')
@@ -85,7 +86,7 @@ class api(object):
     # Function - API Request Wrapper
     # =========================================================================
     @staticmethod
-    def _request(
+    def _request(  # pylint: disable=inconsistent-return-statements
             method,
             kwargs,
             ok_statuses,
@@ -188,8 +189,8 @@ class api(object):
 # =============================================================================
 
 
-class build(object):
-    def __init__(self, category=None, type=None):
+class build:
+    def __init__(self, category=None, type=None):  # pylint: disable=redefined-builtin
         self.category = category
         self.type = type
 
@@ -498,7 +499,7 @@ class build(object):
         self.get_compare_patch(
             '/redfish/v1/Managers/bmc/EthernetInterfaces/eth0', item, kwargs)
         pcolor.Cyan(
-            f"     * Pausing to allow time for DNS settings to take effect before claiming in Intersight.")
+            "     * Pausing to allow time for DNS settings to take effect before claiming in Intersight.")
         time.sleep(10)
         notifications.section_end(self.category, self.type)
 
@@ -548,7 +549,7 @@ class build(object):
             # =================================================================
             # Claim in Intersight if not already Claimed
             # =================================================================
-            id = api.get(kwargs)
+            device_ids = api.get(kwargs)
             valid_time = 0
             max_attempts = 10
             attempt = 0
@@ -561,7 +562,7 @@ class build(object):
                 valid_time = token[0]['Duration']
                 if valid_time < 60:
                     pcolor.Cyan(
-                        f"     * Waiting for Security Token to be valid for at least 60 seconds.")
+                        "     * Waiting for Security Token to be valid for at least 60 seconds.")
                     pcolor.Cyan(
                         f"     * Current Security Token Duration: {valid_time} seconds")
                     time.sleep(60)
@@ -571,7 +572,7 @@ class build(object):
             kwargs = kwargs | DotMap(
                 api_body={
                     'SecurityToken': token[0]['Token'],
-                    'SerialNumber': id[0]['Id']},
+                    'SerialNumber': device_ids[0]['Id']},
                 method='post',
                 uri='asset/DeviceClaims')
             kwargs = intersight_api(
@@ -627,7 +628,7 @@ class build(object):
                      'timezone': '/redfish/v1/Managers/bmc'}.items():
             self.get_compare_patch(v, item, kwargs, type_override=k)
         pcolor.Cyan(
-            f"     * Pausing to allow time for NTP settings to take effect before claiming in Intersight.")
+            "     * Pausing to allow time for NTP settings to take effect before claiming in Intersight.")
         time.sleep(10)
         notifications.section_end(self.category, self.type)
 
@@ -642,7 +643,7 @@ class build(object):
             kwargs,
             method='put')
         pcolor.Cyan(
-            f"     * Pausing to allow time for Proxy settings to take effect before claiming in Intersight.")
+            "     * Pausing to allow time for Proxy settings to take effect before claiming in Intersight.")
         time.sleep(20)
         notifications.section_end(self.category, self.type)
 

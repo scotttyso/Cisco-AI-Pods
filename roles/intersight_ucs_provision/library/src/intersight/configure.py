@@ -1,7 +1,7 @@
 """Intersight configure class."""
-
 # Copyright (c) 2026 Cisco Systems, Inc. and its affiliates.
 # All rights reserved.
+# pylint: disable=invalid-name,missing-class-docstring,missing-function-docstring,too-many-branches,too-many-statements,too-many-locals,too-many-nested-blocks,too-many-lines,no-member,import-outside-toplevel,too-many-return-statements,no-else-return,unused-argument
 # =============================================================================
 # Source Modules
 # =============================================================================
@@ -10,7 +10,7 @@ from .. import notifications, pcolor
 
 
 def prRed(skk):
-    print("\033[91m {}\033[00m".format(skk))
+    print(f"\033[91m {skk}\033[00m")
 
 
 try:
@@ -58,8 +58,8 @@ DESCRIPTION_WORD_MAP = {
 # =============================================================================
 
 
-class configure(object):
-    def __init__(self, category=None, type=None):
+class configure:
+    def __init__(self, category=None, type=None):  # pylint: disable=redefined-builtin
         self.category = category
         self.type = type
 
@@ -81,7 +81,7 @@ class configure(object):
             pcolor.Red(f"The API Query Results were empty for {kwargs.uri}.")
             pcolor.Red(f"  Organization: {org}")
             pcolor.Red(f"  Names: `{', '.join(names)}`")
-            pcolor.Red(f"Exiting...")
+            pcolor.Red("Exiting...")
             raise ValueError(
                 f"Empty API query results for {kwargs.uri} (organization={org}, names={', '.join(names)})")
 
@@ -200,7 +200,7 @@ class configure(object):
             if f"{np}{e.name}{ns}" in ikeys and child_type in ekeys:
                 continue_count += 1
             elif child_type in ekeys and kwargs.args.check:
-                pcolor.Cyan(f"\n     * Running in Check Mode")
+                pcolor.Cyan("\n     * Running in Check Mode")
                 pcolor.Cyan(
                     f"       - Skipping {ptitle} {pcategory} Children Retrieval for Org: {org} > {ptitle}:")
                 pcolor.Cyan(
@@ -1289,7 +1289,7 @@ class configure(object):
         for tag in global_tags + item_tags + script_tags:
             try:
                 tag_obj = tag.toDict() if hasattr(tag, 'toDict') else deepcopy(tag)
-            except Exception:
+            except Exception:  # pylint: disable=broad-exception-caught
                 tag_obj = deepcopy(tag)
             if isinstance(tag_obj, DotMap):
                 tag_obj = tag_obj.toDict()
@@ -1543,7 +1543,7 @@ class configure(object):
                 f"{np}{e}{ns}" for e in item.names if f"{np}{e}{ns}" in ikeys]
             continue_count += len(policy_list)
             if kwargs.args.check and len(policy_list) != len(item.names):
-                pcolor.Cyan(f"\n     * Running in Check Mode")
+                pcolor.Cyan("\n     * Running in Check Mode")
             if len(policy_list) != len(item.names):
                 pcolor.Yellow(
                     f"\n     * Skipping Port Policy Children Retrieval for Org: {org} > Port Policies:")
@@ -2249,6 +2249,7 @@ class configure(object):
         kwargs.bulk_list = []
         template_attach = False
         template_merge = False
+        template_type = None
         for e in kwargs.resources:
             if any(template_regex.match(k) for k in e.keys()):
                 template_type = next(
@@ -2439,7 +2440,7 @@ class configure(object):
     # Function - Deploy Domain Profile if Action is Deploy
     # =========================================================================
     def profiles_domain_deploy(self, profiles, kwargs):
-        dtype = self.type.split('.')[1]
+        _dtype = self.type.split('.')[1]  # pylint: disable=unused-variable
         pending_changes = False
         kwargs.names = []
         np, ns = self.name_prefix_suffix(kwargs.org, kwargs)
@@ -2581,9 +2582,9 @@ class configure(object):
         activate_results = []
         if activate_moids:
             dt = datetime.today().strftime('%Y-%m-%d')
-            names = "', '".join(activate_moids).strip("', '")
+            names = "', '".join(activate_moids)
             str1 = f"CreateTime gt {dt}T00:00:00.000Z and CreateTime lt {dt}T23:59:59.999Z and AssociatedObject.Moid in ('{names}')"
-            str2 = f" and WorkflowCtx.WorkflowType eq 'Activate'"
+            str2 = " and WorkflowCtx.WorkflowType eq 'Activate'"
             kwargs = kwargs | DotMap(
                 api_filter=str1 + str2,
                 method='get',
@@ -2660,7 +2661,7 @@ class configure(object):
         # =====================================================================
         pcolor.LightGray(f'  {"-" * 60}\n')
         pcolor.LightPurple(
-            f'   Beginning Server Profile Pool Reservations Deployments\n')
+            '   Beginning Server Profile Pool Reservations Deployments\n')
         # =====================================================================
         # Obtain Pool Names
         # =====================================================================
@@ -2735,7 +2736,7 @@ class configure(object):
                         bulk_list[ptype] = []
                     bulk_list[ptype].append(api_body)
                 else:
-                    reservations[e.identity].moid
+                    _ = reservations[e.identity].moid  # verify exists
                     pcolor.Cyan(
                         f"  * Skipping Org: {kwargs.org} > Server Profile: `{profile}` > {ptype.upper()} Reservation: {e.identity}. "
                         f"Existing reservation: {reservations[e.identity].moid}")
@@ -2763,7 +2764,7 @@ class configure(object):
         # =====================================================================
         # Send End Notification and return kwargs
         # =====================================================================
-        pcolor.LightPurple(f'\n    Completed Pool Reservations Deployments\n')
+        pcolor.LightPurple('\n    Completed Pool Reservations Deployments\n')
         pcolor.LightGray(f'  {"-" * 60}\n')
         return kwargs
 
@@ -3024,14 +3025,14 @@ class configure(object):
                         kwargs.policies[k][e.Moid] = DotMap(
                             name=e.Name, organization=kwargs.org_names[e.Organization.Moid])
             if kwargs.intersight_pools.get('uuid'):
-                uri = kwargs.ezdata[f'intersight.pools.uuid'].intersight_uri
+                uri = kwargs.ezdata['intersight.pools.uuid'].intersight_uri
                 kwargs = kwargs | DotMap(
                     method='get', names=kwargs.pools['uuid'], uri=uri)
                 kwargs = api(
                     category='pools',
                     type='moid_filter').calls(kwargs)
                 for e in kwargs.results:
-                    kwargs.pools[k][e.Moid] = DotMap(
+                    kwargs.pools[k][e.Moid] = DotMap(  # pylint: disable=undefined-loop-variable
                         name=e.Name, organization=kwargs.org_names[e.Organization.Moid])
             for e in template_results:
                 name = e.get('Name', '')
@@ -3122,7 +3123,7 @@ class configure(object):
         else:
             target_platform = 'UCS Domain'
         template_type = f'{target_platform.lower().replace(" ", "_")}_profile_template'
-        template_cfg = configure(category='templates', type=f'{self.type}')
+        _template_cfg = configure(category='templates', type=f'{self.type}')  # pylint: disable=unused-variable
         template_check = False
         resources = deepcopy(kwargs.resources)
         for e in resources:

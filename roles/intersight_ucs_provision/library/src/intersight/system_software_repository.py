@@ -1,5 +1,6 @@
 """Intersight system_software_repository class."""
 # Copyright (c) 2026 Cisco Systems, Inc. and its affiliates.
+# pylint: disable=invalid-name,missing-class-docstring,missing-function-docstring,too-many-branches,too-many-statements,too-many-locals,too-many-nested-blocks,no-member,import-outside-toplevel,consider-using-enumerate
 # All rights reserved.
 # =============================================================================
 # Source Modules
@@ -9,7 +10,7 @@ from .. import notifications, pcolor
 
 
 def prRed(skk):
-    print("\033[91m {}\033[00m".format(skk))
+    print(f"\033[91m {skk}\033[00m")
 
 
 try:
@@ -40,8 +41,8 @@ def api(*args, **kwargs):
 # =============================================================================
 # Intersight -> System -> Software Repository Class
 # =============================================================================
-class system_software_repository(object):
-    def __init__(self, category=None, type=None):
+class system_software_repository:
+    def __init__(self, category=None, type=None):  # pylint: disable=redefined-builtin
         self.category = category
         self.type = type
 
@@ -88,7 +89,7 @@ class system_software_repository(object):
             'azure_stack_hci',
             '23H2',
             'AzureStackHCIIntersight.xml')
-        vsplist = (kwargs.os_version.name.split(' '))
+        vsplist = kwargs.os_version.name.split(' ')
         version = f'{vsplist[0]}{vsplist[2]}'
         ctemplate = answer.split(os.sep)[-1]
         template_name = version + '-' + ctemplate.split('_')[0]
@@ -102,7 +103,8 @@ class system_software_repository(object):
             kwargs = api('hcl_operating_system').calls(kwargs)
             kwargs.distributions[version].moid = kwargs.results[0].Moid
         kwargs.distribution_moid = kwargs.distributions[version].moid
-        file_content = (open(os.path.join(answer), 'r')).read()
+        with open(os.path.join(answer), 'r', encoding='utf-8') as fh:
+            file_content = fh.read()
         for e in ['LayeredDriver:layered_driver',
                   'UILanguageFallback:secondary_language']:
             elist = e.split(':')
@@ -244,7 +246,7 @@ class system_software_repository(object):
             if kwargs.imm_dict.orgs[kwargs.org].wizard.server_profiles[x].boot_volume.lower(
             ) == 'm2':
                 m2_found = False
-                for k, v in kwargs.imm_dict.orgs[kwargs.org].wizard.server_profiles[x].storage_controllers.items(
+                for _, v in kwargs.imm_dict.orgs[kwargs.org].wizard.server_profiles[x].storage_controllers.items(
                 ):
                     if re.search('MSTOR-RAID', v.slot):
                         m2_found = True
@@ -252,11 +254,11 @@ class system_software_repository(object):
                 if not m2_found:
                     pcolor.Red(f'\n{"-" * 108}\n')
                     pcolor.Red(
-                        f'  !!! ERROR !!!\n  Could not determine the Controller Slot for:')
+                        '  !!! ERROR !!!\n  Could not determine the Controller Slot for:')
                     pcolor.Red(f'  * Profile: {server_profiles[x].name}')
                     pcolor.Red(f'  * Serial:  {server_profiles[x].serial}')
                     pcolor.Red(
-                        f'  Exiting... (intersight-tools/new/src/intersight/core.py Line 1448)')
+                        '  Exiting... (intersight-tools/new/src/intersight/core.py Line 1448)')
                     pcolor.Red(f'\n{"-" * 108}\n')
                     len(False)
                     sys.exit(1)
@@ -313,8 +315,9 @@ class system_software_repository(object):
                 # =============================================================
                 # Get Installation Interface
                 # =============================================================
+                vnic = DotMap()
                 if isinstance(v.install_interface, str):
-                    for a, b in v.adapters.items():
+                    for _, b in v.adapters.items():
                         vnic = [
                             DotMap(
                                 name=c,
@@ -465,7 +468,7 @@ class system_software_repository(object):
                         f'      * OS Install Failed for `{v.name}`.  Please Validate the Logs.')
             pcolor.Red(f'\n{"-" * 108}\n')
             pcolor.Red(
-                f'  Exiting... (intersight-tools/new/src/intersight/core.py Line 1576)')
+                '  Exiting... (intersight-tools/new/src/intersight/core.py Line 1576)')
             len(False)
             sys.exit(1)
         return kwargs

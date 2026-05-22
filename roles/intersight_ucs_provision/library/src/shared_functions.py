@@ -1,3 +1,5 @@
+"""Shared utility functions for Intersight UCS provisioning."""
+# pylint: disable=invalid-name,missing-class-docstring,missing-function-docstring,too-many-branches,too-many-statements,too-many-locals,too-many-ancestors
 # =============================================================================
 # Source Modules
 # =============================================================================
@@ -6,7 +8,7 @@ from pathlib import Path
 
 
 def prRed(skk):
-    print("\033[91m {}\033[00m".format(skk))
+    print(f"\033[91m {skk}\033[00m")
 
 
 SCRIPT_PATH = Path(__file__).resolve().parent
@@ -25,7 +27,6 @@ try:
     from dotmap import DotMap
     from json_ref_dict import materialize, RefDict
     from OpenSSL import crypto
-    from pathlib import Path
     import importlib
     import importlib.util
     import itertools
@@ -55,7 +56,7 @@ class insufficient_args(Exception):
 
 class yaml_dumper(yaml.Dumper):
     def increase_indent(self, flow=False, indentless=False):
-        return super(yaml_dumper, self).increase_indent(flow, False)
+        return super().increase_indent(flow, False)
 
 # =============================================================================
 # Function - Basic Setup for the Majority of the modules
@@ -105,7 +106,7 @@ def base_script_settings(kwargs):
     with open(os.path.join(kwargs.schema_path, 'cisco-ai-pods.json'), encoding='utf8') as f:
         ezdata = json.load(f)
     ezdata.pop('$ref')
-    with open(os.path.join(kwargs.schema_path, 'temp.json'), 'w') as f:
+    with open(os.path.join(kwargs.schema_path, 'temp.json'), 'w', encoding='utf-8') as f:
         json.dump(ezdata, f, indent=4)
     ezdata = materialize(
         RefDict(
@@ -163,9 +164,9 @@ def base_script_settings(kwargs):
         elif not re.search(r'^[\w\@\-\.\:\/\\]+$', folder):
             pcolor.Red(f'\n{"-" * 108}\n\n  !!ERROR!!')
             pcolor.Red(
-                f'  The Directory structure can only contain the following characters:')
+                '  The Directory structure can only contain the following characters:')
             pcolor.Red(
-                f'  letters(a-z, A-Z), numbers(0-9), hyphen(-), period(.), colon(:), and underscore(-).')
+                '  letters(a-z, A-Z), numbers(0-9), hyphen(-), period(.), colon(:), and underscore(-).')
             pcolor.Red(
                 f'  It can be a short path or a fully qualified path.  `{folder}` does not qualify.')
             pcolor.Red(f'  Exiting...\n\n{"-" * 108}\n')
@@ -199,7 +200,7 @@ def cert_file_check(expected_type, file_path):
     if 'PRIVATE KEY' in cert_content:
         try:
             crypto.load_privatekey(crypto.FILETYPE_PEM, cert_content)
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             pcolor.Red(
                 f'!!! ERROR !!! `{file_path}` is not a valid PEM private key: {exc}')
             sys.exit(1)
@@ -271,7 +272,7 @@ def intersight_config(kwargs):
                     default=kwargs.args.intersight_fqdn or 'intersight.com',
                     title='Intersight FQDN/IP'))
             kwargs.args.intersight_fqdn = variable_prompt(kwargs)
-    kwargs.args.url = 'https://%s' % (kwargs.args.intersight_fqdn)
+    kwargs.args.url = f'https://{kwargs.args.intersight_fqdn}'
     # Return kwargs
     return kwargs
 
@@ -388,13 +389,13 @@ def load_configurations(kwargs):
             for message in error_messages:
                 # Preserve per-line formatting/colors from validator output.
                 print(message, file=sys.stderr)
-            raise
+            sys.exit(1)
         else:
             kwargs.sensitive_vars = DotMap(sensitive_vars)
-    except Exception as error:
+    except Exception as error:  # pylint: disable=broad-exception-caught
         pcolor.Red(
             f'\n!!! ERROR !!! validate_sensitive_variables failed during load_configurations: {error}')
-        pcolor.Red(f'shared_functions.py line 893')
+        pcolor.Red('shared_functions.py line 893')
         raise
 
     # Return kwargs
@@ -411,7 +412,7 @@ def variable_from_list(kwargs):
     # =========================================================================
     default = kwargs.jdata.default
     description = kwargs.jdata.description
-    optional = False
+    optional = False  # pylint: disable=unused-variable
     title = kwargs.jdata.title
     if not kwargs.jdata.get('multi_select'):
         kwargs.jdata.multi_select = False
@@ -419,9 +420,9 @@ def variable_from_list(kwargs):
     # Sort the Variables
     # =========================================================================
     if not kwargs.jdata.get('sort'):
-        vars = kwargs.jdata.enum
+        vars = kwargs.jdata.enum  # pylint: disable=redefined-builtin
     else:
-        vars = sorted(kwargs.jdata.enum, key=str.casefold)
+        vars = sorted(kwargs.jdata.enum, key=str.casefold)  # pylint: disable=redefined-builtin
     valid = False
     while not valid:
         pcolor.LightPurple(f'\n{"-" * 108}\n')
@@ -435,9 +436,10 @@ def variable_from_list(kwargs):
             pcolor.Yellow(
                 '\n     Note: Answer can be:\n       * Single: 1\n       * Multiple: `1,2,3` or `1-3,5-6`')
         if kwargs.jdata.get('multi_select'):
-            pcolor.Yellow(f'    Select Option(s) Below:')
+            pcolor.Yellow('    Select Option(s) Below:')
         else:
-            pcolor.Yellow(f'\n    Select an Option Below:')
+            pcolor.Yellow('\n    Select an Option Below:')
+        default_index = 0
         for index, value in enumerate(vars):
             index += 1
             if value == default:
@@ -472,9 +474,9 @@ def variable_from_list(kwargs):
                     f'\nPlease Enter the Option Number to select for {title}: ')
         if kwargs.jdata.get('optional') and var_selection == '' and not kwargs.jdata.multi_select:
             return '', True
-        elif kwargs.jdata.get('optional') and var_selection == '' and kwargs.jdata.multi_select:
+        if kwargs.jdata.get('optional') and var_selection == '' and kwargs.jdata.multi_select:
             return [], True
-        elif default != '' and var_selection == '':
+        if default != '' and var_selection == '':
             var_selection = default_index
         if not kwargs.jdata.multi_select and re.search(
                 r'^[0-9]+$', str(var_selection)):
@@ -520,9 +522,9 @@ def variable_prompt(kwargs):
         pcolor.Red(
             f'\n{"-" * 108}\n   `{title}` value of `{answer}` is Invalid!!! Please enter `Y` or `N`.\n{"-" * 108}\n')
 
-    def invalid_integer(title, answer):
+    def invalid_integer(title, answer):  # pylint: disable=cell-var-from-loop,used-before-assignment
         pcolor.Red(
-            f'\n{"-" * 108}\n   `{title}` value of `{answer}` is Invalid!!!  Valid range is `{minimum}-{maximum}`.\n{"-" * 108}\n')
+            f'\n{"-" * 108}\n   `{title}` value of `{answer}` is Invalid!!!  Valid range is `{minimum}-{maximum}`.\n{"-" * 108}\n')  # pylint: disable=used-before-assignment
 
     def invalid_string(title, answer):
         pcolor.Red(

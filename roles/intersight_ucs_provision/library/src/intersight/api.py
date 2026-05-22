@@ -1,6 +1,7 @@
 """Intersight api class."""
 # Copyright (c) 2026 Cisco Systems, Inc. and its affiliates.
 # All rights reserved.
+# pylint: disable=invalid-name,missing-class-docstring,missing-function-docstring,too-many-branches,too-many-statements,too-many-locals,too-many-nested-blocks,no-else-continue,no-else-return
 # =============================================================================
 # Source Modules
 # =============================================================================
@@ -9,7 +10,7 @@ from .. import notifications, pcolor
 
 
 def prRed(skk):
-    print("\033[91m {}\033[00m".format(skk))
+    print(f"\033[91m {skk}\033[00m")
 
 
 try:
@@ -41,8 +42,8 @@ pool_regex = re.compile(
 # =============================================================================
 
 
-class api(object):
-    def __init__(self, category=None, type=None):
+class api:
+    def __init__(self, category=None, type=None):  # pylint: disable=redefined-builtin
         self.category = category
         self.type = type
 
@@ -327,7 +328,7 @@ class api(object):
             def send_error(kwargs, response):
                 pcolor.Red(json.dumps(kwargs.api_body, indent=4))
                 pcolor.Red(kwargs.api_body)
-                pcolor.Red(f'!!! ERROR !!!')
+                pcolor.Red('!!! ERROR !!!')
                 if method == 'get_by_moid':
                     pcolor.Red(f'  URL: {url}/{uri}/{moid}')
                 elif method == 'delete':
@@ -390,7 +391,7 @@ class api(object):
                                 ):
                                     retry_action = True
                                     break
-                        except Exception:
+                        except Exception:  # pylint: disable=broad-exception-caught
                             retry_action = False
 
                     if retry_action and i < retries - 1:
@@ -646,7 +647,7 @@ class api(object):
                 return api_args
 
             if len(kwargs.names) > 100:
-                chunked_list = list()
+                chunked_list = []
                 chunk_size = 100
                 for i in range(0, len(kwargs.names), chunk_size):
                     chunked_list.append(kwargs.names[i:i + chunk_size])
@@ -692,7 +693,7 @@ class api(object):
                 if rcount <= 100:
                     kwargs.api_args = api_args
                     kwargs = api_calls(kwargs)
-                elif rcount > 100 and rcount <= 1000:
+                elif 100 < rcount <= 1000:
                     if '?' in api_args:
                         kwargs.api_args = api_args + '&$top=1000'
                     else:

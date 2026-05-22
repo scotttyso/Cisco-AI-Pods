@@ -1,6 +1,7 @@
 """Intersight system class."""
 # Copyright (c) 2026 Cisco Systems, Inc. and its affiliates.
 # All rights reserved.
+# pylint: disable=invalid-name,missing-class-docstring,missing-function-docstring,too-many-branches,too-many-statements,too-many-locals,too-many-nested-blocks,import-outside-toplevel
 # =============================================================================
 # Source Modules
 # =============================================================================
@@ -8,8 +9,8 @@ import sys
 from .. import notifications
 
 
-def prRed(skk):
-    print("\033[91m {}\033[00m".format(skk))
+def prRed(skk):  # pylint: disable=invalid-name
+    print(f"\033[91m {skk}\033[00m")
 
 
 try:
@@ -39,8 +40,8 @@ def configure(*args, **kwargs):
 # =============================================================================
 # Intersight -> System Class
 # =============================================================================
-class system(object):
-    def __init__(self, category=None, type=None):
+class system:
+    def __init__(self, category=None, type=None):  # pylint: disable=redefined-builtin
         self.category = category
         self.type = type
 
@@ -59,7 +60,7 @@ class system(object):
         def empty_results(names, kwargs):
             pcolor.Red(f"The API Query Results were empty for {kwargs.uri}.")
             pcolor.Red(f"  Names: `{', '.join(names)}`")
-            pcolor.Red(f"Exiting...")
+            pcolor.Red("Exiting...")
             sys.exit(1)
         if re.search(r'^(blades|rackmounts)$', self.type):
             kwargs = kwargs | DotMap(
@@ -173,15 +174,13 @@ class system(object):
     # =========================================================================
     def organizations(self, kwargs):
         kwargs.bulk_list = []
-        okeys = list(kwargs.org_moids)
         names = []
         # =====================================================================
         # Function to Create Resource Groups and Organizations
         # =====================================================================
 
-        def compare_to_api(api_body, kwargs):
+        def compare_to_api(api_body, check_flag, kwargs):
             check_count = False
-            obj_id = api_body['SharedResource']['Moid']
             org = kwargs.org_names[api_body['SharedWithResource']['Moid']]
             shared_org = kwargs.org_names[api_body['SharedResource']['Moid']]
             for k, v in kwargs.intersight_api.system.iam_sharing_rules.items():
@@ -240,7 +239,7 @@ class system(object):
                     ikeys = list(
                         kwargs.intersight_api.system.iam_sharing_rules)
                     if len(ikeys) > 0:
-                        kwargs = compare_to_api(api_body, kwargs)
+                        kwargs = compare_to_api(api_body, check_flag, kwargs)
         # =====================================================================
         # POST Bulk Request if List > 0
         # =====================================================================
@@ -261,9 +260,7 @@ class system(object):
         kwargs = api(category=self.category, type=self.type).calls(kwargs)
         for item in rdict:
             if item.path_tag not in (kwargs.intersight_api.system.path_tags):
-                np = ''
-                ns = ''
-                api_body = self.create_api_body(item, np, ns, kwargs)
+                api_body = self.create_api_body(item, kwargs)
                 kwargs = kwargs | DotMap(
                     method='post', api_body=api_body, uri=uri)
                 kwargs = api(
@@ -328,8 +325,7 @@ class system(object):
             kwargs = self.path_tags(rdict, kwargs)
             notifications.section_end(self.category, self.type)
             return kwargs
-        else:
-            reconcile_resources = list({v.name: v for v in rdict}.values())
+        reconcile_resources = list({v.name: v for v in rdict}.values())
         # =====================================================================
         # Get Existing Resources
         # =====================================================================

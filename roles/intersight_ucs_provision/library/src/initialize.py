@@ -1,7 +1,7 @@
-"""Intersight configure class."""
-
+"""Intersight initialize class."""
 # Copyright (c) 2026 Cisco Systems, Inc. and its affiliates.
 # All rights reserved.
+# pylint: disable=invalid-name,missing-class-docstring,missing-function-docstring,too-many-branches,too-many-statements,too-many-locals,too-many-nested-blocks,too-few-public-methods
 # =============================================================================
 # Source Modules
 # =============================================================================
@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 def prRed(skk):
-    print("\033[91m {}\033[00m".format(skk))
+    print(f"\033[91m {skk}\033[00m")
 
 
 SCRIPT_PATH = Path(__file__).resolve().parent
@@ -42,8 +42,8 @@ except ImportError as e:
 # =============================================================================
 
 
-class begin(object):
-    def __init__(self, category=None, type=None):
+class begin:
+    def __init__(self, category=None, type=None):  # pylint: disable=redefined-builtin
         self.category = category
         self.type = type
 
@@ -62,9 +62,9 @@ class begin(object):
         else:
             pcolor.Yellow(f'{"-" * 108}')
             pcolor.Yellow(
-                f'   No Organizations found in the YAML configuration files.')
+                '   No Organizations found in the YAML configuration files.')
             pcolor.Yellow(
-                f'   Confirm that you have created the YAML configuration files correctly and that they contain at least one organization with configurations.')
+                '   Confirm that you have created the YAML configuration files correctly and that they contain at least one organization with configurations.')
             pcolor.Yellow(f'{"-" * 108}')
             raise ValueError(
                 'No organizations found in YAML configuration files')
