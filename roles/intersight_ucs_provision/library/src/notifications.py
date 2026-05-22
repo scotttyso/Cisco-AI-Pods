@@ -1,3 +1,4 @@
+"""Notification helpers for Intersight UCS provisioning operations."""
 # =============================================================================
 # Source Modules
 # =============================================================================
@@ -5,8 +6,9 @@ import sys
 from pathlib import Path
 
 
-def prRed(skk):
-    print("\033[91m {}\033[00m".format(skk))
+def pr_red(skk):
+    """Print text in red to stdout."""
+    print(f"\033[91m {skk}\033[00m")
 
 
 SCRIPT_PATH = Path(__file__).resolve().parent
@@ -25,9 +27,9 @@ try:
     import json
     import re
 except ImportError as e:
-    prRed(f'src/validating.py line 6 - !!! ERROR !!!\n{e.__class__.__name__}')
-    prRed(f" Module {e.name} is required to run this script")
-    prRed(f" Install the module using the following: `pip install {e.name}`")
+    pr_red(f'src/validating.py line 6 - !!! ERROR !!!\n{e.__class__.__name__}')
+    pr_red(f" Module {e.name} is required to run this script")
+    pr_red(f" Install the module using the following: `pip install {e.name}`")
     sys.exit(1)
 
 oregex = re.compile(
@@ -72,6 +74,7 @@ DESCRIPTION_WORD_MAP = {
 
 
 def mod_pol_description(pol_description):
+    """Convert a policy description string from snake_case to title-case words."""
     words = str.title(pol_description.replace('_', ' ')).split()
     return ' '.join(DESCRIPTION_WORD_MAP.get(word, word) for word in words)
 
@@ -81,12 +84,14 @@ def mod_pol_description(pol_description):
 
 
 def begin_loop(ptype1, ptype2):
+    """Print a section-begin banner for a deployment loop."""
     pcolor.LightGray(f'\n{"-" * 108}\n')
     pcolor.LightPurple(
         f"  Beginning {' '.join(ptype1.split('_')).title()} {ptype2} Deployment.\n")
 
 
-def completed_item(category, ptype, kwargs):
+def completed_item(category, ptype, kwargs):  # pylint: disable=too-many-branches,too-many-statements,too-many-locals
+    """Print a completion notification for a single API operation."""
     iresults = DotMap(kwargs.api_results)
     ikeys = list(iresults.keys())
     method = kwargs.method
@@ -142,7 +147,7 @@ def completed_item(category, ptype, kwargs):
             pcolor.LightPurple(
                 f'{" " * 6}* Completed {method.upper()} for Organization: `{kwargs.org}` > {parent_title} {rtype} `{parent_name}`: {name} - Moid: {pmoid}')
         return
-    elif re.search(regex, iresults.ObjectType):
+    if re.search(regex, iresults.ObjectType):
         if 'SharingRule' in iresults.ObjectType:
             resource = 'iam_sharing_rule'
         else:
@@ -159,7 +164,7 @@ def completed_item(category, ptype, kwargs):
             pcolor.LightPurple(
                 f'{" " * 6}* Completed {method.upper()} for System -> {name} - Moid: {pmoid}')
         return
-    elif 'asset.DeviceClaim' == iresults.ObjectType:
+    if 'asset.DeviceClaim' == iresults.ObjectType:
         name = f"Claiming Server `{iresults.SerialNumber}` Registration"
     elif 'autosupport' == ptype:
         name = "AutoSupport"
@@ -170,7 +175,7 @@ def completed_item(category, ptype, kwargs):
     elif 'UserId' in ikeys:
         name = f"{iresults.UserId} CCO User Authentication"
     elif 'eula' in ptype:
-        name = f"Account EULA Acceptance"
+        name = "Account EULA Acceptance"
     elif 'Action' in ikeys:
         if iresults.Action == 'Deploy':
             name = f"Deploy Profile {pmoid}"
@@ -201,10 +206,10 @@ def completed_item(category, ptype, kwargs):
         print(kwargs.parent_name)
         print(kwargs.parent_type)
         print('missing definition')
-        raise
-    elif re.search('^(Activating|Deploy)', name):
+        sys.exit(1)
+    if re.search('^(Activating|Deploy)', name):
         pcolor.Cyan(f'      * {name}.')
-    elif re.search('(eula|upgrade)', ptype) and ptype == 'firmware':
+    if re.search('(eula|upgrade)', ptype) and ptype == 'firmware':
         if method == 'post':
             pcolor.Green(
                 f'{" " * 6}* Completed {method.upper()} for {ptype} {name}.')
@@ -223,10 +228,6 @@ def completed_item(category, ptype, kwargs):
             pcolor.LightPurple(
                 f'{" " * 4}- Completed Bulk Merger {method.upper()} for Organization: `{kwargs.org}` > Name: {name} - Moid: {pmoid}')
     else:
-        rcategory = DESCRIPTION_WORD_MAP.get(
-            category.replace(
-                '_', ' ').title(), category.replace(
-                '_', ' ').title())
         rtype = mod_pol_description(ptype.replace('_', ' ').title())
         if method == 'post':
             pcolor.Green(
@@ -237,6 +238,7 @@ def completed_item(category, ptype, kwargs):
 
 
 def deploy_notification(profile, profile_type):
+    """Print a deploy-in-progress notification for a profile."""
     pcolor.LightGray(f'\n{"-" * 108}\n')
     pcolor.LightPurple(
         f'   Deploy Action Still ongoing for {profile_type} Profile {profile}')
@@ -244,11 +246,13 @@ def deploy_notification(profile, profile_type):
 
 
 def end_loop(ptype1, ptype2):
+    """Print a section-end banner after a deployment loop."""
     pcolor.LightPurple(
         f"\n   Completed {' '.join(ptype1.split('_')).title()} {ptype2} Deployment.")
 
 
 def section_begin(resource_type, resource):
+    """Print a section-begin header for an Intersight resource deployment."""
     ptype1 = ' '.join(resource_type.split('_')).title()
     ptype2 = mod_pol_description((' '.join(resource.split('_'))).title())
     pcolor.LightGray(f'\n{"-" * 108}\n')
@@ -257,6 +261,7 @@ def section_begin(resource_type, resource):
 
 
 def section_end(resource_type, resource):
+    """Print a section-end header for an Intersight resource deployment."""
     ptype1 = ' '.join(resource_type.split('_')).title()
     ptype2 = mod_pol_description((' '.join(resource.split('_'))).title())
     pcolor.LightGray(f'\n{"-" * 108}\n')
@@ -265,6 +270,7 @@ def section_end(resource_type, resource):
 
 
 def section_begin_c88x(resource_type, resource):
+    """Print a section-begin header for a C88x resource deployment."""
     ptype1 = ' '.join(resource_type.split('_')).title()
     ptype2 = mod_pol_description((' '.join(resource.split('_'))).title())
     pcolor.LightGray(f'\n{"-" * 108}\n')
@@ -272,6 +278,7 @@ def section_begin_c88x(resource_type, resource):
 
 
 def section_end_c88x(resource_type, resource):
+    """Print a section-end header for a C88x resource deployment."""
     ptype1 = ' '.join(resource_type.split('_')).title()
     ptype2 = mod_pol_description((' '.join(resource.split('_'))).title())
     pcolor.LightGray(f'\n{"-" * 108}\n')
@@ -279,6 +286,7 @@ def section_end_c88x(resource_type, resource):
 
 
 def section_begin_org(org, resource, resource_type):
+    """Print a section-begin header scoped to a specific organization."""
     ptype1 = ' '.join(resource_type.split('_')).title()
     ptype2 = mod_pol_description((' '.join(resource.split('_'))).title())
     pcolor.LightGray(f'\n{"-" * 108}\n')
@@ -287,6 +295,7 @@ def section_begin_org(org, resource, resource_type):
 
 
 def section_end_org(org, resource, resource_type):
+    """Print a section-end header scoped to a specific organization."""
     ptype1 = ' '.join(resource_type.split('_')).title()
     ptype2 = mod_pol_description((' '.join(resource.split('_'))).title())
     pcolor.LightPurple(
@@ -297,43 +306,48 @@ def section_end_org(org, resource, resource_type):
 # =============================================================================
 
 
-def error_file_location(varName, varValue):
+def error_file_location(var_name, var_value):  # pylint: disable=invalid-name
+    """Print an error for an invalid file location variable and exit."""
     pcolor.LightGray(f'\n{"-" * 108}\n')
-    pcolor.Yellow(f'  !!! ERROR !!! The "{varName}" "{varValue}"')
-    pcolor.Yellow(f'  is invalid.  Please valid the Entry for "{varName}".')
+    pcolor.Yellow(f'  !!! ERROR !!! The "{var_name}" "{var_value}"')
+    pcolor.Yellow(f'  is invalid.  Please valid the Entry for "{var_name}".')
     pcolor.LightGray(f'\n{"-" * 108}\n')
-    raise
+    sys.exit(1)
 
 
 def error_organization(org):
+    """Print an error for a missing Intersight organization and exit."""
     pcolor.LightGray(f'\n{"-" * 108}\n')
-    pcolor.Yellow(f'   !!! ERROR !!!')
+    pcolor.Yellow('   !!! ERROR !!!')
     pcolor.Yellow(
-        f'   The organization was not found in Intersight, but it is referenced in the input file.')
+        '   The organization was not found in Intersight, but it is referenced in the input file.')
     pcolor.Yellow(f'   Organization: {org}')
     pcolor.LightGray(f'\n{"-" * 108}\n')
-    raise
+    sys.exit(1)
 
 
 def error_requests(method, status, text, uri):
+    """Print an HTTP error response and exit."""
     pcolor.LightGray(f'\n{"-" * 108}\n')
     pcolor.Yellow(f'   !!! ERROR !!! when attempting {method} to {uri}')
     pcolor.Yellow(f'   Exiting on Error {status} with the following output:')
     pcolor.Yellow(f'   {text}')
     pcolor.LightGray(f'\n{"-" * 108}\n')
-    raise
+    sys.exit(1)
 
 
 # =============================================================================
 # Messages
 # =============================================================================
 def message_invalid_selection():
+    """Print an error for an invalid menu selection."""
     pcolor.Red(
         f'\n{"-" * 108}\n\n  !!!Error!!! Invalid Selection.  Please Select a valid Option from the List.')
     pcolor.Red(f'\n{"-" * 108}\n')
 
 
 def message_invalid_y_or_n(length):
+    """Print an error for a Y/N prompt receiving an invalid response."""
     if length == 'short':
         dash_rep = '-' * 54
     else:
@@ -344,6 +358,7 @@ def message_invalid_y_or_n(length):
 
 
 def message_fcoe_vlan(fcoe_id, vlan_policy):
+    """Print an error when a FCoE VLAN ID conflicts with the VLAN policy."""
     pcolor.Red(
         f'\n{"-" * 108}\n\n  !!!Error!!!\n  The FCoE VLAN `{fcoe_id}` is already assigned to the VLAN Policy')
     pcolor.Red(
@@ -351,25 +366,29 @@ def message_fcoe_vlan(fcoe_id, vlan_policy):
     pcolor.Red(f'\n{"-" * 108}\n')
 
 
-def message_invalid_native_vlan(nativeVlan, VlanList):
+def message_invalid_native_vlan(native_vlan, vlan_list):  # pylint: disable=invalid-name
+    """Print an error when the native VLAN is not in the VLAN policy list."""
     pcolor.Red(
-        f'\n{"-" * 108}\n\n  !!!Error!!!\n  The Native VLAN `{nativeVlan}` was not in the VLAN Policy List.')
-    pcolor.Red(f'  VLAN Policy List is: "{VlanList}"')
+        f'\n{"-" * 108}\n\n  !!!Error!!!\n  The Native VLAN `{native_vlan}` was not in the VLAN Policy List.')
+    pcolor.Red(f'  VLAN Policy List is: "{vlan_list}"')
     pcolor.Red(f'\n{"-" * 108}\n')
 
 
 def message_invalid_vxan():
+    """Print an error for an invalid VXAN/VLAN ID entry."""
     pcolor.Red(
         f'\n{"-" * 108}\n\n  !!!Error!!!\n  Invalid Entry.  Please Enter a valid ID in the range of 1-4094.')
     pcolor.Red(f'\n{"-" * 108}\n')
 
 
 def message_invalid_vsan_id(vsan_policy, vsan_id, vsan_list):
+    """Print an error when a VSAN ID is not in the VSAN policy."""
     pcolor.Red(
         f'\n{"-" * 108}\n\n  !!!Error!!!\n  The VSAN `{vsan_id}` is not in the VSAN Policy `{vsan_policy}`.')
     pcolor.Red(f'  Options are: {vsan_list}.\n\n{"-" * 108}\n')
 
 
 def message_starting_over(policy_type):
+    """Print a notice that a policy section is restarting from the beginning."""
     pcolor.Yellow(f'\n{"-" * 54}\n\n  Starting `{policy_type}` Section over.')
     pcolor.Yellow(f'\n{"-" * 54}\n')

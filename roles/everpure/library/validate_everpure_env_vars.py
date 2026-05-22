@@ -30,7 +30,7 @@ import re
 import sys
 import textwrap
 from pathlib import Path
-from typing import Any, Dict, Optional, Set
+from typing import Any, Dict, Optional
 
 # Schema path
 _SCHEMA_PATH = Path(__file__).parent.parent / "schema" / "cisco-ai-pods.json"
@@ -41,12 +41,12 @@ _SENSITIVE_SCHEMA_PROPS: Dict[str, Any] = {}
 
 def load_schema() -> None:
     """Load schema and populate sensitive variable properties."""
-    global _SENSITIVE_SCHEMA_PROPS
+    global _SENSITIVE_SCHEMA_PROPS  # pylint: disable=global-statement
     if not _SCHEMA_PATH.exists():
         raise FileNotFoundError(f"Schema not found at {_SCHEMA_PATH}")
 
-    with open(_SCHEMA_PATH) as f:
-        schema = json.load(f)
+    with open(_SCHEMA_PATH, encoding='utf-8') as schema_file:
+        schema = json.load(schema_file)
 
     if "definitions" not in schema or "abstract.sensitive_variables" not in schema[
             "definitions"]:
@@ -68,7 +68,7 @@ def _wrap_cli_text(text: str, indent: str = "  ", width: int = 100) -> str:
 
 
 def _format_sensitive_constraints(
-        schema_key: str, schema_rule: Dict[str, Any]) -> str:
+        schema_key: str, schema_rule: Dict[str, Any]) -> str:  # pylint: disable=unused-argument
     """Format schema constraints (description, pattern, min/max) as readable text block."""
     if not isinstance(schema_rule, dict):
         return ""
@@ -98,7 +98,7 @@ def _format_sensitive_constraints(
     return "".join(parts)
 
 
-def _validate_sensitive_value(
+def _validate_sensitive_value(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     value: Any,
     schema_rule: Dict[str, Any],
     env_var_name: str,
@@ -152,7 +152,7 @@ def _validate_sensitive_value(
                 f"{constraint_info}")
 
 
-def _resolve_sensitive_identifier(
+def _resolve_sensitive_identifier(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     var_id: Any,
     env_prefix: str,
     schema_key: Optional[str],
@@ -226,13 +226,13 @@ def _resolve_sensitive_var(
     return resolved_vars.get(env_var_name, "")
 
 
-def validate_pure_api_token(config: Dict[str, Any]) -> None:
+def validate_pure_api_token(cfg: Dict[str, Any]) -> None:  # pylint: disable=redefined-outer-name
     """Validate pure_api_token for each FlashArray and FlashBlade."""
     for array_type in ["flash_arrays", "flash_blades"]:
-        if array_type not in config.get("everpure", {}):
+        if array_type not in cfg.get("everpure", {}):
             continue
 
-        arrays = config["everpure"][array_type]
+        arrays = cfg["everpure"][array_type]
         if not isinstance(arrays, list):
             continue
 
@@ -257,9 +257,9 @@ def validate_pure_api_token(config: Dict[str, Any]) -> None:
             )
 
 
-def validate_certificates(config: Dict[str, Any]) -> None:
+def validate_certificates(cfg: Dict[str, Any]) -> None:  # pylint: disable=redefined-outer-name
     """Validate certificate management variables in Everpure settings."""
-    settings = config.get("everpure", {}).get("settings", {})
+    settings = cfg.get("everpure", {}).get("settings", {})
     if not isinstance(settings, dict):
         return
 
@@ -330,9 +330,9 @@ def validate_certificates(config: Dict[str, Any]) -> None:
             )
 
 
-def validate_directory_service(config: Dict[str, Any]) -> None:
+def validate_directory_service(cfg: Dict[str, Any]) -> None:  # pylint: disable=redefined-outer-name
     """Validate LDAP binding password in directory service configuration."""
-    settings = config.get("everpure", {}).get("settings", {})
+    settings = cfg.get("everpure", {}).get("settings", {})
     if not isinstance(settings, dict):
         return
 
@@ -363,9 +363,9 @@ def validate_directory_service(config: Dict[str, Any]) -> None:
             )
 
 
-def validate_local_users(config: Dict[str, Any]) -> None:
+def validate_local_users(cfg: Dict[str, Any]) -> None:  # pylint: disable=redefined-outer-name
     """Validate local user passwords."""
-    settings = config.get("everpure", {}).get("settings", {})
+    settings = cfg.get("everpure", {}).get("settings", {})
     if not isinstance(settings, dict):
         return
 
@@ -391,9 +391,9 @@ def validate_local_users(config: Dict[str, Any]) -> None:
             )
 
 
-def validate_snmp(config: Dict[str, Any]) -> None:
+def validate_snmp(cfg: Dict[str, Any]) -> None:  # pylint: disable=redefined-outer-name,too-many-branches
     """Validate SNMP configuration variables (community strings and passphrases)."""
-    settings = config.get("everpure", {}).get("settings", {})
+    settings = cfg.get("everpure", {}).get("settings", {})
     if not isinstance(settings, dict):
         return
 
@@ -497,13 +497,13 @@ def validate_snmp(config: Dict[str, Any]) -> None:
             )
 
 
-def validate_all(config: Dict[str, Any]) -> None:
+def validate_all(cfg: Dict[str, Any]) -> None:  # pylint: disable=redefined-outer-name
     """Validate all Everpure sensitive environment variables."""
-    validate_pure_api_token(config)
-    validate_certificates(config)
-    validate_directory_service(config)
-    validate_local_users(config)
-    validate_snmp(config)
+    validate_pure_api_token(cfg)
+    validate_certificates(cfg)
+    validate_directory_service(cfg)
+    validate_local_users(cfg)
+    validate_snmp(cfg)
 
 
 if __name__ == "__main__":
@@ -534,7 +534,7 @@ if __name__ == "__main__":
                 file=sys.stderr)
             sys.exit(1)
 
-        with open(config_path) as f:
+        with open(config_path, encoding='utf-8') as f:
             config = yaml.safe_load(f) or {}
 
         validate_all(config)
@@ -547,6 +547,6 @@ if __name__ == "__main__":
     except ValueError as e:
         print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         print(f"ERROR: Unexpected error: {e}", file=sys.stderr)
         sys.exit(1)

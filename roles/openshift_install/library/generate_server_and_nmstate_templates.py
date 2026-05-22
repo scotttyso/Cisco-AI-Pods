@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate nmstate templates and assisted-installer/server.json from bare metal install vars."""
+# pylint: disable=too-many-lines,duplicate-code
 
 import base64
 import binascii
@@ -32,7 +33,7 @@ _SCHEMA_PATH = Path(__file__).parent.parent.parent.parent / \
 
 def load_schema() -> None:
     """Load abstract.sensitive_variables properties from the JSON schema into _SENSITIVE_SCHEMA_PROPS."""
-    global _SENSITIVE_SCHEMA_PROPS  # noqa: PLW0603
+    global _SENSITIVE_SCHEMA_PROPS  # pylint: disable=global-statement
     try:
         with open(_SCHEMA_PATH, encoding="utf-8") as schema_file:
             schema = json.load(schema_file)
@@ -79,7 +80,7 @@ def _format_sensitive_constraints(context_label: str, schema_rule: Any) -> str:
     )
 
 
-def _validate_sensitive_value(
+def _validate_sensitive_value(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     value: Any,
     schema_rule: Any,
     env_var_name: str,
@@ -131,7 +132,7 @@ def _validate_sensitive_value(
                 f"{constraint_info}")
 
 
-def _resolve_sensitive_identifier(
+def _resolve_sensitive_identifier(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     var_id: Any,
     env_prefix: str,
     schema_key: Optional[str],
@@ -314,11 +315,11 @@ def get_first_interface_ip(server: Dict[str, Any]) -> Optional[str]:
     if template_type == "ethernet":
         interfaces = server.get("interfaces", {}).get("ethernet", [])
         if interfaces:
-            return str(interfaces[0].get("ipv4", "")).split("/")[0] or None
+            return str(interfaces[0].get('ipv4', '')).split('/', maxsplit=1)[0] or None
     if template_type == "bond":
         bonds = server.get("interfaces", {}).get("bond", [])
         if bonds:
-            return str(bonds[0].get("ipv4", "")).split("/")[0] or None
+            return str(bonds[0].get('ipv4', '')).split('/', maxsplit=1)[0] or None
     return None
 
 
@@ -446,7 +447,7 @@ def render_jinja_template(env: Environment,
     try:
         template = env.get_template(template_name)
         rendered = template.render(context)
-    except Exception as error:
+    except (Exception) as error:  # pylint: disable=broad-exception-caught
         print(f"Error rendering template {template_name}: {error}")
         return None
 
@@ -707,7 +708,7 @@ def _safe_extract_tar(archive_path: Path, destination: Path) -> None:
         tar_handle.extractall(destination)
 
 
-def download_and_extract_latest_iserver_release(output_dir: Path) -> None:
+def download_and_extract_latest_iserver_release(output_dir: Path) -> None:  # pylint: disable=too-many-locals
     """Download latest Linux tar.gz release asset from datacenter/iserver and extract it.
 
     If an iServer Linux tar.gz already exists in the output directory, skip downloading
@@ -940,7 +941,8 @@ def generate_server_json(
         return False
 
 
-def main() -> None:
+def main() -> None:  # pylint: disable=too-many-statements
+    """Parse arguments, load config, and generate nmstate/server templates."""
     args = parse_args()
     load_schema()
 

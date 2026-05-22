@@ -1,16 +1,10 @@
-dump_model.py pylint!skip
-roles/everpure/library/validate_everpure_env_vars.py pylint!skip
 roles/intersight_ucs_provision/library/src/bmc.py pylint!skip
 roles/intersight_ucs_provision/library/src/initialize.py pylint!skip
 roles/intersight_ucs_provision/library/src/intersight/api.py pylint!skip
 roles/intersight_ucs_provision/library/src/intersight/configure.py pylint!skip
 roles/intersight_ucs_provision/library/src/intersight/system.py pylint!skip
 roles/intersight_ucs_provision/library/src/intersight/system_software_repository.py pylint!skip
-roles/intersight_ucs_provision/library/src/notifications.py pylint!skip
 roles/intersight_ucs_provision/library/src/shared_functions.py pylint!skip
-roles/intersight_ucs_provision/library/src/validating.py pylint!skip
-roles/openshift_install/library/generate_server_and_nmstate_templates.py pylint!skip
-schema/jsonpath.py pylint!skip
 dump_model.py shebang!skip
 roles/everpure/library/validate_everpure_env_vars.py shebang!skip
 roles/intersight_ucs_provision/library/deploy_intersight_ucs.py shebang!skip

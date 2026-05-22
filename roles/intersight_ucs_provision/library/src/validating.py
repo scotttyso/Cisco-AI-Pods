@@ -1,20 +1,22 @@
+"""Validation helpers for Intersight UCS provisioning inputs."""
 # =============================================================================
 # Source Modules
 # =============================================================================
 import sys
 
 
-def prRed(skk):
-    print("\033[91m {}\033[00m".format(skk))
+def pr_red(skk):
+    """Print text in red to stdout."""
+    print(f"\033[91m {skk}\033[00m")
 
 
 try:
     import re
     import validators
 except ImportError as e:
-    prRed(f'src/validating.py line 9 - !!! ERROR !!!\n{e.__class__.__name__}')
-    prRed(f" Module {e.name} is required to run this script")
-    prRed(f" Install the module using the following: `pip install {e.name}`")
+    pr_red(f'src/validating.py line 9 - !!! ERROR !!!\n{e.__class__.__name__}')
+    pr_red(f" Module {e.name} is required to run this script")
+    pr_red(f" Install the module using the following: `pip install {e.name}`")
     sys.exit(1)
 
 # =============================================================================
@@ -22,8 +24,9 @@ except ImportError as e:
 # =============================================================================
 
 
-def dns_name(varName, varValue):
-    hostname = varValue
+def dns_name(var_name, var_value):  # pylint: disable=invalid-name
+    """Return True when var_value is a valid DNS hostname, False otherwise."""
+    hostname = var_value
     valid_count = 0
     if len(hostname) > 255:
         valid_count += 1
@@ -36,22 +39,21 @@ def dns_name(varName, varValue):
     if not all(allowed.match(x) for x in hostname.split(".")):
         valid_count += 1
     if not valid_count == 0:
-        print(f'{"-" * 108}')
-        print(
-            f'   Error with {varName}.  "{varValue}" is not a valid Hostname/Domain.')
-        print(f'   Confirm that you have entered the DNS Name Correctly.')
-        print(f'{"-" * 108}')
+        print('-' * 108)
+        print(f'   Error with {var_name}.  "{var_value}" is not a valid Hostname/Domain.')
+        print('   Confirm that you have entered the DNS Name Correctly.')
+        print('-' * 108)
         return False
-    else:
-        return True
+    return True
 
 
-def ip_address(varName, varValue):
-    if re.search('/', varValue):
-        x = varValue.split('/')
+def ip_address(var_name, var_value):  # pylint: disable=invalid-name
+    """Return True when var_value is a valid IPv4 or IPv6 address, False otherwise."""
+    if re.search('/', var_value):
+        x = var_value.split('/')
         address = x[0]
     else:
-        address = varValue
+        address = var_value
     valid_count = 0
     if re.search(r'\.', address):
         if not validators.ip_address.ipv4(address):
@@ -60,16 +62,13 @@ def ip_address(varName, varValue):
         if not validators.ip_address.ipv6(address):
             valid_count += 1
     if not valid_count == 0 and re.search(r'\.', address):
-        print(f'{"-" * 108}')
-        print(
-            f'   Error with {varName}. "{varValue}" is not a valid IPv4 Address.')
-        print(f'{"-" * 108}')
+        print('-' * 108)
+        print(f'   Error with {var_name}. "{var_value}" is not a valid IPv4 Address.')
+        print('-' * 108)
         return False
-    elif not valid_count == 0:
-        print(f'{"-" * 108}')
-        print(
-            f'   Error with {varName}. "{varValue}" is not a valid IPv6 Address.')
-        print(f'{"-" * 108}')
+    if not valid_count == 0:
+        print('-' * 108)
+        print(f'   Error with {var_name}. "{var_value}" is not a valid IPv6 Address.')
+        print('-' * 108)
         return False
-    else:
-        return True
+    return True

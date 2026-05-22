@@ -14,7 +14,7 @@ Author:
 
 import json
 import sys
-from typing import Any, Dict, List, Union
+from typing import Any, Dict
 
 
 def traverse(path: str, obj: Any) -> None:
@@ -39,11 +39,11 @@ def read_file(fpath: str) -> Dict:
         return json.load(f)    # type: ignore
 
 
-def process(fname: str) -> None:
+def process(fpath: str) -> None:
     """
     Process the given JSON file.
     """
-    d: Dict = read_file(fname)
+    d: Dict = read_file(fpath)
     traverse("root", d)
 
 ##############################################################################

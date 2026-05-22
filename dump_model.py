@@ -3,10 +3,20 @@
 Dump Intersight model structure to JSON for inspection.
 """
 import json
-import os
 import sys
 from pathlib import Path
 import yaml
+
+
+def _deep_merge(base, update):
+    """Recursively merge update dict into base dict in-place."""
+    for key, value in update.items():
+        if isinstance(value, dict) and key in base and isinstance(base[key], dict):
+            _deep_merge(base[key], value)
+        elif isinstance(value, list) and key in base and isinstance(base[key], list):
+            base[key].extend(value)
+        else:
+            base[key] = value
 
 
 def load_yaml_files(model_dir):
@@ -23,25 +33,11 @@ def load_yaml_files(model_dir):
     for yaml_file in yaml_files:
         print(f"  Loading: {yaml_file.name}")
         try:
-            with open(yaml_file, 'r') as f:
+            with open(yaml_file, 'r', encoding='utf-8') as f:
                 data = yaml.safe_load(f)
                 if data:
-                    # Merge recursively
-                    def deep_merge(base, update):
-                        for key, value in update.items():
-                            if isinstance(
-                                    value,
-                                    dict) and key in base and isinstance(
-                                    base[key],
-                                    dict):
-                                deep_merge(base[key], value)
-                            elif isinstance(value, list) and key in base and isinstance(base[key], list):
-                                base[key].extend(value)
-                            else:
-                                base[key] = value
-
-                    deep_merge(merged, data)
-        except Exception as e:
+                    _deep_merge(merged, data)
+        except (yaml.YAMLError, OSError) as e:
             print(f"  Error loading {yaml_file}: {e}")
             continue
 
@@ -49,6 +45,7 @@ def load_yaml_files(model_dir):
 
 
 def main():
+    """Dump Intersight YAML models to a JSON file and print a summary."""
     # Model directory
     model_dir = Path(
         '/home/tyscott@rich.ciscolabs.com/scotttyso/Cisco-AI-Pods/intersight/policies')
@@ -65,7 +62,7 @@ def main():
     output_file = Path(
         '/home/tyscott@rich.ciscolabs.com/scotttyso/Cisco-AI-Pods/model_structure.json')
 
-    with open(output_file, 'w') as f:
+    with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(merged, f, indent=2, default=str)
 
     print(f"\nModel structure saved to: {output_file}")
