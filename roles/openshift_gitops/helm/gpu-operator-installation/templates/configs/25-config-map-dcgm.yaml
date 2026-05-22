@@ -1,3 +1,5 @@
+#  This file is used to create a ConfigMap that contains the DCGM metrics configuration for the NVIDIA GPU Operator.
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:

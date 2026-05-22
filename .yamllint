@@ -1,5 +1,12 @@
 ---
 extends: default
+ignore: |
+  .ansible/**
+  .git/**
+  assisted-installer/**
+  host_vars/**
+  netapp/**
+  roles/openshift_gitops/helm/**/templates/**/*.yaml
 rules:
   braces:
     min-spaces-inside: 0

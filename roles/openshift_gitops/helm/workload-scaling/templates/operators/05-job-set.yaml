@@ -1,4 +1,5 @@
 {{- if not (eq .Values.trainer "Removed") }}
+---
 apiVersion: v1
 kind: Namespace
 metadata:

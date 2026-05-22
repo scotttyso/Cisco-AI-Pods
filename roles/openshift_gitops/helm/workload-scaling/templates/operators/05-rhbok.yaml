@@ -1,4 +1,5 @@
 {{- if not (eq .Values.kueue "Removed") }}
+---
 apiVersion: v1
 kind: Namespace
 metadata:

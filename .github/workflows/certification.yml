@@ -1,9 +1,10 @@
+---
 name: Run collection certification checks
 
 permissions:
   contents: read
 
-on:
+'on':
   pull_request:
     branches: [main]
   workflow_dispatch:

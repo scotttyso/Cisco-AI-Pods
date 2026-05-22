@@ -1,4 +1,5 @@
 # Creates an instance of NodeFeatureDiscovery, which deploys the worker pods
+---
 apiVersion: nfd.openshift.io/v1
 kind: NodeFeatureDiscovery
 metadata:

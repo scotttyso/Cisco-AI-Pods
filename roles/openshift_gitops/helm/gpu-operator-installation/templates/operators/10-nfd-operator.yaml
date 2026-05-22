@@ -1,3 +1,5 @@
+#  This file is used to create the Namespace, OperatorGroup, and Subscription for the Node Feature Discovery (NFD) Operator.
+---
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -14,7 +16,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "10"
 spec:
   targetNamespaces:
-  - openshift-nfd
+    - openshift-nfd
 ---
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
