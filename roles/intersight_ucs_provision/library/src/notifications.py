@@ -3,6 +3,8 @@
 # =============================================================================
 import sys
 from pathlib import Path
+
+
 def prRed(skk):
     print("\033[91m {}\033[00m".format(skk))
 
@@ -79,7 +81,7 @@ def mod_pol_description(pol_description):
 
 
 def begin_loop(ptype1, ptype2):
-    pcolor.LightGray(f'\n{"-"*108}\n')
+    pcolor.LightGray(f'\n{"-" * 108}\n')
     pcolor.LightPurple(
         f"  Beginning {' '.join(ptype1.split('_')).title()} {ptype2} Deployment.\n")
 
@@ -135,10 +137,10 @@ def completed_item(category, ptype, kwargs):
                 '_', ' ').title())
         if method == 'post':
             pcolor.Green(
-                f'{" "*6}* Completed {method.upper()} for Organization: `{kwargs.org}` > {parent_title} {rtype} `{parent_name}`: {name} - Moid: {pmoid}')
+                f'{" " * 6}* Completed {method.upper()} for Organization: `{kwargs.org}` > {parent_title} {rtype} `{parent_name}`: {name} - Moid: {pmoid}')
         else:
             pcolor.LightPurple(
-                f'{" "*6}* Completed {method.upper()} for Organization: `{kwargs.org}` > {parent_title} {rtype} `{parent_name}`: {name} - Moid: {pmoid}')
+                f'{" " * 6}* Completed {method.upper()} for Organization: `{kwargs.org}` > {parent_title} {rtype} `{parent_name}`: {name} - Moid: {pmoid}')
         return
     elif re.search(regex, iresults.ObjectType):
         if 'SharingRule' in iresults.ObjectType:
@@ -152,10 +154,10 @@ def completed_item(category, ptype, kwargs):
             name = f"{ptype}: `{iresults.Name}`"
         if method == 'post':
             pcolor.Green(
-                f'{" "*6}* Completed {method.upper()} for System -> {name} - Moid: {pmoid}')
+                f'{" " * 6}* Completed {method.upper()} for System -> {name} - Moid: {pmoid}')
         else:
             pcolor.LightPurple(
-                f'{" "*6}* Completed {method.upper()} for System -> {name} - Moid: {pmoid}')
+                f'{" " * 6}* Completed {method.upper()} for System -> {name} - Moid: {pmoid}')
         return
     elif 'asset.DeviceClaim' == iresults.ObjectType:
         name = f"Claiming Server `{iresults.SerialNumber}` Registration"
@@ -205,21 +207,21 @@ def completed_item(category, ptype, kwargs):
     elif re.search('(eula|upgrade)', ptype) and ptype == 'firmware':
         if method == 'post':
             pcolor.Green(
-                f'{" "*6}* Completed {method.upper()} for {ptype} {name}.')
+                f'{" " * 6}* Completed {method.upper()} for {ptype} {name}.')
         else:
             pcolor.LightPurple(
                 f'      * Completed {method.upper()} for {ptype} {name}.')
     elif 'Claiming' in name:
-        pcolor.Green(f'{" "*6}- Completed POST for {name} - Moid: {pmoid}')
+        pcolor.Green(f'{" " * 6}- Completed POST for {name} - Moid: {pmoid}')
     elif 'Reservation' in name:
-        pcolor.Green(f'{" "*6}- Completed POST for {name} - Moid: {pmoid}')
+        pcolor.Green(f'{" " * 6}- Completed POST for {name} - Moid: {pmoid}')
     elif 'bulk/MoMergers' == kwargs.uri:
         if method == 'post':
             pcolor.Green(
-                f'{" "*6}- Completed Bulk Merger {method.upper()} for Organization: `{kwargs.org}` > Name: {name} - Moid: {pmoid}')
+                f'{" " * 6}- Completed Bulk Merger {method.upper()} for Organization: `{kwargs.org}` > Name: {name} - Moid: {pmoid}')
         else:
             pcolor.LightPurple(
-                f'{" "*4}- Completed Bulk Merger {method.upper()} for Organization: `{kwargs.org}` > Name: {name} - Moid: {pmoid}')
+                f'{" " * 4}- Completed Bulk Merger {method.upper()} for Organization: `{kwargs.org}` > Name: {name} - Moid: {pmoid}')
     else:
         rcategory = DESCRIPTION_WORD_MAP.get(
             category.replace(
@@ -228,17 +230,17 @@ def completed_item(category, ptype, kwargs):
         rtype = mod_pol_description(ptype.replace('_', ' ').title())
         if method == 'post':
             pcolor.Green(
-                f'{" "*6}- Completed {method.upper()} for Organization: `{kwargs.org}` Name: {name} - Moid: {pmoid}')
+                f'{" " * 6}- Completed {method.upper()} for Organization: `{kwargs.org}` Name: {name} - Moid: {pmoid}')
         else:
             pcolor.LightPurple(
-                f'{" "*6}- Completed {method.upper()} for Organization: `{kwargs.org}` > Name: {name} - Moid: {pmoid}')
+                f'{" " * 6}- Completed {method.upper()} for Organization: `{kwargs.org}` > Name: {name} - Moid: {pmoid}')
 
 
 def deploy_notification(profile, profile_type):
-    pcolor.LightGray(f'\n{"-"*108}\n')
+    pcolor.LightGray(f'\n{"-" * 108}\n')
     pcolor.LightPurple(
         f'   Deploy Action Still ongoing for {profile_type} Profile {profile}')
-    pcolor.LightGray(f'\n{"-"*108}\n')
+    pcolor.LightGray(f'\n{"-" * 108}\n')
 
 
 def end_loop(ptype1, ptype2):
@@ -249,7 +251,7 @@ def end_loop(ptype1, ptype2):
 def section_begin(resource_type, resource):
     ptype1 = ' '.join(resource_type.split('_')).title()
     ptype2 = mod_pol_description((' '.join(resource.split('_'))).title())
-    pcolor.LightGray(f'\n{"-"*108}\n')
+    pcolor.LightGray(f'\n{"-" * 108}\n')
     pcolor.LightPurple(
         f"  Beginning Intersight -> {ptype1} -> {ptype2} Deployments.\n")
 
@@ -257,7 +259,7 @@ def section_begin(resource_type, resource):
 def section_end(resource_type, resource):
     ptype1 = ' '.join(resource_type.split('_')).title()
     ptype2 = mod_pol_description((' '.join(resource.split('_'))).title())
-    pcolor.LightGray(f'\n{"-"*108}\n')
+    pcolor.LightGray(f'\n{"-" * 108}\n')
     pcolor.LightPurple(
         f"  Completed Intersight -> {ptype1} -> {ptype2} Deployments.\n")
 
@@ -265,21 +267,21 @@ def section_end(resource_type, resource):
 def section_begin_c88x(resource_type, resource):
     ptype1 = ' '.join(resource_type.split('_')).title()
     ptype2 = mod_pol_description((' '.join(resource.split('_'))).title())
-    pcolor.LightGray(f'\n{"-"*108}\n')
+    pcolor.LightGray(f'\n{"-" * 108}\n')
     pcolor.LightPurple(f"  Beginning {ptype1} -> {ptype2} Deployment.\n")
 
 
 def section_end_c88x(resource_type, resource):
     ptype1 = ' '.join(resource_type.split('_')).title()
     ptype2 = mod_pol_description((' '.join(resource.split('_'))).title())
-    pcolor.LightGray(f'\n{"-"*108}\n')
+    pcolor.LightGray(f'\n{"-" * 108}\n')
     pcolor.LightPurple(f"  Completed {ptype1} -> {ptype2} Deployment.\n")
 
 
 def section_begin_org(org, resource, resource_type):
     ptype1 = ' '.join(resource_type.split('_')).title()
     ptype2 = mod_pol_description((' '.join(resource.split('_'))).title())
-    pcolor.LightGray(f'\n{"-"*108}\n')
+    pcolor.LightGray(f'\n{"-" * 108}\n')
     pcolor.LightPurple(
         f"  Beginning Intersight -> {ptype1} -> {ptype2} Deployments for Organization: `{org}`.\n")
 
@@ -296,29 +298,29 @@ def section_end_org(org, resource, resource_type):
 
 
 def error_file_location(varName, varValue):
-    pcolor.LightGray(f'\n{"-"*108}\n')
+    pcolor.LightGray(f'\n{"-" * 108}\n')
     pcolor.Yellow(f'  !!! ERROR !!! The "{varName}" "{varValue}"')
     pcolor.Yellow(f'  is invalid.  Please valid the Entry for "{varName}".')
-    pcolor.LightGray(f'\n{"-"*108}\n')
+    pcolor.LightGray(f'\n{"-" * 108}\n')
     raise
 
 
 def error_organization(org):
-    pcolor.LightGray(f'\n{"-"*108}\n')
+    pcolor.LightGray(f'\n{"-" * 108}\n')
     pcolor.Yellow(f'   !!! ERROR !!!')
     pcolor.Yellow(
         f'   The organization was not found in Intersight, but it is referenced in the input file.')
     pcolor.Yellow(f'   Organization: {org}')
-    pcolor.LightGray(f'\n{"-"*108}\n')
+    pcolor.LightGray(f'\n{"-" * 108}\n')
     raise
 
 
 def error_requests(method, status, text, uri):
-    pcolor.LightGray(f'\n{"-"*108}\n')
+    pcolor.LightGray(f'\n{"-" * 108}\n')
     pcolor.Yellow(f'   !!! ERROR !!! when attempting {method} to {uri}')
     pcolor.Yellow(f'   Exiting on Error {status} with the following output:')
     pcolor.Yellow(f'   {text}')
-    pcolor.LightGray(f'\n{"-"*108}\n')
+    pcolor.LightGray(f'\n{"-" * 108}\n')
     raise
 
 
@@ -327,8 +329,8 @@ def error_requests(method, status, text, uri):
 # =============================================================================
 def message_invalid_selection():
     pcolor.Red(
-        f'\n{"-"*108}\n\n  !!!Error!!! Invalid Selection.  Please Select a valid Option from the List.')
-    pcolor.Red(f'\n{"-"*108}\n')
+        f'\n{"-" * 108}\n\n  !!!Error!!! Invalid Selection.  Please Select a valid Option from the List.')
+    pcolor.Red(f'\n{"-" * 108}\n')
 
 
 def message_invalid_y_or_n(length):
@@ -343,31 +345,31 @@ def message_invalid_y_or_n(length):
 
 def message_fcoe_vlan(fcoe_id, vlan_policy):
     pcolor.Red(
-        f'\n{"-"*108}\n\n  !!!Error!!!\n  The FCoE VLAN `{fcoe_id}` is already assigned to the VLAN Policy')
+        f'\n{"-" * 108}\n\n  !!!Error!!!\n  The FCoE VLAN `{fcoe_id}` is already assigned to the VLAN Policy')
     pcolor.Red(
         f'  {vlan_policy}.  Please choose a VLAN id that is not already in use.')
-    pcolor.Red(f'\n{"-"*108}\n')
+    pcolor.Red(f'\n{"-" * 108}\n')
 
 
 def message_invalid_native_vlan(nativeVlan, VlanList):
     pcolor.Red(
-        f'\n{"-"*108}\n\n  !!!Error!!!\n  The Native VLAN `{nativeVlan}` was not in the VLAN Policy List.')
+        f'\n{"-" * 108}\n\n  !!!Error!!!\n  The Native VLAN `{nativeVlan}` was not in the VLAN Policy List.')
     pcolor.Red(f'  VLAN Policy List is: "{VlanList}"')
-    pcolor.Red(f'\n{"-"*108}\n')
+    pcolor.Red(f'\n{"-" * 108}\n')
 
 
 def message_invalid_vxan():
     pcolor.Red(
-        f'\n{"-"*108}\n\n  !!!Error!!!\n  Invalid Entry.  Please Enter a valid ID in the range of 1-4094.')
-    pcolor.Red(f'\n{"-"*108}\n')
+        f'\n{"-" * 108}\n\n  !!!Error!!!\n  Invalid Entry.  Please Enter a valid ID in the range of 1-4094.')
+    pcolor.Red(f'\n{"-" * 108}\n')
 
 
 def message_invalid_vsan_id(vsan_policy, vsan_id, vsan_list):
     pcolor.Red(
-        f'\n{"-"*108}\n\n  !!!Error!!!\n  The VSAN `{vsan_id}` is not in the VSAN Policy `{vsan_policy}`.')
-    pcolor.Red(f'  Options are: {vsan_list}.\n\n{"-"*108}\n')
+        f'\n{"-" * 108}\n\n  !!!Error!!!\n  The VSAN `{vsan_id}` is not in the VSAN Policy `{vsan_policy}`.')
+    pcolor.Red(f'  Options are: {vsan_list}.\n\n{"-" * 108}\n')
 
 
 def message_starting_over(policy_type):
-    pcolor.Yellow(f'\n{"-"*54}\n\n  Starting `{policy_type}` Section over.')
-    pcolor.Yellow(f'\n{"-"*54}\n')
+    pcolor.Yellow(f'\n{"-" * 54}\n\n  Starting `{policy_type}` Section over.')
+    pcolor.Yellow(f'\n{"-" * 54}\n')

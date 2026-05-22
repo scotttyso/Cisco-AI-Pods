@@ -6,6 +6,8 @@
 # =============================================================================
 import sys
 from .. import notifications, pcolor
+
+
 def prRed(skk):
     print("\033[91m {}\033[00m".format(skk))
 
@@ -248,14 +250,14 @@ class system_software_repository(object):
                         m2_found = True
                         kwargs.imm_dict.orgs[kwargs.org].wizard.server_profiles[x].virtual_drive = v.virtual_drives['0'].name
                 if not m2_found:
-                    pcolor.Red(f'\n{"-"*108}\n')
+                    pcolor.Red(f'\n{"-" * 108}\n')
                     pcolor.Red(
                         f'  !!! ERROR !!!\n  Could not determine the Controller Slot for:')
                     pcolor.Red(f'  * Profile: {server_profiles[x].name}')
                     pcolor.Red(f'  * Serial:  {server_profiles[x].serial}')
                     pcolor.Red(
                         f'  Exiting... (intersight-tools/new/src/intersight/core.py Line 1448)')
-                    pcolor.Red(f'\n{"-"*108}\n')
+                    pcolor.Red(f'\n{"-" * 108}\n')
                     len(False)
                     sys.exit(1)
         # =====================================================================
@@ -333,27 +335,27 @@ class system_software_repository(object):
                     # kwargs.fc_ifs = [b for a,b in v.adapters[kwargs.san_target.slot].fc_ifs.items()]
                     kwargs.fc_ifs = v.adapters[kwargs.san_target.slot].fc_ifs
                     stgt = kwargs.san_target
-                    pcolor.Green(f'\n{"-"*52}\n')
+                    pcolor.Green(f'\n{"-" * 52}\n')
                     pcolor.Green(
-                        f'\n{" "*2}- boot_mode: SAN\n{" "*5}boot_target:')
+                        f'\n{" " * 2}- boot_mode: SAN\n{" " * 5}boot_target:')
                     pcolor.Green(
-                        f'{" "*4}initiator: {kwargs.fc_ifs[stgt.interface_name].wwpn}\n{" "*7}lun: {stgt.lun}\n{" "*7}target: {stgt.wwpn}')
+                        f'{" " * 4}initiator: {kwargs.fc_ifs[stgt.interface_name].wwpn}\n{" " * 7}lun: {stgt.lun}\n{" " * 7}target: {stgt.wwpn}')
                     pcolor.Green(
-                        f'{" "*4}profile: {v.name}\n{" "*5}serial: {v.serial}')
+                        f'{" " * 4}profile: {v.name}\n{" " * 5}serial: {v.serial}')
                     pcolor.Green(
-                        f'{" "*4}vnic:\n{" "*7}name: {vnic.name}\n{" "*7}mac: {vnic.mac}\n')
+                        f'{" " * 4}vnic:\n{" " * 7}name: {vnic.name}\n{" " * 7}mac: {vnic.mac}\n')
                 elif v.boot_volume.lower() == 'm2' and isinstance(v.install_interface, str):
-                    pcolor.Green(f'\n{"-"*52}\n')
-                    pcolor.Green(f'{" "*2}- boot_mode: {v.boot_volume}')
+                    pcolor.Green(f'\n{"-" * 52}\n')
+                    pcolor.Green(f'{" " * 2}- boot_mode: {v.boot_volume}')
                     pcolor.Green(
-                        f'{" "*4}profile: {v.name}\n{" "*5}serial: {v.serial}')
+                        f'{" " * 4}profile: {v.name}\n{" " * 5}serial: {v.serial}')
                     pcolor.Green(
-                        f'{" "*4}vnic:\n{" "*7}name: {vnic.name}\n{" "*7}mac: {vnic.mac}\n')
+                        f'{" " * 4}vnic:\n{" " * 7}name: {vnic.name}\n{" " * 7}mac: {vnic.mac}\n')
                 else:
-                    pcolor.Green(f'\n{"-"*52}\n')
-                    pcolor.Green(f'{" "*2}- boot_mode: {v.boot_volume}')
+                    pcolor.Green(f'\n{"-" * 52}\n')
+                    pcolor.Green(f'{" " * 2}- boot_mode: {v.boot_volume}')
                     pcolor.Green(
-                        f'{" "*4}profile: {v.name}\n{" "*5}serial: {v.serial}')
+                        f'{" " * 4}profile: {v.name}\n{" " * 5}serial: {v.serial}')
                 # =============================================================
                 # POST OS Install
                 # =============================================================
@@ -410,7 +412,7 @@ class system_software_repository(object):
                         progress = kwargs.results.Progress
                         status = kwargs.results.WorkflowStatus
                         pcolor.Cyan(
-                            f'{" "*6}* Operating System Installation for `{v.name}` still In Progress.'
+                            f'{" " * 6}* Operating System Installation for `{v.name}` still In Progress.'
                             f'  Status is: `{status}`, Progress is: {progress} Percent, Sleeping for 120 seconds.')
                         time.sleep(120)
                 # =============================================================
@@ -454,14 +456,14 @@ class system_software_repository(object):
             pcolor.Yellow(names)
             pcolor.Yellow(install_pmoids)
             pcolor.Yellow(json.dumps(install_results, indent=4))
-            pcolor.Red(f'\n{"-"*108}\n')
+            pcolor.Red(f'\n{"-" * 108}\n')
             for x in range(0, len(
                     kwargs.imm_dict.orgs[kwargs.org].wizard.server_profiles)):
                 v = kwargs.imm_dict.orgs[kwargs.org].wizard.server_profiles[x]
                 if not v.install_success:
                     pcolor.Red(
                         f'      * OS Install Failed for `{v.name}`.  Please Validate the Logs.')
-            pcolor.Red(f'\n{"-"*108}\n')
+            pcolor.Red(f'\n{"-" * 108}\n')
             pcolor.Red(
                 f'  Exiting... (intersight-tools/new/src/intersight/core.py Line 1576)')
             len(False)

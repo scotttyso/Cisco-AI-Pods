@@ -2298,7 +2298,7 @@ class configure(object):
         if len(kwargs.bulk_list) > 0:
             pcolor.Cyan('')
             pcolor.Cyan(
-                f'{" "*3}Updating {self.type.capitalize()} Profile Descriptions.')
+                f'{" " * 3}Updating {self.type.capitalize()} Profile Descriptions.')
             kwargs.uri = ezdata.intersight_uri
             kwargs = self.create_bulk_request(kwargs)
         # =====================================================================
@@ -2353,7 +2353,7 @@ class configure(object):
                     pending_changes = True
                     kwargs.profile_update[e].pending_changes = 'Activate'
             if pending_changes:
-                pcolor.LightPurple(f'\n{"-"*108}\n')
+                pcolor.LightPurple(f'\n{"-" * 108}\n')
                 deploy_pending = any(
                     kwargs.profile_update[e].pending_changes == 'Deploy' for e in names)
                 activate_pending = any(
@@ -2361,7 +2361,7 @@ class configure(object):
                 if deploy_pending:
                     if 'server' == self.type:
                         pcolor.LightPurple(
-                            f'{" "*4}* Pending Changes.  Sleeping for 120 Seconds')
+                            f'{" " * 4}* Pending Changes.  Sleeping for 120 Seconds')
                         time.sleep(120)
                     else:
                         pcolor.LightPurple(
@@ -2370,7 +2370,7 @@ class configure(object):
                 for e in names:
                     if kwargs.profile_update[e].pending_changes == 'Deploy':
                         pcolor.Green(
-                            f'{" "*4}- Beginning Profile Deployment for `{e}`.')
+                            f'{" " * 4}- Beginning Profile Deployment for `{e}`.')
                         kwargs = kwargs | DotMap(
                             api_body={
                                 'Action': 'Deploy',
@@ -2380,18 +2380,18 @@ class configure(object):
                         kwargs = profile_api.calls(kwargs)
                     elif kwargs.profile_update[e].pending_changes == 'Activate':
                         pcolor.LightPurple(
-                            f'{" "*4}- Skipping Org: {kwargs.org}; Profile Deployment for `{e}`.  Pending Activation.')
+                            f'{" " * 4}- Skipping Org: {kwargs.org}; Profile Deployment for `{e}`.  Pending Activation.')
                     else:
                         pcolor.LightPurple(
-                            f'{" "*4}- Skipping Org: {kwargs.org}; Profile Deployment for `{e}`.  No Pending Changes.')
+                            f'{" " * 4}- Skipping Org: {kwargs.org}; Profile Deployment for `{e}`.  No Pending Changes.')
                 if deploy_pending:
                     if 'server' == self.type:
                         pcolor.LightPurple(
-                            f'{" "*4}* Deploying Changes.  Sleeping for 600 Seconds')
+                            f'{" " * 4}* Deploying Changes.  Sleeping for 600 Seconds')
                         time.sleep(600)
                     else:
                         pcolor.LightPurple(
-                            f'{" "*4}* Deploying Changes.  Sleeping for 60 Seconds')
+                            f'{" " * 4}* Deploying Changes.  Sleeping for 60 Seconds')
                         time.sleep(60)
                 for e in names:
                     if kwargs.profile_update[e].pending_changes == 'Deploy':
@@ -2401,7 +2401,7 @@ class configure(object):
                         while not deploy_complete:
                             if retry_count >= max_retries:
                                 pcolor.Yellow(
-                                    f'{" "*4}- Deploy timeout waiting for `{e}` after {max_retries} checks.')
+                                    f'{" " * 4}- Deploy timeout waiting for `{e}` after {max_retries} checks.')
                                 break
                             kwargs = kwargs | DotMap(
                                 method='get_by_moid', pmoid=profile_map[e].moid)
@@ -2412,20 +2412,20 @@ class configure(object):
                                 deploy_complete = True
                                 if 'chassis' in self.type:
                                     pcolor.Green(
-                                        f'{" "*4}- Completed Profile Deployment for `{e}`.')
+                                        f'{" " * 4}- Completed Profile Deployment for `{e}`.')
                             else:
                                 if 'server' in self.type:
                                     pcolor.Cyan(
-                                        f'{" "*6}* Deploy Still Occuring on `{e}`.  Waiting 120 seconds.')
+                                        f'{" " * 6}* Deploy Still Occuring on `{e}`.  Waiting 120 seconds.')
                                     time.sleep(120)
                                 else:
                                     pcolor.Cyan(
-                                        f'{" "*6}* Deploy Still Occuring on `{e}`.  Waiting 60 seconds.')
+                                        f'{" " * 6}* Deploy Still Occuring on `{e}`.  Waiting 60 seconds.')
                                     time.sleep(60)
                             retry_count += 1
                 if 'server' == self.type and activate_pending:
                     kwargs = self.profiles_server_activate(kwargs)
-                pcolor.LightPurple(f'\n{"-"*108}\n')
+                pcolor.LightPurple(f'\n{"-" * 108}\n')
         return kwargs
 
     # =========================================================================
@@ -2475,11 +2475,11 @@ class configure(object):
                     kwargs.cluster_update[clusters[e.Parent.Moid]].names.append(
                         e.Name)
         if pending_changes:
-            pcolor.LightPurple(f'\n{"-"*108}\n')
-            pcolor.Cyan(f'{" "*6}* Sleeping for 120 Seconds')
+            pcolor.LightPurple(f'\n{"-" * 108}\n')
+            pcolor.Cyan(f'{" " * 6}* Sleeping for 120 Seconds')
             time.sleep(120)
             pcolor.Green(
-                f'{" "*4}- Beginning Profile Deployment for Switch Profiles')
+                f'{" " * 4}- Beginning Profile Deployment for Switch Profiles')
         kwargs.bulk_list = []
         for k in list(kwargs.cluster_update.keys()):
             if kwargs.cluster_update[k].pending_changes:
@@ -2489,7 +2489,7 @@ class configure(object):
         if len(kwargs.bulk_list) > 0:
             kwargs = configure('profiles.switch').create_bulk_request(kwargs)
         if pending_changes:
-            pcolor.LightPurple(f'\n{"-"*108}\n')
+            pcolor.LightPurple(f'\n{"-" * 108}\n')
             time.sleep(60)
         for k in list(kwargs.cluster_update.keys()):
             if kwargs.cluster_update[k].pending_changes:
@@ -2505,17 +2505,17 @@ class configure(object):
                         kwargs = api('switch_profiles').calls(kwargs)
                         if kwargs.results.ConfigContext.ControlAction == 'No-op':
                             pcolor.Green(
-                                f'{" "*4}- Completed Switch Profile Deployment for {e}')
+                                f'{" " * 4}- Completed Switch Profile Deployment for {e}')
                             deploy_complete = True
                         elif attempts >= max_attempts:
                             raise TimeoutError(
                                 f'Switch profile deployment timed out for "{e}" after {attempts} checks')
                         else:
                             pcolor.Cyan(
-                                f'{" "*6}* Deploy Still Occuring on {e}.  Waiting 120 seconds.')
+                                f'{" " * 6}* Deploy Still Occuring on {e}.  Waiting 120 seconds.')
                             time.sleep(120)
         if pending_changes:
-            pcolor.LightPurple(f'\n{"-"*108}\n')
+            pcolor.LightPurple(f'\n{"-" * 108}\n')
         return kwargs
 
     # =========================================================================
@@ -2537,7 +2537,7 @@ class configure(object):
     # Function - Deploy Profile if Action is Deploy
     # =========================================================================
     def profiles_server_activate(self, kwargs):
-        pcolor.LightPurple(f'\n{"-"*108}\n')
+        pcolor.LightPurple(f'\n{"-" * 108}\n')
         profile_api = api(category=self.category, type=self.type)
         profile_keys = list(kwargs.profile_update.keys())
         active_profiles = [
@@ -2553,14 +2553,14 @@ class configure(object):
             profile_result = profile_results_by_name.get(e)
             if not profile_result:
                 pcolor.LightPurple(
-                    f'{" "*4}- Skipping Org: {kwargs.org}; Profile Activation for `{e}`.  Profile not found.')
+                    f'{" " * 4}- Skipping Org: {kwargs.org}; Profile Activation for `{e}`.  Profile not found.')
                 kwargs.profile_update[e].pending_changes = 'Empty'
                 continue
             if profile_result.get(
                     'ConfigChanges', {}).get(
                     'PolicyDisruptions', []):
                 pcolor.Green(
-                    f'{" "*4}- Beginning Profile Activation for `{e}`.')
+                    f'{" " * 4}- Beginning Profile Activation for `{e}`.')
                 api_body = {'ScheduledActions': [
                     {'Action': 'Activate', 'ProceedOnReboot': True}]}
                 kwargs = kwargs | DotMap(api_body=api_body, method='patch',
@@ -2569,10 +2569,10 @@ class configure(object):
                 pending_activations = True
             else:
                 pcolor.LightPurple(
-                    f'{" "*4}- Skipping Org: {kwargs.org}; Profile Activation for `{e}`.  No Pending Changes.')
+                    f'{" " * 4}- Skipping Org: {kwargs.org}; Profile Activation for `{e}`.  No Pending Changes.')
                 kwargs.profile_update[e].pending_changes = 'Empty'
         if pending_activations:
-            pcolor.LightPurple(f'\n{"-"*108}\n')
+            pcolor.LightPurple(f'\n{"-" * 108}\n')
             pcolor.LightPurple(
                 '    * Pending Activations.  Sleeping for 300 Seconds')
             time.sleep(300)
@@ -2601,16 +2601,16 @@ class configure(object):
 
         def activation_message(e, progress, status):
             pcolor.Cyan(
-                f'{" "*6}* Still In Progress for `{e}`.  Status: `{status}` Progress Percentage: `{progress}`, Sleeping for 120 seconds.')
+                f'{" " * 6}* Still In Progress for `{e}`.  Status: `{status}` Progress Percentage: `{progress}`, Sleeping for 120 seconds.')
 
         def failed_message(e):
-            pcolor.Yellow(f'\n{"-"*75}\n')
+            pcolor.Yellow(f'\n{"-" * 75}\n')
             pcolor.Red(
                 f'  - Failed to Activate Profile `{e}`.  Please validate in Intersight the reason for the failure.')
-            pcolor.Yellow(f'\n{"-"*75}\n')
+            pcolor.Yellow(f'\n{"-" * 75}\n')
 
         def success_message(e):
-            pcolor.Green(f'{" "*4}- Completed Profile Activation for `{e}`.')
+            pcolor.Green(f'{" " * 4}- Completed Profile Activation for `{e}`.')
 
         for e in profile_keys:
             if kwargs.profile_update[e].pending_changes != 'Empty':
@@ -2648,7 +2648,7 @@ class configure(object):
                     retry_count += 1
             else:
                 pcolor.LightPurple(
-                    f'{" "*4}- Skipping Org: {kwargs.org}; Profile Activation for `{e}`.  No Pending Changes.')
+                    f'{" " * 4}- Skipping Org: {kwargs.org}; Profile Activation for `{e}`.  No Pending Changes.')
         return kwargs
 
     # =========================================================================
@@ -2658,7 +2658,7 @@ class configure(object):
         # =====================================================================
         # Send Begin Notification and Load Variables
         # =====================================================================
-        pcolor.LightGray(f'  {"-"*60}\n')
+        pcolor.LightGray(f'  {"-" * 60}\n')
         pcolor.LightPurple(
             f'   Beginning Server Profile Pool Reservations Deployments\n')
         # =====================================================================
@@ -2764,7 +2764,7 @@ class configure(object):
         # Send End Notification and return kwargs
         # =====================================================================
         pcolor.LightPurple(f'\n    Completed Pool Reservations Deployments\n')
-        pcolor.LightGray(f'  {"-"*60}\n')
+        pcolor.LightGray(f'  {"-" * 60}\n')
         return kwargs
 
     # =========================================================================

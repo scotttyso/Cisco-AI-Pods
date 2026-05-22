@@ -3,6 +3,8 @@
 # =============================================================================
 import sys
 from pathlib import Path
+
+
 def prRed(skk):
     print("\033[91m {}\033[00m".format(skk))
 
@@ -159,14 +161,14 @@ def base_script_settings(kwargs):
         if folder == '':
             pass
         elif not re.search(r'^[\w\@\-\.\:\/\\]+$', folder):
-            pcolor.Red(f'\n{"-"*108}\n\n  !!ERROR!!')
+            pcolor.Red(f'\n{"-" * 108}\n\n  !!ERROR!!')
             pcolor.Red(
                 f'  The Directory structure can only contain the following characters:')
             pcolor.Red(
                 f'  letters(a-z, A-Z), numbers(0-9), hyphen(-), period(.), colon(:), and underscore(-).')
             pcolor.Red(
                 f'  It can be a short path or a fully qualified path.  `{folder}` does not qualify.')
-            pcolor.Red(f'  Exiting...\n\n{"-"*108}\n')
+            pcolor.Red(f'  Exiting...\n\n{"-" * 108}\n')
             raise ValueError(f'Invalid directory component: {folder}')
     return kwargs
 
@@ -254,7 +256,7 @@ def intersight_config(kwargs):
                 valid = validating.ip_address(varName, varValue)
             else:
                 pcolor.Red(
-                    f'\n{"-"*108}\n\n  "{varValue}" is not a valid address.\n\n{"-"*108}\n')
+                    f'\n{"-" * 108}\n\n  "{varValue}" is not a valid address.\n\n{"-" * 108}\n')
         if not valid:
             if non_interactive:
                 pcolor.Red(
@@ -422,7 +424,7 @@ def variable_from_list(kwargs):
         vars = sorted(kwargs.jdata.enum, key=str.casefold)
     valid = False
     while not valid:
-        pcolor.LightPurple(f'\n{"-"*108}\n')
+        pcolor.LightPurple(f'\n{"-" * 108}\n')
         if '\n' in description:
             description = description.split('\n')
             for line in description:
@@ -500,7 +502,7 @@ def variable_from_list(kwargs):
                 valid = True
             else:
                 pcolor.Red(
-                    f'\n{"-"*108}\n\n  The list of Vars {var_list} did not match the available list.\n\n{"-"*108}\n')
+                    f'\n{"-" * 108}\n\n  The list of Vars {var_list} did not match the available list.\n\n{"-" * 108}\n')
         if not valid:
             notifications.message_invalid_selection()
     return selection, valid
@@ -516,15 +518,15 @@ def variable_prompt(kwargs):
     # =========================================================================
     def invalid_boolean(title, answer):
         pcolor.Red(
-            f'\n{"-"*108}\n   `{title}` value of `{answer}` is Invalid!!! Please enter `Y` or `N`.\n{"-"*108}\n')
+            f'\n{"-" * 108}\n   `{title}` value of `{answer}` is Invalid!!! Please enter `Y` or `N`.\n{"-" * 108}\n')
 
     def invalid_integer(title, answer):
         pcolor.Red(
-            f'\n{"-"*108}\n   `{title}` value of `{answer}` is Invalid!!!  Valid range is `{minimum}-{maximum}`.\n{"-"*108}\n')
+            f'\n{"-" * 108}\n   `{title}` value of `{answer}` is Invalid!!!  Valid range is `{minimum}-{maximum}`.\n{"-" * 108}\n')
 
     def invalid_string(title, answer):
         pcolor.Red(
-            f'\n{"-"*108}\n   `{title}` value of `{answer}` is Invalid!!!\n{"-"*108}\n')
+            f'\n{"-" * 108}\n   `{title}` value of `{answer}` is Invalid!!!\n{"-" * 108}\n')
     # =========================================================================
     # Set Function Variables
     # =========================================================================
@@ -536,7 +538,7 @@ def variable_prompt(kwargs):
     # Print `description` if not enum
     # =========================================================================
     if not kwargs.jdata.get('enum'):
-        pcolor.LightPurple(f'\n{"-"*108}\n')
+        pcolor.LightPurple(f'\n{"-" * 108}\n')
         pcolor.LightGray(f'{description}\n')
     # =========================================================================
     # Prompt User for Answer

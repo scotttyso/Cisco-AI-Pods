@@ -60,12 +60,12 @@ class begin(object):
                 category='system',
                 type='organizations').all_organizations(kwargs)
         else:
-            pcolor.Yellow(f'{"-"*108}')
+            pcolor.Yellow(f'{"-" * 108}')
             pcolor.Yellow(
                 f'   No Organizations found in the YAML configuration files.')
             pcolor.Yellow(
                 f'   Confirm that you have created the YAML configuration files correctly and that they contain at least one organization with configurations.')
-            pcolor.Yellow(f'{"-"*108}')
+            pcolor.Yellow(f'{"-" * 108}')
             raise ValueError(
                 'No organizations found in YAML configuration files')
         # =====================================================================

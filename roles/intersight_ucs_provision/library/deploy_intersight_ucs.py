@@ -123,7 +123,7 @@ def main() -> int:
     # Configure Base Module Setup
     # =========================================================================
     pcolor.Cyan(
-        f'\n{"-"*108}\n\n  Starting -> Deploy Intersight/UCS CLI!\n\n{"-"*108}\n')
+        f'\n{"-" * 108}\n\n  Starting -> Deploy Intersight/UCS CLI!\n\n{"-" * 108}\n')
     kwargs = cli_arguments()
     kwargs = shared_functions.base_script_settings(kwargs)
     kwargs = shared_functions.load_configurations(kwargs)
@@ -131,7 +131,7 @@ def main() -> int:
     kwargs = initialize.begin('intersight',
                               'deployment').functions_to_run(kwargs)
     pcolor.Cyan(
-        f'\n{"-"*108}\n\n  !!! Procedures Complete !!!\n  Closing Environment and Exiting Script...\n\n{"-"*108}\n')
+        f'\n{"-" * 108}\n\n  !!! Procedures Complete !!!\n  Closing Environment and Exiting Script...\n\n{"-" * 108}\n')
     return 0
 
 
