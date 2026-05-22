@@ -324,7 +324,7 @@ class api(object):
             uri = kwargs.uri
             url = f'{kwargs.args.url}/api/v1'
 
-            def send_error(kwargs):
+            def send_error(kwargs, response):
                 pcolor.Red(json.dumps(kwargs.api_body, indent=4))
                 pcolor.Red(kwargs.api_body)
                 pcolor.Red(f'!!! ERROR !!!')
@@ -341,6 +341,9 @@ class api(object):
                 elif method == 'post':
                     pcolor.Red(f'  URL: {url}/{uri}')
                 pcolor.Red(f'  Running Process: {method} {self.type}')
+                if response is None:
+                    pcolor.Red('    Error status is unavailable (request failed before response).')
+                    sys.exit(1)
                 pcolor.Red(f'    Error status is {response}')
                 if '{' in response.text:
                     for k, v in (response.json()).items():
@@ -348,26 +351,27 @@ class api(object):
                 else:
                     pcolor.Red(response.text)
                 sys.exit(1)
+            response = None
             for i in range(retries):
                 try:
                     if method == 'get_by_moid':
                         response = requests.get(
-                            f'{url}/{uri}/{moid}', verify=False, auth=aauth)
+                            f'{url}/{uri}/{moid}', verify=False, auth=aauth, timeout=120)
                     elif method == 'delete':
                         response = requests.delete(
-                            f'{url}/{uri}/{moid}', verify=False, auth=aauth)
+                            f'{url}/{uri}/{moid}', verify=False, auth=aauth, timeout=120)
                     elif method == 'get':
                         response = requests.get(
-                            f'{url}/{uri}{aargs}', verify=False, auth=aauth)
+                            f'{url}/{uri}{aargs}', verify=False, auth=aauth, timeout=120)
                     elif method == 'patch':
                         response = requests.patch(
-                            f'{url}/{uri}/{moid}', verify=False, auth=aauth, json=payload)
+                            f'{url}/{uri}/{moid}', verify=False, auth=aauth, json=payload, timeout=120)
                     elif method == 'post_by_moid':
                         response = requests.post(
-                            f'{url}/{uri}/{moid}', verify=False, auth=aauth, json=payload)
+                            f'{url}/{uri}/{moid}', verify=False, auth=aauth, json=payload, timeout=120)
                     elif method == 'post':
                         response = requests.post(
-                            f'{url}/{uri}', verify=False, auth=aauth, json=payload)
+                            f'{url}/{uri}', verify=False, auth=aauth, json=payload, timeout=120)
 
                     status = response.status_code
 
@@ -405,7 +409,7 @@ class api(object):
                         return kwargs
 
                     # Only hard-fail in final else path
-                    send_error(kwargs)
+                    send_error(kwargs, response)
 
                 except requests.RequestException as e:
                     if 'Your token has expired' in str(
@@ -546,7 +550,7 @@ class api(object):
                     if re.search('(vlans|vsans)', self.type):
                         names = ", ".join(map(str, kwargs.names))
                     else:
-                        names = "', '".join(kwargs.names).strip("', '")
+                        names = "', '".join(kwargs.names)
                     if re.search('organizations|resource_groups', self.type):
                         api_filter = f"Name in ('{names}')"
                     elif self.category == 'system':
@@ -762,7 +766,7 @@ class api(object):
             kwargs.rsg_moids[rg].selectors = kwargs.results.Selectors
             return kwargs
 
-        def create_org_api_call(api_body, kwargs):
+        def create_org_api_call(api_body, org, kwargs):
             kwargs = kwargs | DotMap(
                 api_body=api_body,
                 method='post',
@@ -773,7 +777,7 @@ class api(object):
 
         def create_shared_organization(o, kwargs):
             api_body = {'Description': f'{o} Organization', 'Name': o}
-            kwargs = create_org_api_call(api_body, kwargs)
+            kwargs = create_org_api_call(api_body, o, kwargs)
             return kwargs
 
         def create_org_question(org, kwargs):
@@ -813,7 +817,7 @@ class api(object):
                     'Description': f'{org} Organization',
                     'Name': org,
                     'ResourceGroups': rgs}
-                kwargs = create_org_api_call(api_body, kwargs)
+                kwargs = create_org_api_call(api_body, org, kwargs)
             elif 'organizations_to_share_with' in okeys and len(kwargs.imm_dict.orgs[org].organizations_to_share_with) > 0:
                 for o in kwargs.imm_dict.orgs[org].organizations_to_share_with:
                     if o not in list(kwargs.org_moids.keys()):
@@ -828,7 +832,7 @@ class api(object):
                     'Description': f'{org} Organization',
                     'Name': org,
                     'SharedWithResources': shared_orgs}
-                kwargs = create_org_api_call(api_body, kwargs)
+                kwargs = create_org_api_call(api_body, org, kwargs)
             else:
                 org_type = organization_type(org, kwargs)
                 if org_type == 'Shared':
@@ -836,12 +840,12 @@ class api(object):
                         'Description': f'{org} Organization',
                         'Name': org,
                         'SharedWithResources': []}
-                    kwargs = create_org_api_call(api_body, kwargs)
+                    kwargs = create_org_api_call(api_body, org, kwargs)
                 else:
                     kwargs = create_resource_group(org, org, kwargs)
                     api_body = {'Description': f'{org} Organization', 'Name': org, 'ResourceGroups': [
                         {'Moid': kwargs.rsg_moids[org].moid, 'ObjectType': 'resource.Group'}]}
-                    kwargs = create_org_api_call(api_body, kwargs)
+                    kwargs = create_org_api_call(api_body, org, kwargs)
             return kwargs
         if self.type == 'resource_groups':
             kwargs = kwargs | DotMap(
@@ -854,7 +858,7 @@ class api(object):
                 kwargs.rsg_moids[e] = DotMap(kwargs.pmoids[e])
             for rsg in kwargs.resource_groups:
                 if rsg not in list(kwargs.rsg_moids.keys()):
-                    kwargs = create_resource_group(rsg, org, kwargs)
+                    kwargs = create_resource_group(rsg, rsg, kwargs)
         else:
             # =====================================================================
             # Get Resource Groups from the API
