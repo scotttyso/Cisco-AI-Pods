@@ -9,7 +9,8 @@ import sys
 from .. import notifications, pcolor
 
 
-def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
+def prRed(skk):
+    print("\033[91m {}\033[00m".format(skk))
 
 
 try:
