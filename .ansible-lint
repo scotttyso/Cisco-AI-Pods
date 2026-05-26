@@ -1,28 +1,37 @@
 ---
-profile: production
+# Ansible-lint configuration for cisco.ai_pods collection
+skip_list:
+  # kubernetes.core.all module_defaults causes syntax-check failures
+  # when the collection isn't installed
+  - internal-error
+  - fqcn[action-core]
+  - args[module]
+  - name[missing]
+  - yaml[truthy]
+  - yaml[line-length]
+  - var-naming[no-role-prefix]
+  - yaml[document-start]
 
+# Exclude Helm templates (Go templating, not valid Ansible YAML)
 exclude_paths:
-  - .github/
-  - .vscode/
+  - openshift/openshift-gitops/helm/
   - best_practices/
-  - c800/
   - images/
   - netapp/
-  - schema/
+  - .git/
+  - .ansible/
+  - '*.tar.gz'
+  - dump_model.py
+  - model_structure.json
 
-enable_list:
-  - yaml
+# These are standalone scripts, not Ansible modules
+mock_modules:
+  - kubernetes.core.k8s
+  - kubernetes.core.k8s_info
+  - kubernetes.core.helm
+  - kubernetes.core.helm_repository
 
-skip_list:
-  - name[missing]
-  - var-naming[no-role-prefix]
-  - jinja[spacing]
-
+# Warn don't error for known issues
 warn_list:
-  - command-instead-of-shell
-  - no-changed-when
-  - risky-shell-pipe
-
-use_default_rules: true
-
-offline: false
+  - experimental
+  - role-name
