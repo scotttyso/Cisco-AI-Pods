@@ -1,7 +1,2 @@
 dump_model.py shebang!skip
-roles/everpure/library/validate_everpure_env_vars.py shebang!skip
-roles/intersight_ucs_provision/library/deploy_intersight_ucs.py shebang!skip
-roles/intersight_ucs_provision/library/src/validate_sensitive_variables.py shebang!skip
-roles/openshift_install/library/generate_server_and_nmstate_templates.py shebang!skip
 schema/jsonpath.py shebang!skip
-roles/splunk_observability/library/get_helm.sh shellcheck!skip
