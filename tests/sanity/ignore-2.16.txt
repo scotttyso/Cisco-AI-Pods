@@ -1,28 +1,19 @@
 roles/splunk_observability/library/get_helm.sh shellcheck!skip
-# GPU operator installation
 roles/openshift_gitops/helm/gpu-operator-installation/templates/configs/13-sriov-config.yaml yamllint!skip
 roles/openshift_gitops/helm/gpu-operator-installation/templates/configs/25-gpu-clusterpolicy.yaml yamllint!skip
 roles/openshift_gitops/helm/gpu-operator-installation/templates/operators/10-nfd-subscription.yaml yamllint!skip
 roles/openshift_gitops/helm/gpu-operator-installation/templates/operators/12-sriov-subscription.yaml yamllint!skip
 roles/openshift_gitops/helm/gpu-operator-installation/templates/operators/20-nvidia-gpu-subscription.yaml yamllint!skip
-
-# Infrastructure Utilities
 roles/openshift_gitops/helm/infrastructure-utilities/templates/operators/05-kmm-subscription.yaml yamllint!skip
 roles/openshift_gitops/helm/infrastructure-utilities/templates/operators/05-rhcl-subscription.yaml yamllint!skip
-
-# Observability Stack
 roles/openshift_gitops/helm/observability-stack/templates/operators/05-cluster-observability-subscription.yaml yamllint!skip
 roles/openshift_gitops/helm/observability-stack/templates/operators/05-open-telemetry-subscription.yaml yamllint!skip
 roles/openshift_gitops/helm/observability-stack/templates/operators/05-tempo-subscription.yaml yamllint!skip
-
-# RHOAI stack
 roles/openshift_gitops/helm/rhoai-stack/templates/configs/32-operator-deployment.yaml yamllint!skip
 roles/openshift_gitops/helm/rhoai-stack/templates/configs/33-datasciencecluster.yaml yamllint!skip
 roles/openshift_gitops/helm/rhoai-stack/templates/configs/35-dashboard-deployment.yaml yamllint!skip
 roles/openshift_gitops/helm/rhoai-stack/templates/configs/35-odhdashboardconfig.yaml yamllint!skip
 roles/openshift_gitops/helm/rhoai-stack/templates/operators/30-rhoai-subscription.yaml yamllint!skip
-
-# Workload scaling
 roles/openshift_gitops/helm/workload-scaling/templates/configs/07-cluster-job-set.yaml yamllint!skip
 roles/openshift_gitops/helm/workload-scaling/templates/operators/05-cma-subscription.yaml yamllint!skip
 roles/openshift_gitops/helm/workload-scaling/templates/operators/05-job-set-namespace.yaml yamllint!skip
