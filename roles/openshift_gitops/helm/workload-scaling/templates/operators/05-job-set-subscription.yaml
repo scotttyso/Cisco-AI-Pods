@@ -1,23 +1,5 @@
+# yamllint disable
 {{- if not (eq .Values.trainer "Removed") }}
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: openshift-jobset-operator
-  annotations:
-    argocd.argoproj.io/sync-wave: "0"
----
-apiVersion: operators.coreos.com/v1alpha2
-kind: OperatorGroup
-metadata:
-  annotations:
-    olm.providedAPIs: JobSetOperator.v1.operator.openshift.io
-    argocd.argoproj.io/sync-wave: "2"
-  name: openshift-jobset-operator-group
-  namespace: openshift-jobset-operator
-spec:
-  targetNamespaces: 
-    - openshift-jobset-operator
 ---
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -36,3 +18,4 @@ spec:
   sourceNamespace: openshift-marketplace
   startingCSV: jobset-operator.v1.0.0
 {{- end }}
+# yamllint enable

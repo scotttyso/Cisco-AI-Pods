@@ -1,0 +1,9 @@
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: redhat-ods-operator-group
+  namespace: redhat-ods-operator
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec: {}

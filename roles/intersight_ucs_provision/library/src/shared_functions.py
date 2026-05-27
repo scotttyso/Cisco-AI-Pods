@@ -306,7 +306,9 @@ def load_configurations(kwargs):
 
     def collect_ezai_files(root_dir):
         file_list = []
-        for current_root, _, files in os.walk(root_dir):
+        for walk_entry in os.walk(root_dir):
+            current_root = walk_entry[0]
+            files = walk_entry[2]
             for file_name in files:
                 if file_name.endswith('ezai.yaml'):
                     file_list.append(os.path.join(current_root, file_name))
@@ -522,8 +524,7 @@ def variable_prompt(kwargs):
         pcolor.Red(
             f'\n{"-" * 108}\n   `{title}` value of `{answer}` is Invalid!!! Please enter `Y` or `N`.\n{"-" * 108}\n')
 
-    # pylint: disable=cell-var-from-loop,used-before-assignment
-    def invalid_integer(title, answer):
+    def invalid_integer(title, answer, minimum, maximum):
         pcolor.Red(
             f'\n{"-" * 108}\n   `{title}` value of `{answer}` is Invalid!!!  Valid range is `{minimum}-{maximum}`.\n{"-" * 108}\n')
 
@@ -593,7 +594,7 @@ def variable_prompt(kwargs):
                         valid = notifications.number_in_range(
                             title, answer, minimum, maximum)
                 else:
-                    invalid_integer(title, answer)
+                    invalid_integer(title, answer, minimum, maximum)
         elif kwargs.jdata.type == 'string':
             if kwargs.jdata.get('optional'):
                 optional = True
@@ -646,7 +647,7 @@ def vlan_list_format(vlan_list_expanded):
         key=lambda item,
         c=itertools.count(): item -
         next(c))
-    tempvlans = [list(g) for _, g in vgroups]
+    tempvlans = [list(group_pair[1]) for group_pair in vgroups]
     vlan_list = [str(x[0]) if len(
         x) == 1 else f'{x[0]}-{x[-1]}' for x in tempvlans]
     return ','.join(vlan_list)

@@ -1,3 +1,4 @@
+# yamllint disable
 {{- if .Values.dataScienceCluster.create }}
 ---
 apiVersion: datasciencecluster.opendatahub.io/v2
@@ -16,3 +17,4 @@ spec:
 spec: {}
 {{- end }}
 {{- end }}
+# yamllint enable

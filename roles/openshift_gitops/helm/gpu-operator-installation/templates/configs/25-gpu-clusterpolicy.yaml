@@ -45,11 +45,11 @@ spec:
     licensingConfig:
       configMapName: ''
       nlsEnabled: true
-{{- if .Values.enableRdma }}
+    {{- if .Values.enableRdma }}
     rdma:
       enabled: true
       useHostMofed: false
-{{- end }}
+    {{- end }}
     repoConfig:
       configMapName: ''
     repository: nvcr.io/nvidia

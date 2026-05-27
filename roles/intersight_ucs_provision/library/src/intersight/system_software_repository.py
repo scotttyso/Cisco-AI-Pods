@@ -249,7 +249,7 @@ class system_software_repository:
             if kwargs.imm_dict.orgs[kwargs.org].wizard.server_profiles[x].boot_volume.lower(
             ) == 'm2':
                 m2_found = False
-                for _, v in kwargs.imm_dict.orgs[kwargs.org].wizard.server_profiles[x].storage_controllers.items(
+                for v in kwargs.imm_dict.orgs[kwargs.org].wizard.server_profiles[x].storage_controllers.values(
                 ):
                     if re.search('MSTOR-RAID', v.slot):
                         m2_found = True
@@ -320,7 +320,7 @@ class system_software_repository:
                 # =============================================================
                 vnic = DotMap()
                 if isinstance(v.install_interface, str):
-                    for _, b in v.adapters.items():
+                    for b in v.adapters.values():
                         vnic = [
                             DotMap(
                                 name=c,

@@ -11,6 +11,7 @@ metadata:
   name: odh-dashboard-config
   namespace: redhat-ods-applications
 spec:
+  # yamllint disable
   dashboardConfig:
     {{- with .Values.dashboardConfig }}
     {{- toYaml . | nindent 4 }}
@@ -26,6 +27,7 @@ spec:
     {{- with .Values.notebookSizes }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+  # yamllint enable
   notebookController:
     enabled: {{ .Values.showJupyterInEnabledApplications }}
     notebookNamespace: rhods-notebooks

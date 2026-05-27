@@ -1,3 +1,4 @@
+# yamllint disable
 {{- if not (eq .Values.trainer "Removed") }}
 ---
 apiVersion: operator.openshift.io/v1
@@ -12,3 +13,4 @@ spec:
   managementState: Managed
   operatorLogLevel: Normal
 {{- end }}
+# yamllint enable

@@ -267,7 +267,8 @@ def collect_required_sensitive_variables(
                 current_path = f"{path}.{key}" if path else key
 
                 # Check if this key matches a sensitive variable prefix pattern.
-                for env_prefix, (schema_key, _) in _SENSITIVE_VAR_PATTERNS.items():
+                for env_prefix, pattern_values in _SENSITIVE_VAR_PATTERNS.items():
+                    schema_key = pattern_values[0]
                     if key == env_prefix or key.endswith(f"_{env_prefix}"):
                         sid = _sensitive_id(value)
                         if sid is not None:
@@ -397,7 +398,8 @@ def validate_all_sensitive_variables(
     error_messages: List[str] = []
     sensitive_vars: Dict[str, str] = {}
 
-    for env_var_name, (_, schema_key) in sorted(required_vars.items()):
+    for env_var_name, required_var_values in sorted(required_vars.items()):
+        schema_key = required_var_values[1]
         env_value = os.environ.get(env_var_name)
 
         if env_value in (None, ""):
@@ -462,10 +464,9 @@ if __name__ == "__main__":
             cli_model_data = json.load(model_file)
 
         cli_schema_path = Path(args.schema) if args.schema else None
-        validation_ok, missing_env_vars, validation_errors, found_sensitive_vars = (
+        validation_ok, missing_env_vars, validation_errors, _found_sensitive_vars = (
             validate_all_sensitive_variables(cli_model_data, cli_schema_path)
         )
-        _ = found_sensitive_vars
 
         if validation_ok:
             print(

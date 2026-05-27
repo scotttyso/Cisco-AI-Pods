@@ -2443,7 +2443,6 @@ class configure:
     # Function - Deploy Domain Profile if Action is Deploy
     # =========================================================================
     def profiles_domain_deploy(self, profiles, kwargs):
-        _dtype = self.type.split('.')[1]  # pylint: disable=unused-variable
         pending_changes = False
         kwargs.names = []
         np, ns = self.name_prefix_suffix(kwargs.org, kwargs)
@@ -2739,10 +2738,10 @@ class configure:
                         bulk_list[ptype] = []
                     bulk_list[ptype].append(api_body)
                 else:
-                    _ = reservations[e.identity].moid  # verify exists
+                    existing_reservation_moid = reservations[e.identity].moid
                     pcolor.Cyan(
                         f"  * Skipping Org: {kwargs.org} > Server Profile: `{profile}` > {ptype.upper()} Reservation: {e.identity}. "
-                        f"Existing reservation: {reservations[e.identity].moid}")
+                        f"Existing reservation: {existing_reservation_moid}")
             else:
                 entity = leases[e.identity].result['AssignedToEntity']
                 pcolor.Yellow(
@@ -3079,7 +3078,7 @@ class configure:
                                         kwargs.templates[org][tname][k] = v
         final_check = True
         for org in orgs:
-            templates = [e for e in kwargs.templates[org].keys()]
+            templates = list(kwargs.templates[org].keys())
             for template in templates:
                 if len(kwargs.templates[org][template].toDict()) == 0:
                     final_check = False
@@ -3126,7 +3125,6 @@ class configure:
         else:
             target_platform = 'UCS Domain'
         template_type = f'{target_platform.lower().replace(" ", "_")}_profile_template'
-        _template_cfg = configure(category='templates', type=f'{self.type}')  # pylint: disable=unused-variable
         template_check = False
         resources = deepcopy(kwargs.resources)
         for e in resources:

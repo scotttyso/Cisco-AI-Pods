@@ -386,7 +386,7 @@ class api:
                     retry_action = False
                     if status in (400, 403, 409):
                         try:
-                            for _, v in response.json().items():
+                            for v in response.json().values():
                                 if isinstance(v, str) and (
                                     'user_action_is_not_allowed' in v or
                                     'policy_attached_to_multiple_profiles_cannot_be_edited' in v

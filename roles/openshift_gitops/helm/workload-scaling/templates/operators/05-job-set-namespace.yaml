@@ -1,0 +1,11 @@
+# yamllint disable
+{{- if not (eq .Values.trainer "Removed") }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-jobset-operator
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+{{- end }}
+# yamllint enable

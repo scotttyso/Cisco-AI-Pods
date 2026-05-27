@@ -674,8 +674,10 @@ class build:
     # =========================================================================
     def power(self, item, kwargs):
         notifications.section_begin(self.category, self.type)
-        _, kwargs = self.get_compare_patch(
+        compare_results, kwargs = self.get_compare_patch(
             '/redfish/v1/Systems/system', item, kwargs)
+        if compare_results is None:
+            pass
         notifications.section_end(self.category, self.type)
         return kwargs
 
