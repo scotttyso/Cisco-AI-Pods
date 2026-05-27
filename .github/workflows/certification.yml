@@ -18,3 +18,5 @@ concurrency:
 jobs:
   call:
     uses: ansible-collections/partner-certification-checker/.github/workflows/certification-reusable.yml@v1.2.0
+    with:
+      python-versions: '["3.9", "3.10", "3.11", "3.12"]'
