@@ -17,7 +17,7 @@ jobs:
   ansible-lint:
     uses: ansible/ansible-content-actions/.github/workflows/ansible_lint.yaml@v1.1.0
     with:
-      args: "--skip-list sanity"
+      args: "--offline --skip-list sanity"
   all_green:
     if: ${{ always() }}
     needs:
