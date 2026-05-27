@@ -5,7 +5,6 @@ ignore: |
   .git/**
   assisted-installer/**
   host_vars/**
-  netapp/**
   roles/openshift_gitops/helm/**/templates/**/*.yaml
 rules:
   braces:

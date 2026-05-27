@@ -34,13 +34,6 @@ build_ignore:
   - .git
   - .github
   - .vscode
-  - best_practices
-  - c800
-  - dump_model.py
-  - guide_*.md
-  - images
-  - model_structure.json
-  - netapp
   - requirements.txt
 dependencies:
   purestorage.flasharray: '>=1.42.0'

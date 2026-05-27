@@ -14,16 +14,10 @@ skip_list:
 
 # Exclude Helm templates (Go templating, not valid Ansible YAML)
 exclude_paths:
-  - openshift/openshift-gitops/helm/
   - roles/openshift_gitops/helm/
-  - best_practices/
-  - images/
-  - netapp/
   - .git/
   - .ansible/
   - '*.tar.gz'
-  - dump_model.py
-  - model_structure.json
 
 # These are standalone scripts, not Ansible modules
 mock_modules:
