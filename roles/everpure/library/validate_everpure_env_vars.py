@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 Everpure Environment Variable Validator
 
@@ -98,7 +97,7 @@ def _format_sensitive_constraints(
     return "".join(parts)
 
 
-def _validate_sensitive_value(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def _validate_sensitive_value(  # pylint: disable=too-many-arguments
     value: Any,
     schema_rule: Dict[str, Any],
     env_var_name: str,
@@ -152,7 +151,7 @@ def _validate_sensitive_value(  # pylint: disable=too-many-arguments,too-many-po
                 f"{constraint_info}")
 
 
-def _resolve_sensitive_identifier(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def _resolve_sensitive_identifier(  # pylint: disable=too-many-arguments
     var_id: Any,
     env_prefix: str,
     schema_key: Optional[str],

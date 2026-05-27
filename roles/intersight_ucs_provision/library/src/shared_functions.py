@@ -522,9 +522,10 @@ def variable_prompt(kwargs):
         pcolor.Red(
             f'\n{"-" * 108}\n   `{title}` value of `{answer}` is Invalid!!! Please enter `Y` or `N`.\n{"-" * 108}\n')
 
-    def invalid_integer(title, answer):  # pylint: disable=cell-var-from-loop,used-before-assignment
+    # pylint: disable=cell-var-from-loop,used-before-assignment
+    def invalid_integer(title, answer):
         pcolor.Red(
-            f'\n{"-" * 108}\n   `{title}` value of `{answer}` is Invalid!!!  Valid range is `{minimum}-{maximum}`.\n{"-" * 108}\n')  # pylint: disable=used-before-assignment
+            f'\n{"-" * 108}\n   `{title}` value of `{answer}` is Invalid!!!  Valid range is `{minimum}-{maximum}`.\n{"-" * 108}\n')
 
     def invalid_string(title, answer):
         pcolor.Red(

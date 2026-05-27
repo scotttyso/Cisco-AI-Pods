@@ -1,5 +1,7 @@
 """BMC API wrapper for Intersight UCS provisioning."""
-# pylint: disable=invalid-name,missing-class-docstring,missing-function-docstring,too-many-arguments,too-many-positional-arguments,too-many-return-statements,too-many-branches,too-many-statements,too-many-locals
+# pylint: disable=invalid-name,missing-class-docstring,missing-function-docstring
+# pylint: disable=too-many-arguments,too-many-return-statements,too-many-branches
+# pylint: disable=too-many-statements,too-many-locals
 # =============================================================================
 # Source Modules
 # =============================================================================

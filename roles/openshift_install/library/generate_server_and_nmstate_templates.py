@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Generate nmstate templates and assisted-installer/server.json from bare metal install vars."""
 # pylint: disable=too-many-lines,duplicate-code
 
@@ -80,7 +79,7 @@ def _format_sensitive_constraints(context_label: str, schema_rule: Any) -> str:
     )
 
 
-def _validate_sensitive_value(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def _validate_sensitive_value(  # pylint: disable=too-many-arguments
     value: Any,
     schema_rule: Any,
     env_var_name: str,
@@ -132,7 +131,7 @@ def _validate_sensitive_value(  # pylint: disable=too-many-arguments,too-many-po
                 f"{constraint_info}")
 
 
-def _resolve_sensitive_identifier(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def _resolve_sensitive_identifier(  # pylint: disable=too-many-arguments
     var_id: Any,
     env_prefix: str,
     schema_key: Optional[str],

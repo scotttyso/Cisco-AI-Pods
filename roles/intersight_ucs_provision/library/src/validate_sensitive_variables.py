@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 Sensitive Variables Validator
 

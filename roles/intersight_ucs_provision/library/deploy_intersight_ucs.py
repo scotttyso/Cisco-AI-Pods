@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """Deploy Intersight UCS -
 Use This to Deploy Intersight UCS configurations or for C88XA-M8 deploy to the server directly.
 It uses argparse to take in the following CLI arguments:
