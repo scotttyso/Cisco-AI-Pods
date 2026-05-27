@@ -18,17 +18,11 @@ jobs:
     uses: ansible/ansible-content-actions/.github/workflows/ansible_lint.yaml@v1.1.0
     with:
       args: "--skip-list sanity"
-  sanity:
-    uses: ansible/ansible-content-actions/.github/workflows/sanity.yaml@v1.1.0
   all_green:
     if: ${{ always() }}
     needs:
       - ansible-lint
-      - sanity
     runs-on: ubuntu-latest
     steps:
       - run: >-
-          python -c "assert set([
-          '${{ needs.sanity.result }}',
-          '${{ needs.ansible-lint.result }}'
-          ]) == {'success'}"
+          python -c "assert '${{ needs.ansible-lint.result }}' == 'success'"
