@@ -1,7 +1,5 @@
 # Phase 1: Planning and Design - Cisco AI Pods
 
-[Back to Best Practices README](README.md) | [Back to README](../README.md)
-
 ## Executive Summary
 
 Day-2 planning at Day-0 is the single biggest gap we see in pilots. Successful Cisco AI Pods deployments require comprehensive planning across workload characterization, infrastructure design, networking architecture, storage strategy, and operational readiness. This phase establishes the foundation for predictable, scalable, and maintainable AI infrastructure.
@@ -13,6 +11,7 @@ Day-2 planning at Day-0 is the single biggest gap we see in pilots. Successful C
 - [4. Storage Strategy and Validation](#4-storage-strategy-and-validation)
 - [5. Day-2 Operations Planning](#5-day-2-operations-planning)
 - [6. Risk Assessment and Mitigation](#6-risk-assessment-and-mitigation)
+- [Summary and Next Steps](#summary-and-next-steps)
 
 ---
 
@@ -120,6 +119,9 @@ Example: 32 GPUs processing 4000 tokens/sec/GPU with 2 bytes/token overhead
 | Inference | SU1 | 32× RTX6000 or 32× RTX4500 | Continuous | Cost-efficient, lower latency needs |
 | Mixed (Train + Infer) | SU2 | 32× H200 or 16× B300 + 32× RTX6000/RTX4500 | Varies | Separate fabrics recommended |
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
+
 ---
 
 ## 2. GPU Interconnect Topology Design
@@ -174,6 +176,9 @@ Frontend Interface (Active-Backup):
   - Supports storage replication and management traffic
 ```
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
+
 ---
 
 ## 3. Network Architecture Planning
@@ -219,6 +224,9 @@ Link-Level Flow Control:
 - Separate frontend VLAN to isolate storage I/O
 - 100 Gbps per server for storage (12.5 Gbps per GPU)
 - Allows parallel data loading while GPUs compute
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 
 ---
 
@@ -277,6 +285,9 @@ Example: 10 TB dataset with 3× replication and 30% snapshot overhead
 
 Growth Buffer: Add 20-30% for future workloads and intermediate results
 ```
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 
 ---
 
@@ -362,6 +373,9 @@ Phase 3: Add SU3 (128 GPUs total)
   - Implement cross-SU job scheduling policies
 ```
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
+
 ---
 
 ## 6. Risk Assessment and Mitigation
@@ -401,6 +415,9 @@ Before moving to production, complete these validation steps:
 - [ ] Data pipeline achieves target throughput with realistic batch sizes
 - [ ] Model checkpointing and recovery procedures tested
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
+
 ---
 
 ## Summary and Next Steps
@@ -413,3 +430,11 @@ Phase 1 planning establishes the foundation for a successful Cisco AI Pods deplo
 3. **Match storage throughput** to GPU count and data pipeline requirements
 4. **Plan Day-2 operations** during design phase
 5. **Build in 20-30% headroom** for unexpected growth and optimization
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
+#### [<ins>Next Step - `Phase 2: Hardware Staging and Day-0 Readiness`</ins>](phase-2-hardware-staging.md)
+
+#### [<ins>Back to `Best Practices` README</ins>](README.md)
+
+#### [<ins>Back to `Repository` README</ins>](../../README.md)

@@ -1,7 +1,5 @@
 # Phase 2: Hardware Staging and Day-0 Readiness
 
-[Back to Best Practices README](README.md) | [Back to README](../README.md)
-
 ## Executive Summary
 
 Phase 2 ensures every compute node, management interface, and physical link is installed consistently before fabric bring-up. The objective is to eliminate avoidable Day-1 failures caused by cabling mistakes, firmware drift, and incomplete out-of-band management setup.
@@ -9,6 +7,14 @@ Phase 2 ensures every compute node, management interface, and physical link is i
 For Cisco AI Pods aligned to the current guidance in this repository, use:
 - Training-focused GPUs: B300 and H200
 - Inference-focused GPUs: RTX6000 and RTX4500
+
+## Table of Contents
+- [1. Cable Labeling and Documentation](#1-cable-labeling-and-documentation-pre-power-on)
+- [2. Out-of-Band Management Network Setup](#2-out-of-band-management-network-setup)
+- [3. Baseline Firmware and BIOS Policy](#3-baseline-firmware-and-bios-policy-pre-os)
+- [4. GPU and Node Staging Matrix](#4-gpu-and-node-staging-matrix)
+- [5. Phase Completion Checklist](#5-phase-completion-checklist)
+- [Summary](#summary)
 
 ## 1. Cable Labeling and Documentation (Pre-Power-On)
 
@@ -38,6 +44,8 @@ In AI Pods, high-density 400G and 800G links make traceability mandatory. A sing
   - Action: Verify backend port map for that node, check link speed/duplex, compare with baseline node.
 - Symptom: Links stay down after boot.
   - Action: Confirm both ends are in matching breakout mode and speed profile.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
 
 ## 2. Out-of-Band Management Network Setup
 
@@ -69,6 +77,8 @@ Out-of-band (OOB) access enables zero-touch recovery, firmware operations, and r
   - Action: Check outbound firewall policy, DNS resolution, and certificate trust path.
 - Symptom: Slow management sessions.
   - Action: Verify no oversubscription or QoS policing on OOB path.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
 
 ## 3. Baseline Firmware and BIOS Policy (Pre-OS)
 
@@ -106,6 +116,8 @@ Uniform firmware is required for stable distributed training and consistent beha
 - Symptom: RDMA not available on subset of nodes.
   - Action: Confirm NIC firmware consistency, RoCE settings, and driver module parity.
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 4. GPU and Node Staging Matrix
 
 Use a clear placement matrix so each node role is explicit before cluster provisioning.
@@ -116,6 +128,8 @@ Use a clear placement matrix so each node role is explicit before cluster provis
 | Training Node | H200 | Fine-tuning and training | Strong memory capacity, balanced scale-out |
 | Inference Node | RTX6000 | High-throughput inference | Optimize for serving density and latency |
 | Inference Node | RTX4500 | Cost-efficient inference | Suitable for lower concurrency tiers |
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
 
 ## 5. Phase Completion Checklist
 
@@ -131,3 +145,11 @@ Do not proceed to Phase 3 until all criteria pass.
 ## Summary
 
 A successful Phase 2 focuses on repeatability: deterministic cabling, deterministic management reachability, and deterministic firmware state. That foundation reduces fabric issues in Phase 3 and shortens time to first stable distributed workload.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
+#### [<ins>Next Step - `Phase 3: Fabric Configuration and Validation`</ins>](phase-3-fabric-configuration.md)
+
+#### [<ins>Back to `Best Practices` README</ins>](README.md)
+
+#### [<ins>Back to `Repository` README</ins>](../../README.md)

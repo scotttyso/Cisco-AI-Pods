@@ -1,10 +1,18 @@
 # Phase 5: Storage Provisioning and Data Pipeline Readiness
 
-[Back to Best Practices README](README.md) | [Back to README](../README.md)
-
 ## Executive Summary
 
 Phase 5 establishes the storage architecture required to keep Cisco AI Pods compute resources fully utilized. The design must sustain high parallel throughput for B300 and H200 training clusters while also delivering low-latency model access for RTX6000 and RTX4500 inference pools.
+
+## Table of Contents
+- [1. Scale-Out Namespace and Access Model](#1-scale-out-namespace-and-access-model)
+- [2. Pipeline-Aware Tiering Strategy](#2-pipeline-aware-tiering-strategy)
+- [3. High-Throughput Data Path Design](#3-high-throughput-data-path-design)
+- [4. Data Protection and Checkpoint Resilience](#4-data-protection-and-checkpoint-resilience)
+- [5. Provisioning Workflow and Validation](#5-provisioning-workflow-and-validation)
+- [6. Troubleshooting Guide](#6-troubleshooting-guide)
+- [7. Phase Completion Checklist](#7-phase-completion-checklist)
+- [Summary](#summary)
 
 ## Storage Partners
 
@@ -32,6 +40,8 @@ Use a single global namespace for training and shared artifact access.
 - For B300/H200 training pools, prioritize wide parallel reads and checkpoint write throughput.
 - For RTX6000/RTX4500 inference pools, prioritize model load latency and predictable cache behavior.
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 2. Pipeline-Aware Tiering Strategy
 
 Map storage tiers to AI lifecycle stages to minimize cost while preserving performance where needed.
@@ -48,6 +58,8 @@ Map storage tiers to AI lifecycle stages to minimize cost while preserving perfo
 - Automate transitions between tiers by age, access frequency, and project labels.
 - Keep model registry artifacts replicated across at least two fault domains.
 - Treat training checkpoints and inference model artifacts as separate policy classes.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
 
 ## 3. High-Throughput Data Path Design
 
@@ -68,6 +80,8 @@ Example targets:
 3. Validate RDMA/RoCE path consistency for data-intensive jobs.
 4. Reserve bandwidth classes for checkpoint windows.
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 4. Data Protection and Checkpoint Resilience
 
 Long-running training jobs require rapid checkpoint protection and restore.
@@ -86,6 +100,8 @@ Total checkpoint capacity = model size x checkpoint frequency x retention window
 Total storage plan = checkpoint capacity + dataset footprint + 20-30% growth buffer
 ```
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 5. Provisioning Workflow and Validation
 
 1. Create role-based storage classes and performance tiers.
@@ -102,6 +118,8 @@ Total storage plan = checkpoint capacity + dataset footprint + 20-30% growth buf
 - [ ] Throughput baseline meets target by cluster size.
 - [ ] Snapshot and restore procedures tested.
 - [ ] Monitoring dashboards and alerts active.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
 
 ## 6. Troubleshooting Guide
 
@@ -142,6 +160,8 @@ Total storage plan = checkpoint capacity + dataset footprint + 20-30% growth buf
   2. Audit stale artifacts and orphaned run outputs.
   3. Adjust lifecycle transitions and retention periods.
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 7. Phase Completion Checklist
 
 - [ ] Storage architecture and policy documentation finalized.
@@ -152,3 +172,11 @@ Total storage plan = checkpoint capacity + dataset footprint + 20-30% growth buf
 ## Summary
 
 Phase 5 is complete when storage throughput, latency, protection, and growth controls are validated against actual workload behavior. Strong storage readiness is a prerequisite for stable orchestration and workload scaling in Phase 6.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
+#### [<ins>Next Step - `Phase 6: Orchestration and Workload Operations`</ins>](phase-6-orchestration-and-workload.md)
+
+#### [<ins>Back to `Best Practices` README</ins>](README.md)
+
+#### [<ins>Back to `Repository` README</ins>](../../README.md)

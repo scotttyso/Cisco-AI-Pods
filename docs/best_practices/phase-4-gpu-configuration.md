@@ -1,10 +1,20 @@
 # Phase 4B: GPU Runtime Configuration and Performance Validation
 
-[Back to Best Practices README](README.md) | [Back to README](../README.md)
-
 ## Executive Summary
 
 Phase 4B applies runtime-level GPU controls and validation for Cisco AI Pods. Training profiles target B300 and H200 nodes for sustained throughput. Inference profiles target RTX6000 and RTX4500 nodes for low-latency, stable serving.
+
+## Table of Contents
+- [1. Hardware Roles and Runtime Targets](#1-hardware-roles-and-runtime-targets)
+- [2. Persistence and Fabric Services](#2-persistence-and-fabric-services)
+- [3. Clock and Power Policy Guidance](#3-clock-and-power-policy-guidance)
+- [4. Topology and Fabric Validation](#4-topology-and-fabric-validation)
+- [5. GPUDirect RDMA Validation](#5-gpudirect-rdma-validation)
+- [6. Performance Testing Runbook (OpenShift Manifests and Commands)](#6-performance-testing-runbook-openshift-manifests-and-commands)
+- [7. Thermal and Power Monitoring](#7-thermal-and-power-monitoring)
+- [8. Troubleshooting Guide](#8-troubleshooting-guide)
+- [9. Phase Completion Checklist](#9-phase-completion-checklist)
+- [Summary](#summary)
 
 ## 1. Hardware Roles and Runtime Targets
 
@@ -14,6 +24,8 @@ Phase 4B applies runtime-level GPU controls and validation for Cisco AI Pods. Tr
 | Training | H200 | High-memory training and fine-tuning | NVLink integrity, RDMA consistency |
 | Inference | RTX6000 | High-throughput model serving | Latency stability, thermal consistency |
 | Inference | RTX4500 | Cost-efficient serving tiers | Predictable p95 latency |
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
 
 ## 2. Persistence and Fabric Services
 
@@ -37,6 +49,8 @@ Expected outcome:
 - Persistence mode enabled.
 - Fabric Manager active on systems requiring NVSwitch/NVLink fabric control.
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 3. Clock and Power Policy Guidance
 
 ### Training (B300/H200)
@@ -59,6 +73,8 @@ nvidia-smi --lock-gpu-clocks=<min>,<max>
 - Keep power policy and fan behavior consistent across inference pools.
 - Validate p95/p99 latency under realistic concurrency.
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 4. Topology and Fabric Validation
 
 Validate that intended high-speed paths are active and no traffic falls back to slower paths.
@@ -74,6 +90,8 @@ nvidia-smi nvlink -s
 
 - Training nodes (B300/H200): expected NVLink connectivity visible and consistent.
 - Any unexpected SYS/PXB path in critical pairs should be investigated before production.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
 
 ## 5. GPUDirect RDMA Validation
 
@@ -95,6 +113,8 @@ lsmod | grep nvidia_peermem
 Validation goals:
 - Throughput aligns with known-good baseline for cluster size.
 - Transport logs indicate direct path usage (GDR where applicable).
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
 
 ## 6. Performance Testing Runbook (OpenShift Manifests and Commands)
 
@@ -259,6 +279,8 @@ oc -n gpu-perf-tests delete job nccl-allreduce
 oc delete namespace gpu-perf-tests
 ```
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 7. Thermal and Power Monitoring
 
 Continuous monitoring is mandatory to avoid hidden throttling.
@@ -276,6 +298,8 @@ nvidia-smi --query-gpu=temperature.gpu,power.draw,clocks.current.graphics,clocks
   - Training pools (B300/H200)
   - Inference pools (RTX6000/RTX4500)
 - Align Intersight thermal policies with rack power and cooling design.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
 
 ## 8. Troubleshooting Guide
 
@@ -327,6 +351,16 @@ nvidia-smi --query-gpu=temperature.gpu,power.draw,clocks.current.graphics,clocks
 - [ ] Inference latency SLOs validated for RTX6000 and RTX4500 pools.
 - [ ] Runbooks published for top failure modes.
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## Summary
 
 Phase 4B is complete when GPU runtime behavior is stable, measurable, and role-appropriate. B300/H200 training nodes and RTX6000/RTX4500 inference nodes should each have dedicated baselines and incident playbooks before production workload onboarding.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
+#### [<ins>Next Step - `Phase 5: Storage Provisioning and Data Pipeline Readiness`</ins>](phase-5-storage-provisioning.md)
+
+#### [<ins>Back to `Best Practices` README</ins>](README.md)
+
+#### [<ins>Back to `Repository` README</ins>](../../README.md)

@@ -6,6 +6,16 @@
 
 Phase 4A defines how compute nodes are provisioned, standardized, and lifecycle-managed so that training clusters (B300/H200) and inference clusters (RTX6000/RTX4500) behave predictably at scale. The goal is to remove configuration drift before workload onboarding.
 
+## Table of Contents
+- [1. Intersight Policy Model for Repeatable Provisioning](#1-intersight-policy-model-for-repeatable-provisioning)
+- [2. BIOS and Platform Tuning by Workload Class](#2-bios-and-platform-tuning-by-workload-class)
+- [3. Provisioning Workflow (Day-0 to Day-1)](#3-provisioning-workflow-day-0-to-day-1)
+- [4. Storage and Boot Policy Alignment](#4-storage-and-boot-policy-alignment)
+- [5. Compute Provisioning Validation Checklist](#5-compute-provisioning-validation-checklist)
+- [6. Troubleshooting Guide](#6-troubleshooting-guide)
+- [7. Phase Completion Checklist](#7-phase-completion-checklist)
+- [Summary](#summary)
+
 ## 1. Intersight Policy Model for Repeatable Provisioning
 
 Use Cisco Intersight templates as the source of truth for server identity, firmware, BIOS, boot order, and network policy.
@@ -26,6 +36,8 @@ Use Cisco Intersight templates as the source of truth for server identity, firmw
 - Reduces MTTR by making node state reproducible.
 - Allows safe scale-out without manual per-node tuning.
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 2. BIOS and Platform Tuning by Workload Class
 
 ### Training Nodes (B300/H200)
@@ -43,6 +55,8 @@ Optimize for latency consistency and serving density:
 - IRQ and NUMA alignment for model-serving processes.
 - Deterministic network and storage interrupt handling.
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 3. Provisioning Workflow (Day-0 to Day-1)
 
 1. Claim hardware in Intersight.
@@ -51,6 +65,8 @@ Optimize for latency consistency and serving density:
 4. Validate out-of-band access and inventory health.
 5. Stage OS install profile per node class.
 6. Execute post-provision smoke tests.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
 
 ## 4. Storage and Boot Policy Alignment
 
@@ -70,6 +86,8 @@ Define storage policy by node role to avoid contention and boot inconsistencies.
 - Avoid mixed boot controller modes within the same cluster.
 - Reserve local fast storage tiers for hot artifacts and temporary staging.
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 5. Compute Provisioning Validation Checklist
 
 - [ ] Node inventory matches intended role mapping.
@@ -78,6 +96,8 @@ Define storage policy by node role to avoid contention and boot inconsistencies.
 - [ ] OS provisioning completes without manual intervention.
 - [ ] Baseline network/storage checks pass.
 - [ ] Host telemetry visible in observability stack.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
 
 ## 6. Troubleshooting Guide
 
@@ -124,6 +144,8 @@ Define storage policy by node role to avoid contention and boot inconsistencies.
   2. Validate model cache placement and local disk pressure.
   3. Check thermal policy and host-level throttling telemetry.
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 7. Phase Completion Checklist
 
 Do not advance to Phase 4B until:
@@ -135,3 +157,11 @@ Do not advance to Phase 4B until:
 ## Summary
 
 Phase 4A is complete when provisioning is deterministic, repeatable, and validated by role. That foundation is required before deeper GPU runtime optimization in Phase 4B.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
+#### [<ins>Next Step - `Phase 4B: GPU Runtime Configuration and Performance Validation`</ins>](phase-4-gpu-configuration.md)
+
+#### [<ins>Back to `Best Practices` README</ins>](README.md)
+
+#### [<ins>Back to `Repository` README</ins>](../../README.md)

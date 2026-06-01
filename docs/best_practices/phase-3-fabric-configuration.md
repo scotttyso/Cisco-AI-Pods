@@ -1,10 +1,17 @@
 # Phase 3: Fabric Configuration and Validation
 
-[Back to Best Practices README](README.md) | [Back to README](../README.md)
-
 ## Executive Summary
 
 Phase 3 activates and validates frontend and backend network fabrics for Cisco AI Pods. The target state is a low-latency, low-loss backend fabric for distributed training with B300 and H200 nodes, plus a stable frontend fabric for storage, orchestration, and inference traffic serving RTX6000 and RTX4500 nodes.
+
+## Table of Contents
+- [1. Fabric Design Objectives](#1-fabric-design-objectives)
+- [2. Core Configuration Standards](#2-core-configuration-standards)
+- [3. Bring-Up Sequence](#3-bring-up-sequence)
+- [4. Validation and Acceptance Tests](#4-validation-and-acceptance-tests)
+- [5. Troubleshooting Guide](#5-troubleshooting-guide)
+- [6. Phase Completion Checklist](#6-phase-completion-checklist)
+- [Summary](#summary)
 
 ## 1. Fabric Design Objectives
 
@@ -27,6 +34,8 @@ Phase 3 activates and validates frontend and backend network fabrics for Cisco A
   - Predictable latency for service traffic
 - Typical workloads:
   - Model serving on RTX6000 and RTX4500
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
 
 ## 2. Core Configuration Standards
 
@@ -56,6 +65,8 @@ Use separate segments for management, storage, cluster pod/service traffic, and 
 - Use consistent LLDP and interface descriptions.
 - Enforce template-based switch configuration to avoid drift.
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 3. Bring-Up Sequence
 
 1. Build and validate management plane first.
@@ -64,6 +75,8 @@ Use separate segments for management, storage, cluster pod/service traffic, and 
 4. Apply QoS and RoCE policy.
 5. Validate host-facing links from training and inference nodes.
 6. Run synthetic traffic and NCCL baseline tests.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
 
 ## 4. Validation and Acceptance Tests
 
@@ -87,6 +100,8 @@ Use separate segments for management, storage, cluster pod/service traffic, and 
 - [ ] Configuration backups exported and versioned.
 - [ ] Telemetry and alerting integrated with NOC workflows.
 - [ ] Runbooks validated for link, leaf, and rack failure scenarios.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
 
 ## 5. Troubleshooting Guide
 
@@ -136,6 +151,8 @@ Use separate segments for management, storage, cluster pod/service traffic, and 
   2. Check ARP tables and duplicate address detection logs.
   3. Compare active configuration against intended template.
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 6. Phase Completion Checklist
 
 - [ ] Fabric diagrams and port maps updated.
@@ -147,3 +164,11 @@ Use separate segments for management, storage, cluster pod/service traffic, and 
 ## Summary
 
 Phase 3 is complete when the fabric is not only operational but predictable under load. Enforce strict template control, validate with both synthetic and workload-driven tests, and keep troubleshooting playbooks aligned to real observed failure patterns.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
+#### [<ins>Next Step - `Phase 4A: Compute Provisioning and Lifecycle Baseline`</ins>](phase-4-compute-provisioning.md)
+
+#### [<ins>Back to `Best Practices` README</ins>](README.md)
+
+#### [<ins>Back to `Repository` README</ins>](../../README.md)

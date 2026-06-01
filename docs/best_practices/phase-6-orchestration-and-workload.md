@@ -1,10 +1,19 @@
 # Phase 6: Orchestration and Workload Operations
 
-[Back to Best Practices README](README.md) | [Back to README](../README.md)
-
 ## Executive Summary
 
 Phase 6 operationalizes OpenShift on Cisco AI Pods for production AI workloads. This phase standardizes operator deployment, scheduling policy, and benchmark validation so B300/H200 training pools and RTX6000/RTX4500 inference pools run predictably under multi-tenant conditions.
+
+## Table of Contents
+- [1. Installation Strategy: IPI vs UPI](#1-installation-strategy-ipi-vs-upi)
+- [2. Operator Stack and Validation Order](#2-operator-stack-and-validation-order)
+- [3. Workload Segmentation by GPU Class](#3-workload-segmentation-by-gpu-class)
+- [4. Resource Governance](#4-resource-governance)
+- [5. NCCL and Data Path Validation](#5-nccl-and-data-path-validation)
+- [6. Inference Workload Validation](#6-inference-workload-validation)
+- [7. Troubleshooting Guide](#7-troubleshooting-guide)
+- [8. Phase Completion Checklist](#8-phase-completion-checklist)
+- [Summary](#summary)
 
 ## Platform Technologies
 
@@ -27,6 +36,8 @@ Best for environments requiring strict control over VLANs, addressing, and backe
 - Use UPI when backend network and storage topology must be precisely aligned to training rails.
 - Use IPI when fast repeatability and simplified lifecycle are primary goals.
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 2. Operator Stack and Validation Order
 
 Install and validate in this sequence:
@@ -40,6 +51,8 @@ Install and validate in this sequence:
 - GPU resources exposed on intended worker nodes.
 - RDMA-capable network interfaces present and healthy.
 - Driver/toolkit versions consistent across node roles.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
 
 ## 3. Workload Segmentation by GPU Class
 
@@ -56,6 +69,8 @@ Use dedicated node pools and labels for role isolation.
 - Apply pod anti-affinity for heavy jobs.
 - Use topology and NUMA-aware placement for communication-intensive workloads.
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 4. Resource Governance
 
 ### Quotas and Limit Ranges
@@ -68,6 +83,8 @@ Use dedicated node pools and labels for role isolation.
 
 - Use hardware partitioning features only where supported by the target GPU class and validated in your stack.
 - For inference density objectives, combine namespace controls with replica-based autoscaling and pool-level capacity limits.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
 
 ## 5. NCCL and Data Path Validation
 
@@ -86,6 +103,8 @@ Before production rollout, baseline collective communication and data path behav
 - 400G backend fabrics: target sustained all-reduce bandwidth in expected platform range with stable latency.
 - Results must be repeatable across multiple runs and time windows.
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 6. Inference Workload Validation
 
 For RTX6000/RTX4500 pools, measure service behavior under realistic traffic.
@@ -96,6 +115,8 @@ For RTX6000/RTX4500 pools, measure service behavior under realistic traffic.
 - Steady-state throughput at target concurrency.
 - p95/p99 latency under burst and sustained load.
 - Rolling update behavior with no SLO breach.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
 
 ## 7. Troubleshooting Guide
 
@@ -135,6 +156,8 @@ For RTX6000/RTX4500 pools, measure service behavior under realistic traffic.
   2. Verify taints/tolerations and pool quotas.
   3. Audit cluster autoscaler and disruption budgets.
 
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
 ## 8. Phase Completion Checklist
 
 - [ ] Node pools and labels documented and validated.
@@ -146,3 +169,9 @@ For RTX6000/RTX4500 pools, measure service behavior under realistic traffic.
 ## Summary
 
 Phase 6 is complete when orchestration policy, benchmark validation, and incident runbooks are production-ready. At this point, Cisco AI Pods can safely host mixed training and inference workloads with predictable performance and governance.
+
+#### [<ins>Back to Table of Contents</ins>](#table-of-contents)
+
+#### [<ins>Back to `Best Practices` README</ins>](README.md)
+
+#### [<ins>Back to `Repository` README</ins>](../../README.md)
