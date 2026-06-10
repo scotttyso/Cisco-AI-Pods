@@ -1,16 +1,18 @@
+---
+{% set ldap = openshift.ldap %}
 kind: LDAPSyncConfig
 apiVersion: v1
-url: {{ openshift.ldap.sync_url }}
-bindDN: {{ openshift.ldap.bind_dn }}
+url: {{ ldap.sync_url }}
+bindDN: {{ ldap.bind_dn }}
 bindPassword: {{ ldap_bind_password }}
-{% if openshift.ldap.secure_ldap %}
+{% if ldap.secure_ldap %}
 insecure: false
 ca: /ldap-sync/ca.crt
 {% else %}
 insecure: true
 {% endif %}
 groupUIDNameMapping:
-{% for k,v in openshift.ldap.group_uid_mappings.items() %}
+{% for k,v in ldap.group_uid_mappings.items() %}
   "{{ k }}": {{ v }}
 {% endfor %}
 augmentedActiveDirectory:
@@ -21,7 +23,11 @@ augmentedActiveDirectory:
     groupUIDAttribute: dn
     groupNameAttributes: [ cn ]
     usersQuery:
-        baseDN: {{ openshift.ldap.base_dn }}
+{% if ldap.base_dn_users %}
+        baseDN: {{ ldap.base_dn_users }}
+{% else %}
+        baseDN: {{ ldap.base_dn }}
+{% endif %}
         derefAliases: never
         filter: (objectclass=person)
         pageSize: 0

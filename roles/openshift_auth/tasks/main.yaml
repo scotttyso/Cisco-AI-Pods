@@ -12,7 +12,6 @@
     that:
       - openshift.ldap is defined
       - openshift.ldap.secure_ldap is defined
-      - openshift.ldap.sync_url is defined
       - openshift.ldap.bind_dn is defined
       - openshift.ldap.base_dn is defined
       - openshift.ldap.group_uid_mappings is defined

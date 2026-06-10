@@ -1,3 +1,5 @@
+---
+{% set ldap = openshift.ldap %}
 apiVersion: config.openshift.io/v1
 kind: OAuth
 metadata:
@@ -13,14 +15,18 @@ spec:
           id: [sAMAccountName]
           name: [cn]
           preferredUsername: [sAMAccountName]
-        bindDN: "{{ openshift.ldap.bind_dn }}"
+        bindDN: "{{ ldap.bind_dn }}"
         bindPassword:
           name: ldap-bind-password # Name of a secret containing the bind password
-{% if openshift.ldap.secure_ldap %}
+{% if ldap.secure_ldap %}
         ca:
           name: ldap-ca-cert
         insecure: false
 {% else %}
         insecure: true
 {% endif %}
-        url: "{{ openshift.ldap.url }}"
+{% if ldap.group_uid_mappings | length == 1 %}
+        url: "{{ ldap.url }}/{{ ldap.base_dn }}?sAMAccountName?sub?(&(objectclass=*)(memberOf={{ ldap.group_uid_mappings.keys() | first }}))"
+{% else %}
+        url: "{{ ldap.url }}/{{ ldap.base_dn }}?sAMAccountName?sub?(&(objectclass=*)(|{% for group_dn in ldap.group_uid_mappings.keys() %}(memberOf={{ group_dn }}){% endfor %}))"
+{% endif %}

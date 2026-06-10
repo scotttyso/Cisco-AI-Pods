@@ -9,5 +9,4 @@ openshift:
     group_uid_mappings:
       "CN=Lab Admin,OU=Cisco Employees,DC=rich,DC=ciscolabs,DC=com": lab-admins
     secure_ldap: true
-    sync_url: ldaps://ad1.rich.ciscolabs.com:636
-    url: ldaps://ad1.rich.ciscolabs.com:636/DC=rich,DC=ciscolabs,DC=com?sAMAccountName?sub?(&(objectclass=*)((memberOf=CN=Lab Admin,OU=Cisco Employees,DC=rich,DC=ciscolabs,DC=com)))
+    url: ldaps://ad1.rich.ciscolabs.com:636

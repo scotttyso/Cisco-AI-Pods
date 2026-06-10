@@ -37536,16 +37536,26 @@
         },
         "openshift.ldap": {
             "additionalProperties": false,
-            "description": "This dictionary defines the LDAP Identity Provider settings for OpenShift.\n\nRequired fields are:\n  * `base_dn`\n  * `bind_dn`\n  * `secure_ldap`\n  * `url`",
+            "description": "This dictionary defines the LDAP Identity Provider settings for OpenShift.\n\nRequired fields are:\n  * `base_dn`\n  * `bind_dn`\n  * `secure_ldap`\n  * `url`\n\nOptional fields are:\n  * `base_dn_users`",
             "properties": {
                 "base_dn": {
-                    "description": "The LDAP Base Distinguished Name used as the search base for user entries (e.g. `DC=example,DC=com`).",
+                    "description": "The LDAP Base Distinguished Name used as the search base for authentication to the cluster (e.g. `DC=example,DC=com`).",
                     "examples": [
                         "DC=example,DC=com"
                     ],
                     "maxLength": 512,
                     "minLength": 1,
                     "title": "LDAP Base Distinguished Name",
+                    "type": "string"
+                },
+                "base_dn_users": {
+                    "description": "The LDAP Base Distinguished Name used as the search base for user entries, if unique from `base_dn`.  (e.g. `OU=Users,DC=example,DC=com`).",
+                    "examples": [
+                        "OU=Users,DC=example,DC=com"
+                    ],
+                    "maxLength": 512,
+                    "minLength": 1,
+                    "title": "LDAP Base Distinguished Name for Users",
                     "type": "string"
                 },
                 "bind_dn": {
@@ -37605,8 +37615,8 @@
                     "title": "Secure LDAP",
                     "type": "boolean"
                 },
-                "sync_url": {
-                    "description": "The LDAP URL used for group synchronization (e.g. `ldaps://ad.example.com:636`).",
+                "url": {
+                    "description": "The LDAP URL used for group synchronization and authentication (e.g. `ldaps://ad.example.com:636`).",
                     "examples": [
                         "ldaps://ad.example.com:636",
                         "ldap://ad.example.com:389"
@@ -37616,17 +37626,6 @@
                     "pattern": "^ldaps?://",
                     "title": "LDAP Sync URL",
                     "type": "string"
-                },
-                "url": {
-                    "description": "The full LDAP search URL including base DN, attribute, scope, and filter (e.g. `ldaps://ad.example.com:636/DC=example,DC=com?sAMAccountName?sub?(objectclass=*)`).",
-                    "examples": [
-                        "ldaps://ad.example.com:636/DC=example,DC=com?sAMAccountName?sub?(objectclass=*)"
-                    ],
-                    "maxLength": 1024,
-                    "minLength": 1,
-                    "pattern": "^ldaps?://",
-                    "title": "LDAP Search URL",
-                    "type": "string"
                 }
             },
             "required": [
@@ -37635,7 +37634,6 @@
                 "cluster_admins",
                 "group_uid_mappings",
                 "secure_ldap",
-                "sync_url",
                 "url"
             ],
             "title": "OpenShift LDAP Identity Provider",
