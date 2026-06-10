@@ -12,6 +12,9 @@ This repository contains automation and runbooks for Cisco AI Pods infrastructur
   - [Runbook Documents](#runbook-documents)
   - [Environment Preparation](#environment-preparation)
   - [Quick Start Workflow](#quick-start-workflow)
+    - [1. Prepare Environment](#1-prepare-environment)
+    - [2. Deploy Full Stack (All Domains)](#2-deploy-full-stack-all-domains)
+    - [3. Deploy Specific Domains (Optional)](#3-deploy-specific-domains-optional)
   - [Common Commands](#common-commands)
   - [Troubleshooting and Operations](#troubleshooting-and-operations)
   - [Architecture](#architecture)
@@ -32,25 +35,25 @@ All workflows use centralized playbooks in `playbooks/` with tag-based condition
 
 All workflows execute through centralized Ansible playbooks from the repository root:
 
-1. **Full Stack Deployment** (`playbooks/deploy_ai_pod.yml`)
+1. **Full Stack Deployment** (`playbooks/deploy_ai_pod.yaml`)
    - Orchestrates all domains in deployment order
    - Automatically loads variables from `host_vars/` subdirectories
    - Supports `--tags` for selective execution
 
-2. **Intersight and UCS** (`playbooks/deploy_ai_pod.yml --tags intersight`)
+2. **Intersight and UCS** (`playbooks/deploy_ai_pod.yaml --tags intersight`)
    - Guide: [docs/intersight.md](docs/intersight.md)
    - Includes policy, pool, and profile provisioning
 
-3. **Everpure Storage and Portworx** (`playbooks/deploy_ai_pod.yml --tags everpure,portworx`)
+3. **Everpure Storage and Portworx** (`playbooks/deploy_ai_pod.yaml --tags everpure,portworx`)
    - Guide: [docs/everpure.md](docs/everpure.md)
   - Role details: [roles/everpure/README.md](roles/everpure/README.md)
   - Role details: [roles/portworx_csi/README.md](roles/portworx_csi/README.md)
 
-4. **OpenShift Platform** (`playbooks/deploy_openshift.yml` or `playbooks/deploy_ai_pod.yml --tags openshift`)
+4. **OpenShift Platform** (`playbooks/deploy_openshift.yaml` or `playbooks/deploy_ai_pod.yaml --tags openshift`)
    - Guide: [docs/openshift.md](docs/openshift.md)
    - Includes authentication, certificates, GitOps, and ArgoCD
 
-5. **Splunk Observability** (`playbooks/deploy_ai_pod.yml --tags observability`)
+5. **Splunk Observability** (`playbooks/deploy_ai_pod.yaml --tags observability`)
    - Guide: [docs/splunk_observability.md](docs/splunk_observability.md)
   - Role details: [roles/splunk_observability/README.md](roles/splunk_observability/README.md)
    - Full-stack monitoring and observability integration
@@ -70,11 +73,11 @@ Cisco-AI-Pods/
     guide_prepare_the_environment.md
     guide_troubleshooting.md
   playbooks/                     # Centralized Ansible playbooks
-    deploy_ai_pod.yml            # Full stack orchestration
-    deploy_openshift.yml         # OpenShift only
-    deploy_storage.yml           # Storage/Portworx only
-    deploy_intersight_ucs.yml    # Intersight only
-    deploy_observability.yml     # Splunk Observability only
+    deploy_ai_pod.yaml           # Full stack orchestration
+    deploy_openshift.yaml        # OpenShift only
+    deploy_storage.yaml          # Storage/Portworx only
+    deploy_intersight_ucs.yaml   # Intersight only
+    deploy_observability.yaml    # Splunk Observability only
   roles/                         # Ansible roles
     intersight_*/
     openshift_*/
@@ -139,29 +142,35 @@ cp -r examples/splunk_observability host_vars/
 ### 2. Deploy Full Stack (All Domains)
 
 ```bash
-ansible-playbook playbooks/deploy_ai_pod.yml
+ansible-playbook playbooks/deploy_ai_pod.yaml
+```
+
+Custom `host_vars` location
+
+```bash
+ansible-playbook playbooks/deploy_ai_pod.yaml -e host_vars_dir=/some/custom/path
 ```
 
 ### 3. Deploy Specific Domains (Optional)
 
 **Intersight and UCS only:**
 ```bash
-ansible-playbook playbooks/deploy_ai_pod.yml --tags intersight
+ansible-playbook playbooks/deploy_ai_pod.yaml --tags intersight
 ```
 
 **Storage and Portworx only:**
 ```bash
-ansible-playbook playbooks/deploy_ai_pod.yml --tags everpure,portworx
+ansible-playbook playbooks/deploy_ai_pod.yaml --tags everpure,portworx
 ```
 
 **OpenShift only:**
 ```bash
-ansible-playbook playbooks/deploy_openshift.yml
+ansible-playbook playbooks/deploy_openshift.yaml
 ```
 
 **Splunk Observability only:**
 ```bash
-ansible-playbook playbooks/deploy_ai_pod.yml --tags observability
+ansible-playbook playbooks/deploy_ai_pod.yaml --tags observability
 ```
 
 For detailed procedures, see [docs/guide_cisco_ai_pods_runbook.md](docs/guide_cisco_ai_pods_runbook.md).
@@ -171,25 +180,25 @@ For detailed procedures, see [docs/guide_cisco_ai_pods_runbook.md](docs/guide_ci
 Run playbook in dry-run mode (check mode):
 
 ```bash
-ansible-playbook playbooks/deploy_ai_pod.yml --check
+ansible-playbook playbooks/deploy_ai_pod.yaml --check
 ```
 
 Run with verbose output for debugging:
 
 ```bash
-ansible-playbook playbooks/deploy_ai_pod.yml -vvv
+ansible-playbook playbooks/deploy_ai_pod.yaml -vvv
 ```
 
 List all available tags:
 
 ```bash
-ansible-playbook playbooks/deploy_ai_pod.yml --list-tags
+ansible-playbook playbooks/deploy_ai_pod.yaml --list-tags
 ```
 
 Run a specific role or tag:
 
 ```bash
-ansible-playbook playbooks/deploy_ai_pod.yml --tags certificates
+ansible-playbook playbooks/deploy_ai_pod.yaml --tags certificates
 ```
 
 ## Troubleshooting and Operations
@@ -207,7 +216,7 @@ ansible-playbook playbooks/deploy_ai_pod.yml --tags certificates
 
 The repository uses a centralized Ansible architecture:
 
-- **Playbooks** (`playbooks/deploy_*.yml`) — Orchestrate roles in dependency order
+- **Playbooks** (`playbooks/deploy_*.yaml`) — Orchestrate roles in dependency order
 - **Roles** (`roles/*/`) — Task implementations for each domain
 - **Variables** (`host_vars/<domain>/`) — Environment-specific configuration auto-loaded at runtime
 - **Tags** — Control which roles execute via `--tags` flag

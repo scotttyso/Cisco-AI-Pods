@@ -10,10 +10,13 @@
   connection: local
   gather_facts: false
 
+  vars:
+    host_vars_dir: "{{ host_vars_dir | default(playbook_dir ~ '/../host_vars') }}"
+
   pre_tasks:
     - name: Find Variable Files Under host_vars
       ansible.builtin.find:
-        paths: "{{ playbook_dir }}/../host_vars"
+        paths: "{{ host_vars_dir }}"
         patterns:
           - "*.ezai.yaml"
         file_type: file
@@ -58,7 +61,7 @@
 
     # - role: cisco.ai_pods.openshift_auth
     - role: openshift_auth
-      tags: [auth]
+      tags: [openshift, auth]
       when: openshift.ldap is defined and openshift.ldap.url | length > 0
 
     # - role: cisco.ai_pods.portworx_csi
@@ -67,16 +70,16 @@
       when: (everpure.flash_arrays is defined or everpure.flash_blades is defined) and everpure.portworx is defined
 
     - role: openshift_gitea
-      tags: [gitea]
+      tags: [openshift, gitea]
       when: openshift.operators.gitea.enabled | default(false) | bool
 
     - role: openshift_argo_cd
-      tags: [argocd]
+      tags: [openshift, argocd]
       when: openshift.operators.openshift_gitops.enabled | default(false) | bool
 
     # - role: cisco.ai_pods.openshift_gitops
     - role: openshift_gitops
-      tags: [gitops]
+      tags: [openshift, gitops]
       when: openshift.operators.openshift_gitops.enabled | default(false) | bool
 
     # - role: cisco.ai_pods.splunk_observability

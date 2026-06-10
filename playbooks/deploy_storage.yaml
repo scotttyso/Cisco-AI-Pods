@@ -5,10 +5,36 @@
   connection: local
   gather_facts: false
 
+  vars:
+    host_vars_dir: "{{ host_vars_dir | default(playbook_dir ~ '/../host_vars') }}"
+
+  pre_tasks:
+    - name: Find Variable Files Under host_vars
+      ansible.builtin.find:
+        paths: "{{ host_vars_dir }}/everpure"
+        patterns:
+          - "*.ezai.yaml"
+        file_type: file
+        recurse: true
+      register: everpure_var_files
+
+    - name: Merge Variable Files Into a Single Dictionary
+      ansible.builtin.set_fact:
+        merged_vars: "{{ merged_vars | default({}) | combine((lookup('ansible.builtin.file', item.path) | from_yaml), recursive=True) }}"
+      loop: "{{ everpure_var_files.files | sort(attribute='path') }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+
+    - name: Set Merged Everpure Object
+      ansible.builtin.set_fact:
+        everpure: "{{ merged_vars.everpure | default({}) }}"
+
   roles:
     # - role: cisco.ai_pods.pure_storage
     - role: everpure
       tags: [everpure]
+      when: (everpure.flash_arrays is defined or everpure.flash_blades is defined) and everpure.settings is defined
 
     - role: portworx_csi
       tags: [portworx]
+      when: (everpure.flash_arrays is defined or everpure.flash_blades is defined) and everpure.portworx is defined

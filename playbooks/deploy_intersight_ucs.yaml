@@ -5,10 +5,13 @@
   connection: local
   gather_facts: false
 
+  vars:
+    host_vars_dir: "{{ host_vars_dir | default(playbook_dir ~ '/../host_vars') }}"
+
   pre_tasks:
     - name: Find Variable Files Under host_vars
       ansible.builtin.find:
-        paths: "{{ playbook_dir }}/../host_vars/intersight"
+        paths: "{{ host_vars_dir }}/intersight"
         patterns:
           - "*.ezai.yaml"
         file_type: file
