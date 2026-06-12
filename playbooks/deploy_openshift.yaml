@@ -16,6 +16,7 @@
           - "*.ezai.yaml"
         file_type: file
       register: openshift_var_files
+      tags: always
 
     - name: Merge Variable Files Into a Single Dictionary
       ansible.builtin.set_fact:
@@ -23,10 +24,12 @@
       loop: "{{ openshift_var_files.files | sort(attribute='path') }}"
       loop_control:
         label: "{{ item.path | basename }}"
+      tags: always
 
     - name: Set Merged OpenShift Object
       ansible.builtin.set_fact:
         openshift: "{{ merged_vars.openshift | default({}) }}"
+      tags: always
 
   roles:
     # # - role: cisco.ai_pods.openshift_install

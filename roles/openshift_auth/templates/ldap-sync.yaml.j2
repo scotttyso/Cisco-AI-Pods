@@ -2,7 +2,7 @@
 {% set ldap = openshift.ldap %}
 kind: LDAPSyncConfig
 apiVersion: v1
-url: {{ ldap.sync_url }}
+url: {{ ldap.url }}
 bindDN: {{ ldap.bind_dn }}
 bindPassword: {{ ldap_bind_password }}
 {% if ldap.secure_ldap %}
