@@ -37661,7 +37661,7 @@
                     "$ref": "#/definitions/openshift.operators.openshift_gitops"
                 },
                 "operators_to_install": {
-                    "description": "List of operators to install on the OpenShift cluster.",
+                    "description": "List of operators to install on the OpenShift cluster.  Supported operators include:\n  * `ansible-automation-platform`\n  * `external-secrets-operator`\n  * `kubernetes-nmstate-operator`\n  * `node-feature-discovery-operator`\n  * `nvidia-gpu-operator`\n  * `nvidia-network-operator`\n  * `openshift-virtualization`\n  * `rhoai-application`",
                     "items": {
                         "description": "Operator name to install.",
                         "enum": [
@@ -37671,7 +37671,8 @@
                             "node-feature-discovery-operator",
                             "nvidia-gpu-operator",
                             "nvidia-network-operator",
-                            "openshift-virtualization"
+                            "openshift-virtualization",
+                            "rhoai-application"
                         ],
                         "title": "Operator Name",
                         "type": "string"
