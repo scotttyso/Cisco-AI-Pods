@@ -230,7 +230,7 @@
 
 - name: Cleanup Temporary Files
   ansible.builtin.file:
-    path: "{{ playbook_dir }}/{{ item }}"
+    path: "{{ role_path }}/{{ item }}"
     state: absent
   loop: ["ldap-sync.yaml", "whitelist.txt"]
   when: cronjob_result is succeeded or ansible_failed_task is undefined
