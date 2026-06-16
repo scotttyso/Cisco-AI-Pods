@@ -36,6 +36,13 @@ intersight:
         storage:
           - name: ModelCache
             storage_template: model_cache
-        virtual_kvm:
-          - allow_tunneled_vkvm: true
-            name: vKVM
+        virtual_media:
+          - enable_low_power_usb: true
+            enable_virtual_media_encryption: true
+            name: vMedia
+            add_virtual_media:
+              - device_type: cdd
+                file_location: https://server.example.com/os.iso
+                mount_options: noauto
+                name: https_iso
+                protocol: https

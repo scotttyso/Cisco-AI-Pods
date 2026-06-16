@@ -1,6 +1,6 @@
 ---
 # =========================================================
-#   Policies -> LAN Connectivity - Variables
+#   Policies -> C885A Profiles - Variables
 # =========================================================
 intersight:
   configure:
@@ -65,4 +65,4 @@ shared_services:
     - 208.67.220.220
   # Option Below if you want to use a proxy server for Device Registration to Intersight, etc.
   # proxy_servers:
-  #   https_server: https://proxy.ciscolabs.com:8080
+  #   https_proxy: https://proxy.ciscolabs.com:8080

@@ -25,14 +25,14 @@ openshift:
           v4_cidr: 172.30.0.0/16
       cluster_version: 4.20.16
       fabric_interconnects:
-        - ip: 10.222.1.90
+        - ip: 198.18.1.90
           password: 1
           username: admin
-        - ip: 10.222.1.92
+        - ip: 198.18.1.92
           password: 1
           username: admin
       iso_web_server:
-        image_base_url: https://10.101.128.25/repo
+        image_base_url: https://198.18.128.25/repo
         image_upload_directory: /var/www/html/repo
         server_address: localhost
         # password: 1
@@ -45,7 +45,7 @@ openshift:
       servers:
         - hostname: dcmaihgx5001
           redfish:
-            ip: 10.222.1.58
+            ip: 198.18.1.58
             password: 2
             type: bmc
             username: root
@@ -55,24 +55,24 @@ openshift:
               - name: bond0
                 interfaces:
                   - name: ens211f0np0
-                    mac: 7C:8C:09:96:E0:52
+                    mac: 8C:7C:09:96:E0:52
                   - name: ens214f0np0
-                    mac: 7C:8C:09:96:DE:B0
-                ipv4: 10.222.2.47/24
+                    mac: 8C:7C:09:96:DE:B0
+                ipv4: 198.18.2.47/24
                 lldp_enabled: true
                 mtu: 9000
               - name: bond1
                 interfaces:
                   - name: ens211f1np1
-                    mac: 7C:8C:09:96:E0:53
+                    mac: 8C:7C:09:96:E0:53
                   - name: ens214f1np1
-                    mac: 7C:8C:09:96:DE:B1
-                ipv4: 10.222.4.47/24
+                    mac: 8C:7C:09:96:DE:B1
+                ipv4: 198.18.4.47/24
                 lldp_enabled: true
                 mtu: 9000
         - hostname: dcmaihgx5002
           redfish:
-            ip: 10.222.1.71
+            ip: 198.18.1.71
             password: 2
             type: bmc
             username: root
@@ -82,158 +82,158 @@ openshift:
               - name: bond0
                 interfaces:
                   - name: ens211f0np0
-                    mac: D8:94:24:42:92:C6
+                    mac: 94:D8:24:42:92:C6
                   - name: ens214f0np0
-                    mac: D8:94:24:4E:B6:28
-                ipv4: 10.222.2.48/24
+                    mac: 94:D8:24:4E:B6:28
+                ipv4: 198.18.2.48/24
                 lldp_enabled: true
                 mtu: 9000
               - name: bond1
                 interfaces:
                   - name: ens211f1np1
-                    mac: D8:94:24:42:92:C7
+                    mac: 94:D8:24:42:92:C7
                   - name: ens214f1np1
-                    mac: D8:94:24:4E:B6:29
-                ipv4: 10.222.4.48/24
+                    mac: 94:D8:24:4E:B6:29
+                ipv4: 198.18.4.48/24
                 lldp_enabled: true
                 mtu: 9000
-        - hostname: dcmaiucs51-1-1
+        - hostname: ucsai-1-1-1
           fabric_interconnect:
-            id: 10.222.1.90
-            inventory_id: dcmaiucs51-1-1
+            id: 198.18.1.90
+            inventory_id: ucsai-1-1-1
           role: worker
           interfaces:
             ethernet:
               - name: eno5
-                ipv4: 10.222.2.49/24
+                ipv4: 198.18.2.49/24
                 lldp_enabled: true
                 mac: 00:25:B5:A2:00:00
                 mtu: 9000
               - name: eno7
-                ipv4: 10.222.4.49/24
+                ipv4: 198.18.4.49/24
                 lldp_enabled: true
                 mac: 00:25:B5:C2:00:00
                 mtu: 9000
-        - hostname: dcmaiucs51-1-3
+        - hostname: ucsai-1-1-3
           fabric_interconnect:
-            id: 10.222.1.90
-            inventory_id: dcmaiucs51-1-3
+            id: 198.18.1.90
+            inventory_id: ucsai-1-1-3
           role: worker
           interfaces:
             ethernet:
               - name: eno5
-                ipv4: 10.222.2.50/24
+                ipv4: 198.18.2.50/24
                 lldp_enabled: true
                 mac: 00:25:B5:A2:00:01
                 mtu: 9000
               - name: eno7
-                ipv4: 10.222.4.50/24
+                ipv4: 198.18.4.50/24
                 lldp_enabled: true
                 mac: 00:25:B5:C2:00:01
                 mtu: 9000
-        - hostname: dcmaiucs51-1-5
+        - hostname: ucsai-1-1-5
           fabric_interconnect:
-            id: 10.222.1.90
-            inventory_id: dcmaiucs51-1-5
+            id: 198.18.1.90
+            inventory_id: ucsai-1-1-5
           role: worker
           interfaces:
             ethernet:
               - name: eno5
-                ipv4: 10.222.2.51/24
+                ipv4: 198.18.2.51/24
                 lldp_enabled: true
                 mac: 00:25:B5:A2:00:02
                 mtu: 9000
               - name: eno7
-                ipv4: 10.222.4.51/24
+                ipv4: 198.18.4.51/24
                 lldp_enabled: true
                 mac: 00:25:B5:C2:00:02
                 mtu: 9000
-        - hostname: dcmaiucs51-1-7
+        - hostname: ucsai-1-1-7
           fabric_interconnect:
-            id: 10.222.1.90
-            inventory_id: dcmaiucs51-1-7
+            id: 198.18.1.90
+            inventory_id: ucsai-1-1-7
           role: worker
           interfaces:
             ethernet:
               - name: eno5
-                ipv4: 10.222.2.52/24
+                ipv4: 198.18.2.52/24
                 lldp_enabled: true
                 mac: 00:25:B5:A2:00:03
                 mtu: 9000
               - name: eno7
-                ipv4: 10.222.4.52/24
+                ipv4: 198.18.4.52/24
                 lldp_enabled: true
                 mac: 00:25:B5:C2:00:03
                 mtu: 9000
-        - hostname: dcmaiucs52-1-1
+        - hostname: ucsai-2-1-1
           fabric_interconnect:
-            id: 2
-            inventory_id: dcmaiucs52-1-1
+            id: 198.18.1.92
+            inventory_id: ucsai-2-1-1
           rendezvous: true
           role: master
           interfaces:
             ethernet:
               - name: eno5
-                ipv4: 10.222.2.53/24
+                ipv4: 198.18.2.53/24
                 lldp_enabled: true
                 mac: 00:25:B5:A2:00:04
                 mtu: 9000
-        - hostname: dcmaiucs52-1-2
+        - hostname: ucsai-2-1-2
           fabric_interconnect:
-            id: 2
-            inventory_id: dcmaiucs52-1-2
+            id: 198.18.1.92
+            inventory_id: ucsai-2-1-2
           role: master
           interfaces:
             ethernet:
               - name: eno5
-                ipv4: 10.222.2.54/24
+                ipv4: 198.18.2.54/24
                 lldp_enabled: true
                 mac: 00:25:B5:A2:00:05
                 mtu: 9000
-        - hostname: dcmaiucs52-1-3
+        - hostname: ucsai-2-1-3
           fabric_interconnect:
-            id: 2
-            inventory_id: dcmaiucs52-1-3
+            id: 198.18.1.92
+            inventory_id: ucsai-2-1-3
           rendezvous: true
           role: master
           interfaces:
             ethernet:
               - name: eno5
-                ipv4: 10.222.2.55/24
+                ipv4: 198.18.2.55/24
                 lldp_enabled: true
                 mac: 00:25:B5:A2:00:06
                 mtu: 9000
-        - hostname: dcmaiucs52-1-4
+        - hostname: ucsai-2-1-4
           fabric_interconnect:
-            id: 10.222.1.92
-            inventory_id: dcmaiucs52-1-4
+            id: 198.18.1.92
+            inventory_id: ucsai-2-1-4
           role: worker
           interfaces:
             ethernet:
               - name: eno5
-                ipv4: 10.222.2.56/24
+                ipv4: 198.18.2.56/24
                 lldp_enabled: true
                 mac: 00:25:B5:A2:00:07
                 mtu: 9000
               - name: eno7
-                ipv4: 10.222.4.56/24
+                ipv4: 198.18.4.56/24
                 lldp_enabled: true
                 mac: 00:25:B5:C2:00:04
                 mtu: 9000
-        - hostname: dcmaiucs52-1-5
+        - hostname: ucsai-2-1-5
           fabric_interconnect:
-            id: 10.222.1.92
-            inventory_id: dcmaiucs52-1-5
+            id: 198.18.1.92
+            inventory_id: ucsai-2-1-5
           role: worker
           interfaces:
             ethernet:
               - name: eno5
-                ipv4: 10.222.2.57/24
+                ipv4: 198.18.2.57/24
                 lldp_enabled: true
                 mac: 00:25:B5:A2:00:08
                 mtu: 9000
               - name: eno7
-                ipv4: 10.222.4.57/24
+                ipv4: 198.18.4.57/24
                 lldp_enabled: true
                 mac: 00:25:B5:C2:00:05
                 mtu: 9000

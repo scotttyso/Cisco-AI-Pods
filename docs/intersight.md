@@ -16,7 +16,7 @@ vi host_vars/intersight/intersight.ezai.yaml
 
 ```bash
 export intersight_api_key_id="<your-intersight-api-key-id>"
-export intersight_api_key_secret="<your-intersight-api-key-secret>"
+export intersight_api_key_secret="<path-to-your-intersight-api-key-secret>"
 ```
 
 3. Run Intersight provisioning (optional):

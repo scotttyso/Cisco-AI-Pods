@@ -1,0 +1,11 @@
+---
+# =========================================================
+#   Policies -> Storage - Variables
+# =========================================================
+intersight:
+  configure:
+    default:
+      policies:
+        storage:
+          - name: ModelCache
+            storage_template: model_cache

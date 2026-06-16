@@ -240,7 +240,7 @@
                             "type": "string"
                         },
                         "no_proxy": {
-                            "description": "List of Bypass URL's or IP addresses/networks to exclude from proxying.",
+                            "description": "List of Bypass URL's or IP addresses/networks to exclude from proxying.\n\nFor `no_proxy`, related to OpenShift, we recommend including the following at a minimum:\n\n  * `localhost`\n  * `.cluster.local`\n  * `.svc.cluster.local`\n  * `apps.<cluster_name>.<base_dns_domain>`\n  * `.<cluster_name>.<base_dns_domain>`\n  * `.<base_dns_domain>`",
                             "items": {
                                 "default": "",
                                 "description": "The default value is ``.  Bypass URL.",
@@ -248,7 +248,7 @@
                                     "example.com",
                                     ".example.com",
                                     "127.0.0.1",
-                                    "198.18.0.0/24",
+                                    "198.18.0.0/16",
                                     "::1",
                                     "2001:db8::/32"
                                 ],
@@ -18154,7 +18154,7 @@
                     "objectType": "SwitchId",
                     "title": "switch_ids - Switch Ids - Object Type: vnic.PlacementSettings",
                     "type": "array",
-                    "uniqueItems": true
+                    "uniqueItems": false
                 },
                 "uplink_ports": {
                     "description": "Adapter port on which the virtual interface will be created.  This attribute is for Standalone Servers Only.",

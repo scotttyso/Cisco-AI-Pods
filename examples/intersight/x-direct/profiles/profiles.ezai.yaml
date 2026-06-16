@@ -11,22 +11,22 @@ intersight:
             imc_access_policy: KVMAccess
             power_policy: X9508
             targets:
-              - name: UCSAI-1
+              - name: ucsai-1
                 serial_number: FOX29100000
-              - name: UCSAI-2
+              - name: ucsai-2
                 serial_number: FOX29100001
             thermal_policy: X9508
         domain:
           - action: Deploy
             attach_template: true
-            name: UCSAI-1
+            name: ucsai-1
             serial_numbers:
               - FDO29100001
               - FDO29100002
             ucs_domain_profile_template: XDirect
           - action: Deploy
             attach_template: true
-            name: UCSAI-2
+            name: ucsai-2
             serial_numbers:
               - FDO29100003
               - FDO29100004
@@ -34,25 +34,25 @@ intersight:
         server:
           - action: No-op
             attach_template: true
-            domain_name: UCSAI-1
+            domain_name: ucsai-1
             target_platform: FIAttached
             targets:
-              - name: UCSAI-1-1
+              - name: ucsai-1-1
                 pre_assign:
                   chassis_id: 1
                   initial_auto_deploy_when_server_is_available: true
                   slot_id: 1
-              - name: UCSAI-1-3
+              - name: ucsai-1-3
                 pre_assign:
                   chassis_id: 1
                   initial_auto_deploy_when_server_is_available: true
                   slot_id: 4
-              - name: UCSAI-1-5
+              - name: ucsai-1-5
                 pre_assign:
                   chassis_id: 1
                   initial_auto_deploy_when_server_is_available: true
                   slot_id: 5
-              - name: UCSAI-1-7
+              - name: ucsai-1-7
                 pre_assign:
                   chassis_id: 1
                   initial_auto_deploy_when_server_is_available: true
@@ -60,25 +60,25 @@ intersight:
             ucs_server_profile_template: AIOptimized
           - action: No-op
             attach_template: true
-            domain_name: UCSAI-2
+            domain_name: ucsai-2
             target_platform: FIAttached
             targets:
-              - name: UCSAI-2-1
+              - name: ucsai-2-1
                 pre_assign:
                   chassis_id: 1
                   initial_auto_deploy_when_server_is_available: true
                   slot_id: 1
-              - name: UCSAI-2-3
+              - name: ucsai-2-3
                 pre_assign:
                   chassis_id: 1
                   initial_auto_deploy_when_server_is_available: true
                   slot_id: 4
-              - name: UCSAI-2-5
+              - name: ucsai-2-5
                 pre_assign:
                   chassis_id: 1
                   initial_auto_deploy_when_server_is_available: true
                   slot_id: 5
-              - name: UCSAI-2-7
+              - name: ucsai-2-7
                 pre_assign:
                   chassis_id: 1
                   initial_auto_deploy_when_server_is_available: true

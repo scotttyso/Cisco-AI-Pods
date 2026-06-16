@@ -12,6 +12,8 @@
 
 ## Overview
 
+This is a fork from [signalfx - Cisco AI Ready Pods](https://github.com/signalfx/splunk-opentelemetry-examples/tree/main/collector/cisco-ai-ready-pods)
+
 This module provides comprehensive documentation and automation for integrating Splunk Observability Cloud with Cisco AI Pods infrastructure. Splunk Observability provides comprehensive visibility into the entire AI infrastructure stack, from compute and storage through applications running on OpenShift.
 
 Role-level reference: [roles/splunk_observability/README.md](../roles/splunk_observability/README.md)
