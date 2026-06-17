@@ -374,6 +374,7 @@ agent:
                   labels:
                     instance: {{ array.endpoint.split('.')[0] }}
                     env: 'production'
+{% endfor %}
 {% endif %}
 {% if splunk_observability.nexus is defined %}
       receiver_creator/nexus:
