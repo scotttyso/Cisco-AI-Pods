@@ -38180,10 +38180,10 @@
         },
         "splunk_observability.otel_collector": {
             "additionalProperties": false,
-            "description": "This dictionary defines the Splunk Observability - Otel Collector Configuration.\n\nRequired fields are:\n  * `metrics_collection`\n\nOptional fields are:\n  * `everpure_flash_arrays`\n  * `proxy`",
+            "description": "This dictionary defines the Splunk Observability - Otel Collector Configuration.\n\nRequired fields are:\n  * `metrics_collection`\n\nOptional fields are:\n  * `everpure_flash_arrays`\n  * `proxy`\n  * `syslog`",
             "properties": {
                 "everpure_flash_arrays": {
-                    "description": "A list of Everpure FlashArrays to collect metrics from.\n\nRequired fields are:\n  * `api_token_id`\n  * `name`\n  * `namespace`\n  * `endpoint`\n  * ",
+                    "description": "A list of Everpure FlashArrays to collect metrics from.\n\nRequired fields are:\n  * `api_token_id`\n  * `name`\n  * `namespace`\n  * `endpoint`",
                     "items": {
                         "$ref": "#/definitions/splunk_observability.otel_collector.everpure_flash_arrays"
                     },
@@ -38198,6 +38198,9 @@
                 },
                 "proxy": {
                     "$ref": "#/definitions/splunk_observability.otel_collector.proxy"
+                },
+                "syslog": {
+                    "$ref": "#/definitions/splunk_observability.otel_collector.syslog"
                 }
             },
             "required": [
@@ -38309,6 +38312,36 @@
                 "no_proxy"
             ],
             "title": "Splunk Observability - Otel Collector - Proxy Configuration",
+            "type": "object"
+        },
+        "splunk_observability.otel_collector.syslog": {
+            "additionalProperties": false,
+            "description": "This dictionary defines the Splunk Observability - Otel Collector - Syslog Configuration if desired.\n\nRequired fields are:\n  * `enabled`\n\nOptional fields are:\n  * `port`\n  * `protocol`",
+            "properties": {
+                "enabled": {
+                    "default": false,
+                    "description": "Default value is `false`.  Enable or disable the Splunk Observability - Otel Collector - Syslog configuration.",
+                    "title": "Enable Syslog",
+                    "type": "boolean"
+                },
+                "port": {
+                    "default": 1514,
+                    "description": "Default value is `1514`.  The port on which the Splunk Observability - Otel Collector is listening.",
+                    "title": "Syslog Port",
+                    "type": "integer"
+                },
+                "protocol": {
+                    "default": "TCP",
+                    "description": "Default value is `TCP`.  The protocol to use for syslog communication.",
+                    "enum": ["TCP", "UDP"],
+                    "title": "Syslog Protocol",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "enabled"
+            ],
+            "title": "Splunk Observability - Otel Collector - Syslog Configuration",
             "type": "object"
         },
         "splunk_observability.splunk_platform": {

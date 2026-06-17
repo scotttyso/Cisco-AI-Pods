@@ -12,9 +12,45 @@ gateway:
 splunkObservability:
   profilingEnabled: true
 agent:
+  config:
+    exporters:
+      debug:
+        verbosity: detailed
+      signalfx:
+        send_otlp_histograms: true
+{% set _otel_collector = splunk_observability.otel_collector | default({}) %}
+{% set _syslog = (_otel_collector.syslog | default({})) %}
+{% if _syslog.get('enabled', false) %}
+    receivers:
+      syslog:
+        tcp:
+          listen_address: "0.0.0.0:{{ _syslog.port | default(1514) }}"
+          protocol: {% if _syslog.protocol | default('TCP') == 'UDP' %}rfc3164{% else %}rfc5424{% endif %}
+          location: UTC
+          resource:
+            com.splunk.sourcetype: syslog:event
+            com.splunk.index: otel
+            com.splunk.source: syslog
+    service:
+      pipelines:
+        logs/syslog:
+          exporters:
+            - splunk_hec/platform_logs
+          processors:
+            - batch
+            - filter/logs
+            - k8s_attributes
+            - memory_limiter
+            - resource
+            - resource/add_environment
+            - resource/logs
+            - resourcedetection
+          receivers:
+            - syslog
+{% endif %}
   discovery:
     enabled: true
-{% set _otel_collector = splunk_observability.otel_collector | default({}) %}
+  enabled: true
 {% if _otel_collector.proxy is defined %}
   extraEnvs:
     - name: HTTP_PROXY
@@ -52,17 +88,19 @@ agent:
       mountPath: /etc/prometheus/secrets/etcd-metric-client
       readOnly: true
 {% endif %}
+{% if (_otel_collector.syslog | default({})).get('enabled', false) %}
+  ports:
+    syslog:
+      containerPort: {{ _syslog.port | default(1514) }}
+      enabled_for: [logs]
+      hostPort: {{ _syslog.port | default(1514) }}
+      protocol: {{ _syslog.protocol | default('TCP') }}
+{% endif %}
   resources:
     limits:
       cpu: 200m
       # This value is being used as a source for default memory_limiter processor configurations
       memory: 2000Mi
-  config:
-    exporters:
-      debug:
-        verbosity: detailed
-      signalfx:
-        send_otlp_histograms: true
 {% raw %}
     processors:
       filter/health:
