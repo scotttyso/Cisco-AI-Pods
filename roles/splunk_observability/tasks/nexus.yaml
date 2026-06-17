@@ -5,7 +5,7 @@
     kind: Namespace
     name: cisco-exporter
     state: present
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
 
 - name: Set Nexus Device Password Fact
   ansible.builtin.set_fact:
@@ -15,7 +15,7 @@
   kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', item) | from_yaml }}"
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
   loop:
     - nexus-config-map.yaml.j2
     - nexus-deployment.yaml.j2

@@ -22,7 +22,7 @@
     kind: Namespace
     name: "{{ operator_namespace }}"
     state: present
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
   register: gitea_namespace_result
   retries: 3
   delay: 5
@@ -32,7 +32,7 @@
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'operator-group.yaml.j2') | from_yaml }}"
     state: present
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
   register: gitea_operator_group_result
   retries: 3
   delay: 5
@@ -42,7 +42,7 @@
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'catalog-source.yaml.j2') | from_yaml }}"
     state: present
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
   register: gitea_catalog_result
   retries: 3
   delay: 5
@@ -52,7 +52,7 @@
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'subscription.yaml.j2') | from_yaml }}"
     state: present
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
   register: gitea_subscription_result
   retries: 3
   delay: 5
@@ -63,7 +63,7 @@
     kind: Deployment
     namespace: "{{ operator_namespace }}"
     name: gitea-operator-controller-manager
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
   register: deployment_info
   until: deployment_info.resources[0].status.availableReplicas | default(0) > 0
   retries: 10
@@ -73,7 +73,7 @@
   kubernetes.core.k8s:
     definition: "{{ lookup('template', 'instance.yaml.j2') | from_yaml }}"
     state: present
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
   register: gitea_instance_result
   retries: 3
   delay: 5

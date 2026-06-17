@@ -59,7 +59,7 @@
   kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', 'user-ca-bundle.yaml.j2') | from_yaml }}"
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
   register: user_ca_configmap_result
   retries: 3
   delay: 5
@@ -76,7 +76,7 @@
       spec:
         trustedCA:
           name: user-ca-bundle
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
   register: proxy_patch_apply_result
   retries: 3
   delay: 5
@@ -87,7 +87,7 @@
     api_version: config.openshift.io/v1
     kind: Proxy
     name: cluster
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
   register: proxy_patch_result
 
 - name: Report Cluster Proxy Patch Result
@@ -104,7 +104,7 @@
     api_version: machineconfiguration.openshift.io/v1
     kind: MachineConfigPool
     name: master
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
   register: mcp_master
   until:
     - mcp_master.resources is defined
@@ -159,7 +159,7 @@
   kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', 'ingress-tls-secret.yaml.j2') | from_yaml }}"
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
   register: ingress_tls_secret_result
   retries: 3
   delay: 5
@@ -177,7 +177,7 @@
       spec:
         defaultCertificate:
           name: ingress-tls-secret
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
   register: ingress_patch_apply_result
   retries: 3
   delay: 5
@@ -189,7 +189,7 @@
     kind: IngressController
     name: default
     namespace: openshift-ingress-operator
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
   register: ingress_controller_patch_result
 
 - name: Report Ingress Controller Patch Result
@@ -275,7 +275,7 @@
   kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', 'api-tls-secret.yaml.j2') | from_yaml }}"
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
   register: api_tls_secret_result
   retries: 3
   delay: 5
@@ -296,7 +296,7 @@
                 - "{{ openshift.certificates.api_server_hostname }}"
               servingCertificate:
                 name: api-tls-secret
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
   register: api_patch_apply_result
   retries: 3
   delay: 5
@@ -311,7 +311,7 @@
     api_version: operator.openshift.io/v1
     kind: KubeAPIServer
     name: cluster
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
   register: kube_apiserver
   until:
     - kube_apiserver.resources is defined

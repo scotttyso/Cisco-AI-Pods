@@ -1,5 +1,5 @@
 ---
 openshift_api_url: "{{ lookup('ansible.builtin.env', 'openshift_api_url') }}"
 openshift_token: "{{ lookup('ansible.builtin.env', 'openshift_token_id') }}"
-openshift_validate_certs: true
 operator_namespace: openshift-gitops-operator
+validate_certificates: "{{ lookup('ansible.builtin.env', 'validate_certificates') | default('false') | bool }}"

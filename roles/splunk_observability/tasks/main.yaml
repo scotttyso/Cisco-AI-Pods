@@ -4,7 +4,9 @@
     that:
       - lookup('ansible.builtin.env', 'openshift_token_id') | length > 0
       - lookup('ansible.builtin.env', 'openshift_api_url') | length > 0
-    fail_msg: "Required environment variables not set: openshift_token_id, openshift_api_url"
+      - lookup('ansible.builtin.env', 'splunk_observability_access_token_' + splunk_observability.access_token) | length > 0
+      - lookup('ansible.builtin.env', 'splunk_platform_token_' + splunk_observability.splunk_platform.token) | length > 0
+    fail_msg: "Required environment variables not set: openshift_token_id, openshift_api_url, splunk_observability_access_token_<token_id>, splunk_platform_token_<token_id>"
 
 - name: Create Otel Operator Namespace
   kubernetes.core.k8s:
@@ -12,7 +14,7 @@
     kind: Namespace
     name: otel
     state: present
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
 
 - name: Run ETCD Tasks if ETCD Metrics Collection is Enabled
   ansible.builtin.include_tasks: etcd.yaml
@@ -23,7 +25,7 @@
     name: splunk-otel-collector-chart
     repo_url: https://signalfx.github.io/splunk-otel-collector-chart
     state: present
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
 
 - name: Set Fact for Proxy Password if provided
   ansible.builtin.set_fact:
@@ -45,7 +47,7 @@
     name: splunk-otel-collector
     release_namespace: otel
     state: present
-    validate_certs: "{{ validate_certificates }}"
+    validate_certs: "{{ validate_certificates | default(false) }}"
     disable_hook: true
     force: true
     replace: true
