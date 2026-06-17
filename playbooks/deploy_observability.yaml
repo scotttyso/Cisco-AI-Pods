@@ -31,4 +31,8 @@
   roles:
     # - role: cisco.ai_pods.splunk_observability
     - role: splunk_observability
-      when: splunk_observability.deploy | default(false) | bool
+      when:
+        - splunk_observability.access_token is defined
+        - splunk_observability.openshift_cluster is defined
+        - splunk_observability.otel_collector is defined
+        - splunk_observability.splunk_platform is defined
