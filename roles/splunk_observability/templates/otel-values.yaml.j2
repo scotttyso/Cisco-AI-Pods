@@ -29,7 +29,7 @@ agent:
           location: UTC
           resource:
             com.splunk.sourcetype: syslog:event
-            com.splunk.index: otel
+            com.splunk.index: nexus
             com.splunk.source: syslog
     service:
       pipelines:
@@ -347,7 +347,7 @@ agent:
               tls_config:
                 insecure_skip_verify: true
               authorization:
-                credentials: '{{ array.auth_token }}'
+                credentials: '{{ vars['"'"'everpure_api_token_'"'"' ~ (array.api_token_id | string)] }}'
               params:
                 namespace: ['{{ array.namespace }}']
               static_configs:
@@ -364,7 +364,7 @@ agent:
               tls_config:
                 insecure_skip_verify: true
               authorization:
-                credentials: '{{ array.auth_token }}'
+                credentials: '{{ vars['"'"'everpure_api_token_'"'"' ~ (array.api_token_id | string)] }}'
               params:
                   namespace:
                     - '{{ array.namespace }}'

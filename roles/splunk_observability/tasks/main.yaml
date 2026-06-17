@@ -35,6 +35,14 @@
     splunk_observability.otel_collector.proxy is defined and
     splunk_observability.otel_collector.proxy.password is defined
 
+- name: Set Fact for Everpure Storage Array Password 
+  ansible.builtin.set_fact:
+    "{{ 'everpure_api_token_' ~ (item.api_token_id | string) }}": "{{ lookup('ansible.builtin.env', 'everpure_api_token_' ~ (item.api_token_id | string)) }}"
+  loop: "{{ splunk_observability.otel_collector.everpure_flash_arrays | default([]) }}"
+  when: |-
+    splunk_observability.otel_collector is defined and
+    splunk_observability.otel_collector.everpure_flash_arrays is defined
+
 - name: Create Splunk Otel Collector values.yaml from Template
   ansible.builtin.template:
     src: otel-values.yaml.j2
