@@ -4,8 +4,8 @@
     that:
       - lookup('ansible.builtin.env', 'openshift_token_id') | length > 0
       - lookup('ansible.builtin.env', 'openshift_api_url') | length > 0
-      - lookup('ansible.builtin.env', 'splunk_observability_access_token_' + splunk_observability.access_token) | length > 0
-      - lookup('ansible.builtin.env', 'splunk_platform_token_' + splunk_observability.splunk_platform.token) | length > 0
+      - lookup('ansible.builtin.env', 'splunk_observability_access_token_' + splunk_observability.access_token | string) | length > 0
+      - lookup('ansible.builtin.env', 'splunk_platform_token_' + splunk_observability.splunk_platform.token | string) | length > 0
     fail_msg: "Required environment variables not set: openshift_token_id, openshift_api_url, splunk_observability_access_token_<token_id>, splunk_platform_token_<token_id>"
 
 - name: Create Otel Operator Namespace
