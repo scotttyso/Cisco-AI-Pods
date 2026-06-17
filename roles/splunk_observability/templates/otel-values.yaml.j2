@@ -1,3 +1,6 @@
+---
+{% set _otel_collector = splunk_observability.otel_collector | default({}) %}
+{% set _syslog = (_otel_collector.syslog | default({})) %}
 distribution: openshift
 readinessProbe:
   initialDelaySeconds: 180
@@ -18,89 +21,6 @@ agent:
         verbosity: detailed
       signalfx:
         send_otlp_histograms: true
-{% set _otel_collector = splunk_observability.otel_collector | default({}) %}
-{% set _syslog = (_otel_collector.syslog | default({})) %}
-{% if _syslog.get('enabled', false) %}
-    receivers:
-      syslog:
-        tcp:
-          listen_address: "0.0.0.0:{{ _syslog.port | default(1514) }}"
-          protocol: {% if _syslog.protocol | default('TCP') == 'UDP' %}rfc3164{% else %}rfc5424{% endif %}
-          location: UTC
-          resource:
-            com.splunk.sourcetype: syslog:event
-            com.splunk.index: nexus
-            com.splunk.source: syslog
-    service:
-      pipelines:
-        logs/syslog:
-          exporters:
-            - splunk_hec/platform_logs
-          processors:
-            - batch
-            - filter/logs
-            - k8s_attributes
-            - memory_limiter
-            - resource
-            - resource/add_environment
-            - resource/logs
-            - resourcedetection
-          receivers:
-            - syslog
-{% endif %}
-  discovery:
-    enabled: true
-  enabled: true
-{% if _otel_collector.proxy is defined %}
-  extraEnvs:
-    - name: HTTP_PROXY
-{% if openshift_install.proxy.http_proxy is defined %}
-{% if _otel_collector.proxy.username is defined %}
-    value: "{{ _otel_collector.proxy.http_proxy.split(':')[0] }}://{{ _otel_collector.proxy.username }}:{{ proxy_password }}@{{ _otel_collector.proxy.http_proxy.split(':')[1] }}",
-{% else %}
-    value: "{{ _otel_collector.proxy.http_proxy }}",
-{% endif %}
-{% endif %}
-    - name: HTTPS_PROXY
-{% if _otel_collector.proxy.https_proxy is defined %}
-{% if _otel_collector.proxy.username is defined %}
-    value: "{{ _otel_collector.proxy.https_proxy.split(':')[0] }}://{{ _otel_collector.proxy.username }}:{{ proxy_password }}@{{ _otel_collector.proxy.https_proxy.split(':')[1] }}",
-{% else %}
-    value: "{{ _otel_collector.proxy.https_proxy }}",
-{% endif %}
-{% endif %}
-    - name: NO_PROXY
-      value: "{{ _otel_collector.proxy.no_proxy | join(',') }}"
-{% endif %}
-{% if (_otel_collector.metrics_collection | default({})).get('etcd_metrics', false) %}
-  extraVolumes:
-    - name: etcd-certs-signer
-      secret:
-        secretName: splunk-monitoring-etcd-metrics-signer
-    - name: etcd-certs-client
-      secret:
-        secretName: splunk-monitoring-etcd-metrics-client
-  extraVolumeMounts:
-    - name: etcd-certs-signer
-      mountPath: /etc/prometheus/secrets/etcd-metric-signer
-      readOnly: true
-    - name: etcd-certs-client
-      mountPath: /etc/prometheus/secrets/etcd-metric-client
-      readOnly: true
-{% endif %}
-{% if (_otel_collector.syslog | default({})).get('enabled', false) %}
-  ports:
-    syslog:
-      containerPort: {{ _syslog.port | default(1514) }}
-      enabled_for: [logs]
-      hostPort: {{ _syslog.port | default(1514) }}
-      protocol: {{ _syslog.protocol | default('TCP') }}
-{% endif %}
-  resources:
-    limits:
-      cpu: 200m
-      # This value is being used as a source for default memory_limiter processor configurations
-      memory: 2000Mi
 {% raw %}
     processors:
       filter/health:
@@ -328,6 +248,7 @@ agent:
               static_configs:
                 - targets:
                     - {% raw %}'${K8S_NODE_NAME}:9979'{% endraw %}
+
               tls_config:
                 insecure_skip_verify: true
                 ca_file: /etc/prometheus/secrets/etcd-metric-signer/tls.crt
@@ -335,41 +256,41 @@ agent:
                 key_file: /etc/prometheus/secrets/etcd-metric-client/tls.key
 {% endif %}
 {% if _otel_collector.everpure_flash_arrays is defined and _otel_collector.everpure_flash_arrays | length > 0 %}
-{% for array in _otel_collector.everpure_flash_arrays %}
       prometheus/pure:
         config:
           scrape_configs:
-            - job_name: 'pure_flash_arrays'
+{% for array in _otel_collector.everpure_flash_arrays %}
+            - job_name: 'purefa_array_{{ array.endpoint.split('.')[0] }}'
               metrics_path: '/metrics/array'
               scrape_interval: 60s
-              scrape_timeout:  60s
+              scrape_timeout: 60s
               scheme: 'https'
               tls_config:
                 insecure_skip_verify: true
               authorization:
-                credentials: '{{ vars['"'"'everpure_api_token_'"'"' ~ (array.api_token_id | string)] }}'
+                credentials: '{{ hostvars[inventory_hostname]['everpure_api_token_' ~ (array.api_token_id | string)] }}'
               params:
                 namespace: ['{{ array.namespace }}']
               static_configs:
-                - targets: 
+                - targets:
                     - {{ array.endpoint }}
                   labels:
                     instance: {{ array.endpoint.split('.')[0] }}
                     env: 'production'
-            - job_name: 'pure_flash_volumes'
+            - job_name: 'purefa_volumes_{{ array.endpoint.split('.')[0] }}'
               metrics_path: '/metrics/volumes'
               scrape_interval: 60s
-              scrape_timeout:  60s
+              scrape_timeout: 60s
               scheme: 'https'
               tls_config:
                 insecure_skip_verify: true
               authorization:
-                credentials: '{{ vars['"'"'everpure_api_token_'"'"' ~ (array.api_token_id | string)] }}'
+                credentials: '{{ hostvars[inventory_hostname]['everpure_api_token_' ~ (array.api_token_id | string)] }}'
               params:
                   namespace:
                     - '{{ array.namespace }}'
               static_configs:
-                - targets: 
+                - targets:
                     - {{ array.endpoint }}
                   labels:
                     instance: {{ array.endpoint.split('.')[0] }}
@@ -505,9 +426,37 @@ agent:
                       - targets:
                           - '`endpoint`:8080'
             rule: type == "pod" && annotations["opendatahub.io/kserve-runtime"] == "vllm"
+{% endraw %}
+{% endif %}
+{% if _syslog.get('enabled', false) %}
+      syslog:
+        tcp:
+          listen_address: "0.0.0.0:{{ _syslog.port | default(1514) }}"
+          protocol: {% if _syslog.protocol | default('TCP') == 'UDP' %}"rfc3164"{% else %}"rfc5424"{% endif %}
+
+          location: UTC
+          resource:
+            com.splunk.sourcetype: syslog:event
+            com.splunk.index: nexus
+            com.splunk.source: syslog
+{% endif %}
     service:
       pipelines:
-{% endraw %}
+{% if _syslog.get('enabled', false) %}
+        logs/syslog:
+          exporters:
+            - splunk_hec/platform_logs
+          processors:
+            - batch
+            - filter/logs
+            - k8s_attributes
+            - memory_limiter
+            - resource
+            - resource/add_environment
+            - resource/logs
+            - resourcedetection
+          receivers:
+            - syslog
 {% endif %}
 {% if (_otel_collector.metrics_collection | default({})).get('nvidia_gpu_metrics', false) %}
         metrics/nvidia-metrics:
@@ -561,8 +510,9 @@ agent:
         #   # - filter/metrics_to_be_included
         #   receivers:
         #   - prometheus/kube-state-metrics
-          
-        metrics/purefa_array_dcmaistpur001:
+{% if _otel_collector.everpure_flash_arrays is defined and _otel_collector.everpure_flash_arrays | length > 0 %}
+{% for array in _otel_collector.everpure_flash_arrays %} 
+        metrics/{{ array.endpoint.split('.')[0] }}:
           exporters:
           - signalfx
           processors:
@@ -575,43 +525,86 @@ agent:
         traces:
           processors:
           - memory_limiter
-          - k8sattributes
+          - k8s_attributes
           - batch
           - resourcedetection
           - resource
           - resource/add_environment
           - filter/health
+{% endfor %}
+{% endif %}
+  discovery:
+    enabled: true
+  enabled: true
+{% if _otel_collector.proxy is defined %}
+  extraEnvs:
+{% if _otel_collector.proxy.http_proxy is defined %}
+    - name: HTTP_PROXY
+{% if _otel_collector.proxy.username is defined %}
+      value: "{{ _otel_collector.proxy.http_proxy.split(':')[0] }}://{{ _otel_collector.proxy.username }}:{{ proxy_password }}@{{ _otel_collector.proxy.http_proxy.split(':')[1] }}"
+{% else %}
+      value: "{{ _otel_collector.proxy.http_proxy }}"
+{% endif %}
+{% endif %}
+{% if _otel_collector.proxy.https_proxy is defined %}
+    - name: HTTPS_PROXY
+{% if _otel_collector.proxy.username is defined %}
+      value: "{{ _otel_collector.proxy.https_proxy.split(':')[0] }}://{{ _otel_collector.proxy.username }}:{{ proxy_password }}@{{ _otel_collector.proxy.https_proxy.split(':')[1] }}"
+{% else %}
+      value: "{{ _otel_collector.proxy.https_proxy }}"
+{% endif %}
+{% endif %}
+    - name: NO_PROXY
+      value: "{{ _otel_collector.proxy.no_proxy | join(',') }}"
+{% endif %}
+{% if (_otel_collector.metrics_collection | default({})).get('etcd_metrics', false) %}
+  extraVolumes:
+    - name: etcd-certs-signer
+      secret:
+        secretName: splunk-monitoring-etcd-metrics-signer
+    - name: etcd-certs-client
+      secret:
+        secretName: splunk-monitoring-etcd-metrics-client
+  extraVolumeMounts:
+    - name: etcd-certs-signer
+      mountPath: /etc/prometheus/secrets/etcd-metric-signer
+      readOnly: true
+    - name: etcd-certs-client
+      mountPath: /etc/prometheus/secrets/etcd-metric-client
+      readOnly: true
+{% endif %}
+{% if (_otel_collector.syslog | default({})).get('enabled', false) %}
+  ports:
+    syslog:
+      containerPort: {{ _syslog.port | default(1514) }}
+      enabled_for: [logs]
+      hostPort: {{ _syslog.port | default(1514) }}
+      protocol: {{ _syslog.protocol | default('TCP') }}
+{% endif %}
+  resources:
+    limits:
+      cpu: 200m
+      # This value is being used as a source for default memory_limiter processor configurations
+      memory: 2000Mi
 clusterReceiver:
 {% if _otel_collector.proxy is defined %}
   extraEnvs:
+{% if _otel_collector.proxy.http_proxy is defined %}
     - name: HTTP_PROXY
-      value: "{{ splunk_observability.otel_collector.proxy.http_proxy }}"
-    - name: HTTPS_PROXY
-      value: "{{ splunk_observability.otel_collector.proxy.https_proxy }}"
-    - name: NO_PROXY
-      value: "{{ splunk_observability.otel_collector.proxy.no_proxy | join(',') }}"
+{% if _otel_collector.proxy.username is defined %}
+      value: "{{ _otel_collector.proxy.http_proxy.split(':')[0] }}://{{ _otel_collector.proxy.username }}:{{ proxy_password }}@{{ _otel_collector.proxy.http_proxy.split(':')[1] }}"
+{% else %}
+      value: "{{ _otel_collector.proxy.http_proxy }}"
 {% endif %}
-  # resources:
-  #   limits:
-  #     cpu: 200m
-  #     # This value is being used as a source for default memory_limiter processor configurations
-  #     memory: 1000Mi
-  # config:
-  #   exporters:
-  #     debug:
-  #       verbosity: detailed
-  #     signalfx:
-  #       send_otlp_histograms: true
-  #   service:
-  #     pipelines:
-  #       # metrics/pure_flash_arrays:
-  #       metrics:
-  #         exporters:
-  #           - signalfx
-  #         processors:
-  #           - memory_limiter
-  #           - batch
-  #           - resourcedetection
-  #           - resource
-  #         receivers:
-  #           - prometheus/pure
+{% endif %}
+{% if _otel_collector.proxy.https_proxy is defined %}
+    - name: HTTPS_PROXY
+{% if _otel_collector.proxy.username is defined %}
+      value: "{{ _otel_collector.proxy.https_proxy.split(':')[0] }}://{{ _otel_collector.proxy.username }}:{{ proxy_password }}@{{ _otel_collector.proxy.https_proxy.split(':')[1] }}"
+{% else %}
+      value: "{{ _otel_collector.proxy.https_proxy }}"
+{% endif %}
+{% endif %}
+    - name: NO_PROXY
+      value: "{{ _otel_collector.proxy.no_proxy | join(',') }}"
+{% endif %}

@@ -35,7 +35,7 @@
     splunk_observability.otel_collector.proxy is defined and
     splunk_observability.otel_collector.proxy.password is defined
 
-- name: Set Fact for Everpure Storage Array Password 
+- name: Set Fact for Everpure Storage Array Password
   ansible.builtin.set_fact:
     "{{ 'everpure_api_token_' ~ (item.api_token_id | string) }}": "{{ lookup('ansible.builtin.env', 'everpure_api_token_' ~ (item.api_token_id | string)) }}"
   loop: "{{ splunk_observability.otel_collector.everpure_flash_arrays | default([]) }}"
@@ -52,27 +52,27 @@
 - name: Deploy Splunk Otel Collector Chart
   kubernetes.core.helm:
     chart_ref: splunk-otel-collector-chart/splunk-otel-collector
-    name: splunk-otel-collector
+    name: ucs-otel-collector
     release_namespace: otel
     state: present
-    validate_certs: "{{ validate_certificates | default(false) }}"
     disable_hook: true
     force: true
-    replace: true
-    update_repo_cache: true
-    wait: true
     release_values:
       clusterName: "{{ splunk_observability.openshift_cluster.cluster_name }}"
       environment: "{{ splunk_observability.openshift_cluster.environment }}"
       splunkObservability:
-        accessToken: "{{ lookup('ansible.builtin.env', 'splunk_observability_access_token_' + splunk_observability.access_token) }}"
+        accessToken: "{{ lookup('ansible.builtin.env', 'splunk_observability_access_token_' ~ (splunk_observability.access_token | string)) }}"
         realm: "{{ splunk_observability.splunk_realm | default('us0') }}"
       splunkPlatform:
         endpoint: "{{ splunk_observability.splunk_platform.endpoint | default('https://customer.splunkcloud.com') }}/services/collector/event"
         index: "{{ splunk_observability.splunk_platform.index | default('my-index') }}"
-        token: "{{ lookup('ansible.builtin.env', 'splunk_platform_token_' + splunk_observability.splunk_platform.token) }}"
+        token: "{{ lookup('ansible.builtin.env', 'splunk_platform_token_' ~ (splunk_observability.splunk_platform.token | string)) }}"
+    replace: true
+    update_repo_cache: true
+    validate_certs: "{{ validate_certificates | default(false) }}"
     values_files:
       - "{{ role_path }}/values.yaml"
+    wait: true
 
 - name: Delete Generated Files / Directories
   ansible.builtin.file:
