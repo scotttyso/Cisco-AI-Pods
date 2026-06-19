@@ -4553,7 +4553,7 @@
                     "uniqueItems": true
                 },
                 "ipmi_over_lan": {
-                    "description": "Defines the protocols for interfacing with a service processor that is embedded in a server platform. The Intelligent Platform Management Interface (IPMI) enables an operating system to obtain information about the system health and control system hardware and directs the Cisco IMC to perform the required actions. You can create an IPMI Over LAN policy to manage the IPMI messages through Cisco Intersight. You can assign these user roles to an IPMI user per session:\n  * `admin` \u2014 IPMI users can perform all available actions. If you select this option, IPMI users with the `Administrator` user role can create admin, user, and read-only sessions on this server.\n  * `read-only` \u2014 Can view information but cannot make any changes. IPMI users with the `Administrator`, `Operator`, or `User` user roles can only create read-only IPMI sessions, regardless of their other IPMI privileges.\n  * `user` \u2014 IPMI users can perform some functions but cannot perform administrative tasks. If you select this option, IPMI users with the `Administrator` or `Operator` user role can create user and read-only sessions on this server.\n\nRequired Attributes:\n  * `name`\n\nOptional Attributes:\n  * `description`\n  * `enabled`\n  * `encryption_key`\n  * `privilege`\n  * `tags`",
+                    "description": "Defines the protocols for interfacing with a service processor that is embedded in a server platform. The Intelligent Platform Management Interface (IPMI) enables an operating system to obtain information about the system health and control system hardware and directs the Cisco IMC to perform the required actions. You can create an IPMI Over LAN policy to manage the IPMI messages through Cisco Intersight. You can assign these user roles to an IPMI user per session:\n  * `admin` \u2014 IPMI users can perform all available actions. If you select this option, IPMI users with the `Administrator` user role can create admin, user, and read-only sessions on this server.\n  * `read-only` \u2014 Can view information but cannot make any changes. IPMI users with the `Administrator`, `Operator`, or `User` user roles can only create read-only IPMI sessions, regardless of their other IPMI privileges.\n  * `user` \u2014 IPMI users can perform some functions but cannot perform administrative tasks. If you select this option, IPMI users with the `Administrator` or `Operator` user role can create user and read-only sessions on this server.\n\nRequired Attributes:\n  * `name`\n  * `privilege`\n\nOptional Attributes:\n  * `description`\n  * `enabled`\n  * `encryption_key`\n  * `tags`",
                     "intersight_uri": "ipmioverlan/Policies",
                     "items": {
                         "$ref": "#/definitions/intersight.policies.ipmi_over_lan"
@@ -16796,6 +16796,14 @@
                 },
                 {
                     "description": "Definition of the list of properties defined in 'access.Policy', excluding properties defined in parent classes.",
+                    "dependentRequired": {
+                        "inband_ip_pool": [
+                            "inband_vlan_id"
+                        ],
+                        "inband_vlan_id": [
+                            "inband_ip_pool"
+                        ]
+                    },
                     "properties": {
                         "inband_ip_pool": {
                             "default": "inband",
@@ -22693,6 +22701,7 @@
                                 }
                             },
                             "required": [
+                                "device_model",
                                 "names",
                                 "target_platform"
                             ]
@@ -22776,6 +22785,7 @@
                                 }
                             },
                             "required": [
+                                "device_model",
                                 "names",
                                 "target_platform"
                             ]
@@ -36750,7 +36760,7 @@
                         },
                         "servers": {
                             "additionalProperties": false,
-                            "description": "This array provides the individual host configurations.\n\nRequired fields are:\n  * `cimc`\n  * `interfaces`\n  * `hostname`\n  * `role`",
+                            "description": "This object provides the individual host configuration.\n\nRequired fields are:\n  * `hostname`\n  * `interfaces`\n  * `role`\n\nOne of the following is also required:\n  * `redfish`\n  * `fabric_interconnect`\n\nOptional fields are:\n  * `rendezvous`",
                             "items": {
                                 "$ref": "#/definitions/openshift.install.bare_metal.servers"
                             },
@@ -36822,7 +36832,7 @@
         },
         "openshift.install.bare_metal.servers": {
             "additionalProperties": false,
-            "description": "This object provides the individual host configuration.\n\nRequired fields are:\n  * `hostname`\n  * `interfaces`\n  * `role`\n\nOne of the following is also required:\n  * `redfish`\n  * `fabric_interconnect`",
+            "description": "This object provides the individual host configuration.\n\nRequired fields are:\n  * `hostname`\n  * `interfaces`\n  * `role`\n\nOne of the following is also required:\n  * `redfish`\n  * `fabric_interconnect`\n\nOptional fields are:\n  * `rendezvous`",
             "oneOf": [
                 {
                     "required": [
