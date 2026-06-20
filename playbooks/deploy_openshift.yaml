@@ -6,6 +6,7 @@
   gather_facts: false
 
   vars:
+    ansible_python_interpreter: "{{ (lookup('ansible.builtin.env', 'VIRTUAL_ENV') + '/bin/python3') if lookup('ansible.builtin.env', 'VIRTUAL_ENV') else 'python3' }}"
     host_vars_dir: "{{ host_vars_dir | default(playbook_dir ~ '/../host_vars') }}"
 
   pre_tasks:
