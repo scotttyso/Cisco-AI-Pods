@@ -1,6 +1,7 @@
 ---
 {% set _otel_collector = splunk_observability.otel_collector | default({}) %}
 {% set _syslog = (_otel_collector.syslog | default({})) %}
+{% set _etcd_metrics_enabled = splunk_observability_etcd_metrics_enabled | default((_otel_collector.metrics_collection | default({})).get('etcd_metrics', false)) %}
 distribution: openshift
 readinessProbe:
   initialDelaySeconds: 180
@@ -33,6 +34,19 @@ agent:
                 IsMatch(name, ".*/v1/health/ready.*")
               )
 {% endraw %}
+{% if _syslog.get('enabled', false) %}
+      resource/syslog:
+        attributes:
+          - action: upsert
+            key: com.splunk.index
+            value: "{{ _syslog.index | default(splunk_observability.splunk_platform.index | default('my-index')) }}"
+          - action: upsert
+            key: com.splunk.source
+            value: "{{ _syslog.source | default('syslog') }}"
+          - action: upsert
+            key: com.splunk.sourcetype
+            value: "{{ _syslog.sourcetype | default('syslog:event') }}"
+{% endif %}
       filter/metrics_to_be_included:
         metrics:
           # Include only metrics used in charts and detectors
@@ -106,7 +120,7 @@ agent:
               - DCGM_FI_PROF_PIPE_TENSOR_ACTIVE
 {% endif %}
               - e2e_request_latency_seconds
-{% if (_otel_collector.metrics_collection | default({})).get('etcd_metrics', false) %}
+{% if _etcd_metrics_enabled %}
               - etcd_network_peer_round_trip_time_seconds
               - etcd_disk_wal_write_duration_seconds
               - etcd_disk_backend_commit_duration_seconds
@@ -237,7 +251,7 @@ agent:
     receivers:
       kubeletstats:
         insecure_skip_verify: true
-{% if (_otel_collector.metrics_collection | default({})).get('etcd_metrics', false) %}
+{% if _etcd_metrics_enabled %}
       prometheus/etcd:
         config:
           scrape_configs:
@@ -245,10 +259,23 @@ agent:
               scheme: https
               metrics_path: "/metrics"
               scrape_interval: 10s
-              static_configs:
-                - targets:
-                    - {% raw %}'${K8S_NODE_NAME}:9979'{% endraw %}
+              kubernetes_sd_configs:
+                - role: node
+              relabel_configs:
+                - source_labels:
+                    - __meta_kubernetes_node_name
+                  regex: {% raw %}'${K8S_NODE_NAME}'{% endraw %}
 
+                  action: keep
+                - source_labels:
+                    - __meta_kubernetes_node_label_node_role_kubernetes_io_control_plane
+                    - __meta_kubernetes_node_label_node_role_kubernetes_io_master
+                  regex: '(.+;.*|.*;.+)'
+                  action: keep
+                - source_labels:
+                    - __meta_kubernetes_node_name
+                  target_label: __address__
+                  replacement: '$1:9979'
               tls_config:
                 insecure_skip_verify: true
                 ca_file: /etc/prometheus/secrets/etcd-metric-signer/tls.crt
@@ -430,15 +457,15 @@ agent:
 {% endif %}
 {% if _syslog.get('enabled', false) %}
       syslog:
+{% if _syslog.protocol | default('TCP') == 'UDP' %}
+        udp:
+          listen_address: "0.0.0.0:{{ _syslog.port | default(1514) }}"
+{% else %}
         tcp:
           listen_address: "0.0.0.0:{{ _syslog.port | default(1514) }}"
-          protocol: {% if _syslog.protocol | default('TCP') == 'UDP' %}"rfc3164"{% else %}"rfc5424"{% endif %}
-
-          location: UTC
-          resource:
-            com.splunk.sourcetype: syslog:event
-            com.splunk.index: nexus
-            com.splunk.source: syslog
+{% endif %}
+        protocol: "{{ 'rfc3164' if _syslog.protocol | default('TCP') == 'UDP' else 'rfc5424' }}"
+        location: UTC
 {% endif %}
     service:
       pipelines:
@@ -447,6 +474,7 @@ agent:
           exporters:
             - splunk_hec/platform_logs
           processors:
+            - resource/syslog
             - batch
             - filter/logs
             - k8s_attributes
@@ -486,7 +514,7 @@ agent:
           - receiver_creator/nexus
           - otlp
 {% endif %}
-{% if (_otel_collector.metrics_collection | default({})).get('etcd_metrics', false) %}
+{% if _etcd_metrics_enabled %}
         metrics/etcd:
           exporters:
           - signalfx
@@ -512,7 +540,7 @@ agent:
         #   - prometheus/kube-state-metrics
 {% if _otel_collector.everpure_flash_arrays is defined and _otel_collector.everpure_flash_arrays | length > 0 %}
 {% for array in _otel_collector.everpure_flash_arrays %} 
-        metrics/{{ array.endpoint.split('.')[0] }}:
+        metrics/purefa_array_{{ array.endpoint.split('.')[0] }}:
           exporters:
           - signalfx
           processors:
@@ -557,7 +585,7 @@ agent:
     - name: NO_PROXY
       value: "{{ _otel_collector.proxy.no_proxy | join(',') }}"
 {% endif %}
-{% if (_otel_collector.metrics_collection | default({})).get('etcd_metrics', false) %}
+{% if _etcd_metrics_enabled %}
   extraVolumes:
     - name: etcd-certs-signer
       secret:

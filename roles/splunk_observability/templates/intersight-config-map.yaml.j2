@@ -3,6 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: intersight-otel-config
+  namespace: intersight-otel
 data:
   intersight-otel.toml: |
     otel_collector_endpoint = "http://ucs-otel-collector-splunk-otel-collector-agent.otel.svc.cluster.local:4317"

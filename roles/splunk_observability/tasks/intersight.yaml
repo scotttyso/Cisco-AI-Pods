@@ -1,4 +1,27 @@
 ---
+- name: Resolve Intersight Secret Key Path
+  ansible.builtin.set_fact:
+    intersight_secret_key_path: "{{ lookup('ansible.builtin.env', 'intersight_secret_key', default='') }}"
+
+- name: Verify Required Intersight Environment Variables Are Set
+  ansible.builtin.assert:
+    that:
+      - lookup('ansible.builtin.env', 'intersight_api_key_id', default='') | length > 0
+      - intersight_secret_key_path | length > 0
+    fail_msg: "Required environment variables not set for Intersight integration: intersight_api_key_id, intersight_secret_key"
+
+- name: Check Intersight Secret Key File Exists
+  ansible.builtin.stat:
+    path: "{{ intersight_secret_key_path }}"
+  register: intersight_secret_key_file
+
+- name: Verify Intersight Secret Key File Is Valid
+  ansible.builtin.assert:
+    that:
+      - intersight_secret_key_file.stat.exists
+      - intersight_secret_key_file.stat.isreg
+    fail_msg: "The intersight_secret_key value must point to an existing private key file. Current value: {{ intersight_secret_key_path }}"
+
 - name: Create Intersight Otel Operator Namespace
   kubernetes.core.k8s:
     api_version: v1
@@ -18,8 +41,9 @@
         namespace: intersight-otel
       data:
         intersight-key-id: "{{ lookup('ansible.builtin.env', 'intersight_api_key_id') | b64encode }}"
-        intersight-key: "{{ lookup('file', lookup('ansible.builtin.env', 'intersight_secret_key')) | b64encode }}"
+        intersight-key: "{{ lookup('file', intersight_secret_key_path) | b64encode }}"
     validate_certs: "{{ validate_certificates | default(false) }}"
+  no_log: true
 
 - name: Configure Intersight Otel
   kubernetes.core.k8s:

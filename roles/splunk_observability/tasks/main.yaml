@@ -1,12 +1,29 @@
 ---
+- name: Resolve Splunk Observability Access Token
+  ansible.builtin.set_fact:
+    splunk_observability_access_token_value: "{{ lookup('ansible.builtin.env', 'splunk_observability_access_token_' ~ (splunk_observability.access_token | string), default=lookup('ansible.builtin.env', 'splunk_observability_token', default='')) | trim }}"
+
+- name: Resolve Splunk Platform HEC Token
+  ansible.builtin.set_fact:
+    splunk_platform_token_value: "{{ lookup('ansible.builtin.env', 'splunk_platform_token_' ~ (splunk_observability.splunk_platform.token | string), default=lookup('ansible.builtin.env', 'splunk_platform_token', default='')) | trim }}"
+
+- name: Resolve Splunk Observability Realm
+  ansible.builtin.set_fact:
+    splunk_observability_realm_value: "{{ lookup('ansible.builtin.env', 'splunk_observability_realm', default=(splunk_observability.realm | default(splunk_observability.splunk_realm | default('us0')))) | trim }}"
+
 - name: Verify Required Environment Variables Are Set
   ansible.builtin.assert:
     that:
       - lookup('ansible.builtin.env', 'openshift_token_id') | length > 0
       - lookup('ansible.builtin.env', 'openshift_api_url') | length > 0
-      - lookup('ansible.builtin.env', 'splunk_observability_access_token_' + splunk_observability.access_token | string) | length > 0
-      - lookup('ansible.builtin.env', 'splunk_platform_token_' + splunk_observability.splunk_platform.token | string) | length > 0
-    fail_msg: "Required environment variables not set: openshift_token_id, openshift_api_url, splunk_observability_access_token_<token_id>, splunk_platform_token_<token_id>"
+      - splunk_observability_access_token_value | length > 0
+      - splunk_platform_token_value | length > 0
+      - splunk_observability_realm_value | length > 0
+    fail_msg: "Required environment variables not set: openshift_token_id, openshift_api_url, and either token-id vars (splunk_observability_access_token_<token_id>, splunk_platform_token_<token_id>) or fallback vars (splunk_observability_token, splunk_platform_token)."
+
+- name: Show Effective Splunk Observability Realm
+  ansible.builtin.debug:
+    msg: "Using Splunk Observability realm '{{ splunk_observability_realm_value }}' for signalfx ingestion."
 
 - name: Create Otel Operator Namespace
   kubernetes.core.k8s:
@@ -16,9 +33,55 @@
     state: present
     validate_certs: "{{ validate_certificates | default(false) }}"
 
+- name: Determine if ETCD Metrics Collection is Requested
+  ansible.builtin.set_fact:
+    splunk_observability_etcd_metrics_requested: "{{ (splunk_observability.otel_collector.metrics_collection | default({})).get('etcd_metrics', false) | bool }}"
+
+- name: Check for ETCD Metrics Client Secret
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Secret
+    name: etcd-metric-client
+    namespace: openshift-etcd
+    validate_certs: "{{ validate_certificates | default(false) }}"
+  register: splunk_etcd_metric_client_secret
+  changed_when: false
+  failed_when: false
+  when: splunk_observability_etcd_metrics_requested
+
+- name: Check for ETCD Metrics Signer Secret
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Secret
+    name: etcd-metric-signer
+    namespace: openshift-etcd
+    validate_certs: "{{ validate_certificates | default(false) }}"
+  register: splunk_etcd_metric_signer_secret
+  changed_when: false
+  failed_when: false
+  when: splunk_observability_etcd_metrics_requested
+
+- name: Determine if ETCD Metrics Collection Can Be Enabled
+  ansible.builtin.set_fact:
+    splunk_observability_etcd_metrics_enabled: >-
+      {{
+        splunk_observability_etcd_metrics_requested | bool and
+        (splunk_etcd_metric_client_secret.resources | default([]) | length > 0) and
+        (splunk_etcd_metric_signer_secret.resources | default([]) | length > 0)
+      }}
+
+- name: Warn When ETCD Metrics Requested But Required Secrets Are Missing
+  ansible.builtin.debug:
+    msg: >-
+      ETCD metrics were requested but required secrets were not found in openshift-etcd namespace
+      (expected: etcd-metric-client and etcd-metric-signer). Continuing without ETCD metrics.
+  when:
+    - splunk_observability_etcd_metrics_requested | bool
+    - not splunk_observability_etcd_metrics_enabled | bool
+
 - name: Run ETCD Tasks if ETCD Metrics Collection is Enabled
   ansible.builtin.include_tasks: etcd.yaml
-  when: splunk_observability.otel_collector.metrics_collection.etcd_metrics | default(false) | bool
+  when: splunk_observability_etcd_metrics_enabled | bool
 
 - name: Add Splunk Otel Collector Chart Repository
   kubernetes.core.helm_repository:
@@ -49,25 +112,32 @@
     dest: "{{ role_path }}/values.yaml"
     mode: '0644'
 
-- name: Deploy Splunk Otel Collector Chart
+- name: Check Existing Splunk Otel Collector Release
+  kubernetes.core.helm_info:
+    name: splunk-otel-collector
+    release_namespace: otel
+    validate_certs: "{{ validate_certificates | default(false) }}"
+  register: splunk_otel_collector_release
+  changed_when: false
+  failed_when: false
+
+- name: Install or Upgrade Splunk Otel Collector Chart
   kubernetes.core.helm:
     chart_ref: splunk-otel-collector-chart/splunk-otel-collector
-    name: ucs-otel-collector
+    name: splunk-otel-collector
     release_namespace: otel
     state: present
     disable_hook: true
-    force: true
     release_values:
       clusterName: "{{ splunk_observability.openshift_cluster.cluster_name }}"
       environment: "{{ splunk_observability.openshift_cluster.environment }}"
       splunkObservability:
-        accessToken: "{{ lookup('ansible.builtin.env', 'splunk_observability_access_token_' ~ (splunk_observability.access_token | string)) }}"
-        realm: "{{ splunk_observability.splunk_realm | default('us0') }}"
+        accessToken: "{{ splunk_observability_access_token_value }}"
+        realm: "{{ splunk_observability_realm_value }}"
       splunkPlatform:
         endpoint: "{{ splunk_observability.splunk_platform.endpoint | default('https://customer.splunkcloud.com') }}/services/collector/event"
         index: "{{ splunk_observability.splunk_platform.index | default('my-index') }}"
-        token: "{{ lookup('ansible.builtin.env', 'splunk_platform_token_' ~ (splunk_observability.splunk_platform.token | string)) }}"
-    replace: true
+        token: "{{ splunk_platform_token_value }}"
     update_repo_cache: true
     validate_certs: "{{ validate_certificates | default(false) }}"
     values_files:
