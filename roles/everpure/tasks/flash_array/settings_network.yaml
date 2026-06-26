@@ -45,4 +45,5 @@
     fa_url: "{{ array_url }}"
     domain: "{{ network.dns.dns_configurations[0].domain }}"
     nameservers: "{{ network.dns.dns_configurations[0].name_servers }}"
+    state: present
   when: network.dns is defined and network.dns.dns_configurations is defined

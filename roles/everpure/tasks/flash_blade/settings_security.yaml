@@ -7,11 +7,13 @@
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
-    certificate: "{{ lookup('file', lookup('ansible.builtin.env', 'cert_mgmt_certificate_{{ element.certificate }}')) }}"
-    intermediate_cert: |
-      {{ lookup('file', lookup('ansible.builtin.env', 'cert_mgmt_intermediate_certificate_{{ element.intermediate_certificate }}')) | default('') }}
-    key: "{{ lookup('file', lookup('ansible.builtin.env', 'cert_mgmt_private_key_{{ element.private_key }}')) }}"
-    passphrase: "{{ lookup('ansible.builtin.env', 'cert_mgmt_passphrase_{{ element.passphrase }}') | default('') }}"
+    certificate: "{{ lookup('file', lookup('ansible.builtin.env', 'cert_mgmt_certificate_{{ element.certificate_file }}')) }}"
+    certificate_type: "{{ 'array' if element.private_key_file is defined else 'external' }}"
+    intermediate_cert: >-
+      {{ lookup('file', lookup('ansible.builtin.env', 'cert_mgmt_intermediate_certificate_{{ element.intermediate_certificate_file }}')) if element.intermediate_certificate_file is defined else omit }}
+    key: "{{ lookup('file', lookup('ansible.builtin.env', 'cert_mgmt_private_key_{{ element.private_key_file }}')) if element.private_key_file is defined else omit }}"
+    passphrase: "{{ lookup('ansible.builtin.env', 'cert_mgmt_passphrase_{{ element.private_key_passphrase }}') | default(omit) }}"
+    state: "{{ element.state | default('present') }}"
   loop_control:
     loop_var: element
   loop: "{{ security.certificates.array_certificates }}"
@@ -35,20 +37,25 @@
 ############################
 # Directory Service
 ############################
+- name: Set Directory Service Fact
+  set_fact:
+    _ds: "{{ security.directory_service | default({}) }}"
+
 - name: Settings > Security > Directory Service > Role Mappings | for {{ array_fqdn }}
   purestorage.flashblade.purefb_dsrole:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
-    group: "{{ element.group | default(null) }}"
-    group_base: "{{ element.group_base | default(null) }}"
-    role: "{{ element.role }}"
+    group: "{{ element.group | ansible.builtin.regex_replace('^[cC][nN]=', '') if element.group is defined else omit }}"
+    group_base: >-
+      {{ element.group_base | ansible.builtin.regex_replace((_ds.configuration.base_dn | regex_escape) + '$', '') if element.group_base is defined else omit }}
+    role: "{{ element.role | default('readonly') }}"
     state: "{{ element.state | default('present') }}"
   loop_control:
     loop_var: element
-  loop: "{{ security.directory_service.role_mappings }}"
+  loop: "{{ _ds.role_mappings }}"
   register: directory_service_role_mappings_change
-  when: security.directory_service is defined and security.directory_service.role_mappings is defined
+  when: _ds.configuration is defined and _ds.role_mappings is defined
 
 - name: Settings > Security > Directory Service > Configuration | for {{ array_fqdn }}
   purestorage.flashblade.purefb_ds:
@@ -59,10 +66,10 @@
     bind_password: "{{ lookup('ansible.builtin.env', 'binding_parameters_password_{{ element.bind_password }}') }}"
     bind_user: "{{ element.bind_user }}"
     dstype: "{{ element.type | default('management') }}"
-    enable: "{{ element.enable | default(true) }}"
+    enable: "{{ element.enabled | default(true) }}"
     uri: "{{ element.uri_list }}"
   loop_control:
     loop_var: element
-  loop: "{{ security.directory_service.configuration }}"
+  loop: "{{ _ds.configuration }}"
   register: directory_service_change
-  when: security.directory_service is defined and security.directory_service.configuration is defined
+  when: _ds.configuration is defined

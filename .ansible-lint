@@ -24,6 +24,7 @@ mock_modules:
   - kubernetes.core.k8s
   - kubernetes.core.k8s_info
   - kubernetes.core.helm
+  - kubernetes.core.helm_info
   - kubernetes.core.helm_repository
 
 # Warn don't error for known issues

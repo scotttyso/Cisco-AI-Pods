@@ -1,4 +1,5 @@
 ---
+# yaml-language-server: $schema=/home/tyscott/scotttyso/Cisco-AI-Pods/schema/cisco-ai-pods.json
 everpure:
   flash_arrays:
     - api_token_id: 1
@@ -116,7 +117,7 @@ everpure:
       directory_service:
         configuration:
           - base_dn: DC=example,DC=com
-            bind_user: CN=nam,DC=example,DC=com
+            bind_user: CN=Service Account,OU=Service Accounts,DC=example,DC=com
             bind_password: 1
             enabled: true
             uri_list:
@@ -124,17 +125,17 @@ everpure:
             user_login_attribute: sAMAccountName
             user_object_class: User
         role_mappings:
-          - group: Storage Admins,OU=Everpure
-            group_base: DC=example,DC=com
+          - group: Storage Admins
+            group_base: OU=Everpure # This is combined to complete the Group DN (Group + Group Base + Base DN). i.e. CN=Storage Admins,OU=Everpure,DC=example,DC=com
             role: storage_admin
-          - group: Operation Administrators,OU=Everpure
-            group_base: DC=example,DC=com
+          - group: Operation Administrators
+            group_base: OU=Everpure
             role: ops_admin
-          - group: Array Administrators,OU=Everpure
-            group_base: DC=example,DC=com
+          - group: Array Administrators
+            group_base: OU=Everpure
             role: array_admin
-          - group: Ready Only,OU=Everpure
-            group_base: DC=example,DC=com
+          - group: Ready Only
+            group_base: OU=Everpure
             role: readonly
     system:
       alerts_and_notifications:

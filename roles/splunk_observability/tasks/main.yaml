@@ -121,7 +121,15 @@
   changed_when: false
   failed_when: false
 
-- name: Install or Upgrade Splunk Otel Collector Chart
+- name: Delete Existing Splunk Otel Collector Release
+  kubernetes.core.helm:
+    name: splunk-otel-collector
+    release_namespace: otel
+    state: absent
+    validate_certs: "{{ validate_certificates | default(false) }}"
+  when: splunk_otel_collector_release.releases is defined and splunk_otel_collector_release.releases | length > 0
+
+- name: Install Splunk Otel Collector Chart
   kubernetes.core.helm:
     chart_ref: splunk-otel-collector-chart/splunk-otel-collector
     name: splunk-otel-collector

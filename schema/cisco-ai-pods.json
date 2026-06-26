@@ -77,6 +77,15 @@
             "title": "Domain Name",
             "type": "string"
         },
+        "abstract.cert_file_path": {
+            "examples": [
+                "/home/blah/downloads/certificate.pem"
+            ],
+            "maxLength": 4096,
+            "minLength": 1,
+            "pattern": "^(?:(?:/(?:[^\\0/]+/)*[^\\0/]+)|(?:[A-Za-z]:[\\\\/](?:[^<>:\"|?*\\r\\n]+[\\\\/])*[^<>:\"|?*\\r\\n]+)|(?:\\.{1,2}[\\\\/])?(?:[^<>:\"|?*\\r\\n\\\\/]+[\\\\/])*[^<>:\"|?*\\r\\n\\\\/]+)$",
+            "type": "string"
+        },
         "abstract.hostname": {
             "examples": [
                 "server.example.com"
@@ -2059,13 +2068,13 @@
             "description": "Imported Array Certificates.\n\nRequired fields are:\n  * `array_fqdns`\n  * `certificate`\n  * `name`\n  * `private_key`\n\nOptional fields are:\n  * `intermediate_certificate`\n  * `key_passphrase`",
             "properties": {
                 "array_fqdns": {
-                    "description": "Fully Qualified Domain Name(s) of the storage array(s).",
+                    "description": "The Fully Qualified Domain Name(s) of the storage array(s) to assign the certificate to.",
                     "examples": [
                         "everpure-array1.example.com"
                     ],
                     "items": {
                         "default": "everpure-array1.example.com",
-                        "description": "The default value is `everpure-array1.example.com`.  Fully Qualified Domain Name of the storage array.",
+                        "description": "The default value is `everpure-array1.example.com`.  The Fully Qualified Domain Name of the storage array to apply this certificate to.",
                         "examples": [
                             "everpure-array1.example.com"
                         ],
@@ -2081,37 +2090,19 @@
                     "type": "array",
                     "uniqueItems": true
                 },
-                "certificate": {
+                "certificate_file": {
                     "default": "/home/blah/downloads/certificate.pem",
-                    "description": "The default value is `/home/blah/downloads/certificate.pem`.  The Environment File location Variable of the signed certificate.  A number Between 1-64 to denote the variables cert_mgmt_certificate_[1-64].  i.e. `export cert_mgmt_certificate_1='/home/example/certificate.pem'`.  Verify the certificate is PEM formatted (Base64 encoded), include the \" -----BEGIN CERTIFICATE----- \" and \" -----END CERTIFICATE----- \" lines.",
-                    "examples": [
-                        1
-                    ],
-                    "maximum": 64,
-                    "minimum": 1,
-                    "title": "Certificate File Variable",
-                    "type": "integer"
-                },
-                "intermediate_certificate": {
-                    "default": 1,
-                    "description": "The default value is `1`.  (Optional) The Environment File location Variable of the signed certificate.  A number Between 1-64 to denote the variables cert_mgmt_intermediate_certificate_[1-64].  i.e. `export cert_mgmt_intermediate_certificate_1='/home/example/certificate.pem'`.  Verify the certificate is PEM formatted (Base64 encoded), include the \" -----BEGIN CERTIFICATE----- \" and \" -----END CERTIFICATE----- \" lines.",
-                    "examples": [
-                        1
-                    ],
-                    "maximum": 64,
-                    "minLength": 3,
-                    "minimum": 1,
-                    "pattern": "^(\\/[\\w -]+)+.pem$",
-                    "title": "Intermediate Certificate File Variable",
+                    "description": "The default value is `/home/blah/downloads/certificate.pem`.  The path to the certificate file to import.",
+                    "$ref": "#/definitions/abstract.cert_file_path",
+                    "title": "Certificate File",
                     "type": "string"
                 },
-                "key_passphrase": {
-                    "default": 1,
-                    "description": "The default value is `1`.  If the private key is encrypted with a passphrase, enter the passphrase.  A number Between 1-64 to denote the variables cert_mgmt_passphrase_[1-64].  i.e. `export cert_mgmt_passphrase_1='cisco123'`.",
-                    "maximum": 64,
-                    "minimum": 1,
-                    "title": "Key Passphrase",
-                    "type": "integer"
+                "intermediate_certificate_file": {
+                    "default": "/home/blah/downloads/intermediate_certificate.pem",
+                    "description": "The default value is `/home/blah/downloads/intermediate_certificate.pem`.  The path to the intermediate certificate file to import.",
+                    "$ref": "#/definitions/abstract.cert_file_path",
+                    "title": "Intermediate Certificate File",
+                    "type": "string"
                 },
                 "name": {
                     "default": "default",
@@ -2125,23 +2116,26 @@
                     "title": "The Array Certificate name",
                     "type": "string"
                 },
-                "private_key": {
+                "private_key_file": {
+                    "default": "/home/blah/downloads/private_key.pem",
+                    "description": "The default value is `/home/blah/downloads/private_key.pem`.  The path to the private key file to import.",
+                    "$ref": "#/definitions/abstract.cert_file_path",
+                    "title": "Private Key File",
+                    "type": "string"
+                },
+                "private_key_passphrase": {
                     "default": 1,
-                    "description": "The default value is `1`.  The Environment File location Variable of the signed certificate.  A number Between 1-64 to denote the variables cert_mgmt_private_key_[1-64].  i.e. `export cert_mgmt_private_key_1='/home/example/certificate.pem'`.  Verify the certificate is PEM formatted (Base64 encoded), include the \" -----BEGIN CERTIFICATE----- \" and \" -----END CERTIFICATE----- \" lines.",
-                    "examples": [
-                        1
-                    ],
+                    "description": "The default value is `1`.  If the private key is encrypted with a passphrase, enter the passphrase.  A number Between 1-64 to denote the variables cert_mgmt_passphrase_[1-64].  i.e. `export cert_mgmt_passphrase_1='cisco123'`.",
                     "maximum": 64,
                     "minimum": 1,
-                    "title": "Private Key File Variable",
-                    "type": "string"
+                    "title": "Private Key Passphrase",
+                    "type": "integer"
                 }
             },
             "required": [
                 "array_fqdns",
-                "certificate",
-                "name",
-                "private_key"
+                "certificate_file",
+                "name"
             ],
             "title": "Everpure - Settings > Security > Certificates > Array Certificates",
             "type": "object"
@@ -2280,15 +2274,10 @@
                     "title": "Bind Username",
                     "type": "string"
                 },
-                "ca_certificate": {
-                    "default": "default",
-                    "description": "The default value is `default`.  The Name of the CA Certificate, configured under SECURITY > Certificates for FlashBlade.  For FlashArray.",
-                    "examples": [
-                        "default"
-                    ],
-                    "maxLength": 63,
-                    "minLength": 0,
-                    "pattern": "^$|^([a-zA-Z0-9][a-zA-Z0-9_-]{0,61})?[a-zA-Z0-9]$",
+                "ca_certificate_file": {
+                    "default": "",
+                    "description": "The default value is ``.  The path of the CA Certificate, For Flash Array's.  This is not yet supported for Flash Blade.",
+                    "$ref": "#/definitions/abstract.cert_file_path",
                     "title": "CA Certificate",
                     "type": "string"
                 },
@@ -2387,18 +2376,19 @@
             "properties": {
                 "group": {
                     "default": "",
-                    "description": "The default value is ``.  In the Group field, enter the common name (CN) of the directory group. The name should be the Common Name of the group without the \"CN=\" specifier. If the configured groups are not in the same OU, also specify the OU. For example, \"pureusers,OU=PureStorage\", where pureusers is the common name of the directory service group.",
+                    "description": "The default value is ``.  In the Group field, enter the common name (CN) of the directory group. The name should be the Common Name of the group without the \"CN=\" specifier. If the configured groups are not in the same OU, also specify the OU. For example, \"Storage Admins\", where Storage Admins is the common name of the directory service group.",
                     "example": [
-                        "pureusers,OU=PureStorage"
+                        "Storage Admins"
                     ],
                     "maxLength": 300,
                     "minLength": 1,
+                    "pattern": "^(?!.*[cC][nN]=)[^,]+$",
                     "title": "Group Common Name",
                     "type": "string"
                 },
                 "group_base": {
                     "default": "",
-                    "description": "The default value is ``.  In the Group Base field, enter the path to the configured groups in the directory tree. The Group Base consists of one or more path components (OUs and CNs) that, when combined with the base DN attribute and the configured group CNs, complete the full distinguished name of each group. The group base should specify \u201cOU=\u201d for each OU and \u201cCN=\u201d for each CN. Multiple path components should be separated by commas. The order of the path components should get larger in scope from left to right. In the following example, SANManagers contains the sub-organizational unit PureGroups: \u201cOU=PureGroups,OU=SANManagers\u201d.",
+                    "description": "The default value is ``.  This is combined to complete the Group DN (group + group_base + base_dn). i.e. CN=Storage Admins,OU=Everpure,DC=example,DC=com.  In the Group Base field, enter the path to the configured groups in the directory tree. The Group Base consists of one or more path components (OUs and CNs) that, when combined with the base DN attribute and the configured group CNs, complete the full distinguished name of each group. The group base should specify \u201cOU=\u201d for each OU and \u201cCN=\u201d for each CN. Multiple path components should be separated by commas. The order of the path components should get larger in scope from left to right. In the following example, SANManagers contains the sub-organizational unit PureGroups: \u201cOU=PureGroups,OU=SANManagers\u201d.",
                     "examples": [
                         "OU=PureGroups,OU=SANManagers"
                     ],
