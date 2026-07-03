@@ -35,21 +35,9 @@ _SCHEMA_PATH = (
 # Maps env_prefix -> (schema_key, description)
 # Note: Many env prefixes map to canonical schema keys to avoid duplication
 _SENSITIVE_VAR_PATTERNS = {
-    "cert_mgmt_certificate": (
-        "certificate",
-        "Pure Storage Certificate",
-    ),
-    "cert_mgmt_intermediate_certificate": (
-        "certificate",
-        "Pure Storage Intermediate Certificate",
-    ),
     "cert_mgmt_passphrase": (
         "cert_mgmt_passphrase",
         "Pure Storage Certificate Passphrase",
-    ),
-    "cert_mgmt_private_key": (
-        "private_key",
-        "Pure Storage Private Key",
     ),
     "cco_password": ("cco_password", "Cisco.com Password"),
     "drive_security_authentication_password": (
@@ -75,7 +63,6 @@ _SENSITIVE_VAR_PATTERNS = {
         "iso_web_server_password",
         "ISO Web Server Password",
     ),
-    "ldap_bind_password": ("ldap_binding_password", "LDAP Bind Password"),
     "ldap_binding_password": (
         "ldap_binding_password",
         "LDAP Binding Password",

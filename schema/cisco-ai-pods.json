@@ -315,13 +315,22 @@
                     "title": "cco_password",
                     "type": "string"
                 },
-                "cert_mgmt_passphrase": {
+                "cco_user": {
                     "default": "",
-                    "description": "Everpure Certificate Management - Passphrase for encrypted private key.  A number Between 1-64 to denote the variables cert_mgmt_passphrase_[1-64].  i.e. `export cert_mgmt_passphrase_1='passphrasehere'`.\n\nKey Requirements:\n  * Required only if private key is encrypted with a passphrase\n  * Character Set: Alphanumeric and special characters typically allowed\n  * Length: 1 to 255 characters\n  * Omit if private key is not passphrase-protected",
+                    "description": "Cisco Software Download User email address.  A number Between 1-64 to denote the variables cco_user_[1-64].  i.e. `export cco_user_1='user@example.com'`.",
+                    "maxLength": 254,
+                    "minLength": 6,
+                    "pattern": "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,63}$",
+                    "title": "cco_user",
+                    "type": "string"
+                },
+                "private_key_passphrase": {
+                    "default": "",
+                    "description": "Private key passphrase.  A number Between 1-64 to denote the variables private_key_passphrase_[1-64].  i.e. `export private_key_passphrase_1='cisco123'`.\n\nKey Requirements:\n  * Required only if private key is encrypted with a passphrase\n  * Character Set: Alphanumeric and special characters typically allowed\n  * Length: 1 to 255 characters\n  * Omit if private key is not passphrase-protected",
                     "maxLength": 255,
                     "minLength": 1,
                     "pattern": "^.{1,}$",
-                    "title": "cert_mgmt_passphrase",
+                    "title": "private_key_passphrase",
                     "type": "string"
                 },
                 "certificate": {
@@ -331,6 +340,24 @@
                     "minLength": 50,
                     "pattern": "^-----BEGIN CERTIFICATE-----\\n[A-Za-z0-9+/=\\n]+\\n-----END CERTIFICATE-----\\n?$",
                     "title": "certificate",
+                    "type": "string"
+                },
+                "drive_security_current_security_key_passphrase": {
+                    "default": "",
+                    "description": "Current Drive Security Key Passphrase configured on the server. From the security context, the passphrase should be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.  A number Between 1-64 to denote the variables drive_security_current_security_key_passphrase_[1-64].  i.e. `export drive_security_current_security_key_passphrase_1='Cisco123!'`.",
+                    "maxLength": 32,
+                    "minLength": 8,
+                    "pattern": "^((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[=!&#$%+^@_*-])[a-zA-Z0-9=!&#$%+^@_*-]{8,32})$",
+                    "title": "drive_security_current_security_key_passphrase",
+                    "type": "string"
+                },
+                "drive_security_new_security_key_passphrase": {
+                    "default": "",
+                    "description": "New Drive Security Key Passphrase to be configured on the server. From the security context, the passphrase should be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.  A number Between 1-64 to denote the variables drive_security_new_security_key_passphrase_[1-64].  i.e. `export drive_security_new_security_key_passphrase_1='Cisco123!'`.",
+                    "maxLength": 32,
+                    "minLength": 8,
+                    "pattern": "^((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[=!&#$%+^@_*-])[a-zA-Z0-9=!&#$%+^@_*-]{8,32})$",
+                    "title": "drive_security_new_security_key_passphrase",
                     "type": "string"
                 },
                 "drive_security_authentication_password": {
@@ -358,6 +385,33 @@
                     "minLength": 1,
                     "pattern": "^[\\S]{1,}$",
                     "title": "everpure_api_token",
+                    "type": "string"
+                },
+                "everpure_snmp_auth_passphrase": {
+                    "default": "",
+                    "description": "SNMPv3 only. Passphrase of 8 - 32 characters.  A number Between 1-64 to denote the variables everpure_snmp_auth_passphrase_[1-64].  i.e. `export everpure_snmp_auth_passphrase_1='cisco123'`.",
+                    "maxLength": 32,
+                    "minLength": 8,
+                    "pattern": "^[\\S]{8,32}$",
+                    "title": "everpure_snmp_auth_passphrase",
+                    "type": "string"
+                },
+                "everpure_snmp_community": {
+                    "default": "",
+                    "description": "Everpure SNMP v2c only. Manager community ID. Between 1 and 32 characters long.  A number Between 1-64 to denote the variables everpure_snmp_community_[1-64].  i.e. `export everpure_snmp_community_1='cisco123'`.",
+                    "maxLength": 32,
+                    "minLength": 1,
+                    "pattern": "^[^\\s]{1,32}$",
+                    "title": "everpure_snmp_community",
+                    "type": "string"
+                },
+                "everpure_snmp_privacy_passphrase": {
+                    "default": "",
+                    "description": "Passphrase to encrypt SNMP messages. Must be between 8 and 63 non-space ASCII characters.  A number Between 1-64 to denote the variables everpure_snmp_privacy_passphrase_[1-64].  i.e. `export everpure_snmp_privacy_passphrase_1='cisco123'`.",
+                    "maxLength": 63,
+                    "minLength": 8,
+                    "pattern": "^[\\x21-\\x7E]{8,63}$",
+                    "title": "everpure_snmp_privacy_passphrase",
                     "type": "string"
                 },
                 "fabric_interconnect_password": {
@@ -432,6 +486,24 @@
                     "title": "local_user_password",
                     "type": "string"
                 },
+                "mac_sec_fallback_key_chain_secret": {
+                    "default": "",
+                    "description": "MacSec fallback key-chain secret. If cryptographic_algorithm is AES_256_CMAC, value must be 144 characters total starting with J and remaining characters hexadecimal. If cryptographic_algorithm is AES_128_CMAC, value must be 100 characters total starting with J and remaining characters hexadecimal.  A number Between 1-64 to denote the variables mac_sec_fallback_key_chain_secret_[1-64].",
+                    "maxLength": 144,
+                    "minLength": 100,
+                    "pattern": "^J(?:[0-9A-Fa-f]{99}|[0-9A-Fa-f]{143})$",
+                    "title": "mac_sec_fallback_key_chain_secret",
+                    "type": "string"
+                },
+                "mac_sec_primary_key_chain_secret": {
+                    "default": "",
+                    "description": "MacSec primary key-chain secret. If cryptographic_algorithm is AES_256_CMAC, value must be 144 characters total starting with J and remaining characters hexadecimal. If cryptographic_algorithm is AES_128_CMAC, value must be 100 characters total starting with J and remaining characters hexadecimal.  A number Between 1-64 to denote the variables mac_sec_primary_key_chain_secret_[1-64].",
+                    "maxLength": 144,
+                    "minLength": 100,
+                    "pattern": "^J(?:[0-9A-Fa-f]{99}|[0-9A-Fa-f]{143})$",
+                    "title": "mac_sec_primary_key_chain_secret",
+                    "type": "string"
+                },
                 "persistent_passphrase": {
                     "default": "",
                     "description": "Persistent Memory Passphrase.",
@@ -439,6 +511,15 @@
                     "minLength": 8,
                     "pattern": "^$|^[a-zA-Z0-9=!&#$%+^@_*-]+$",
                     "title": "persistent_passphrase",
+                    "type": "string"
+                },
+                "proxy_password": {
+                    "default": "",
+                    "description": "Proxy password for authenticated proxy endpoints.  A number Between 1-64 to denote the variables proxy_password_[1-64].  i.e. `export proxy_password_1='cisco123'`.",
+                    "maxLength": 255,
+                    "minLength": 8,
+                    "pattern": "^(?:(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])|(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#$%^&*()\\-_=+\\[\\]{}|;:',.<>?/~`])|(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()\\-_=+\\[\\]{}|;:',.<>?/~`])|(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*()\\-_=+\\[\\]{}|;:',.<>?/`~]))[\\S]{8,255}$",
+                    "title": "proxy_password",
                     "type": "string"
                 },
                 "private_key": {
@@ -468,6 +549,15 @@
                     "title": "Root Password",
                     "type": "string"
                 },
+                "snmp_access_community_string": {
+                    "default": "",
+                    "description": "SNMP Access Community String (maps to SNMP community string constraints).  A number Between 1-64 to denote the variables snmp_access_community_string_[1-64].  i.e. `export snmp_access_community_string_1='cisco123'`.",
+                    "maxLength": 32,
+                    "minLength": 1,
+                    "pattern": "^[^\\s@:]+$",
+                    "title": "snmp_access_community_string",
+                    "type": "string"
+                },
                 "snmp_community_string": {
                     "default": "",
                     "description": "SNMP Community String.\n\nAvoid using the @ and : characters in Cisco SNMP community strings. The @ character is reserved for indexing (VLAN designation), causing potential mapping issues, while : can cause delimiters issues in management systems. Most other characters (-=;,. ~#$%^&*()_+{}|<>?) are generally allowed, but it's best to avoid special characters. \n\nKey takeaways:\n * Avoid `@ and `:`.  Specifically, the `@` symbol is used for SNMP community string indexing (e.g., `community@vlan`).\n * Characters Allowed: Standard alphanumeric characters, along with special characters like `-`, `_`, `.`, `!`, `#`, `$`, `%`, etc., are generally supported.\n * Impact: Using an @ symbol can cause the switch to misunderstand which VLAN you are trying to query.\n * Best Practice: Use strong, long strings, but avoid the reserved `@` and `:` characters to prevent polling errors. \n\nIf you are encountering errors, you may want to try:\n * Checking for errors in the CLI: Use show running-config to verify the string actually applied correctly.\n * Using alphanumeric characters: Try avoiding symbols entirely if you are still experiencing issues.",
@@ -486,6 +576,60 @@
                     "title": "snmp_password",
                     "type": "string"
                 },
+                "snmp_trap_community": {
+                    "default": "",
+                    "description": "SNMP Trap Community String (maps to SNMP community string constraints).  A number Between 1-64 to denote the variables snmp_trap_community_[1-64].  i.e. `export snmp_trap_community_1='cisco123'`.",
+                    "maxLength": 32,
+                    "minLength": 1,
+                    "pattern": "^[^\\s@:]+$",
+                    "title": "snmp_trap_community",
+                    "type": "string"
+                },
+                "snmp_user_auth_password": {
+                    "default": "",
+                    "description": "SNMP user auth password (maps to SNMP password constraints).  A number Between 1-64 to denote the variables snmp_user_auth_password_[1-64].  i.e. `export snmp_user_auth_password_1='cisco123'`.",
+                    "maxLength": 64,
+                    "minLength": 8,
+                    "pattern": "^[a-zA-Z0-9]{8,64}$",
+                    "title": "snmp_user_auth_password",
+                    "type": "string"
+                },
+                "snmp_user_privacy_password": {
+                    "default": "",
+                    "description": "SNMP user privacy password (maps to SNMP password constraints).  A number Between 1-64 to denote the variables snmp_user_privacy_password_[1-64].  i.e. `export snmp_user_privacy_password_1='cisco123'`.",
+                    "maxLength": 64,
+                    "minLength": 8,
+                    "pattern": "^[a-zA-Z0-9]{8,64}$",
+                    "title": "snmp_user_privacy_password",
+                    "type": "string"
+                },
+                "splunk_observability_access_token": {
+                    "default": "",
+                    "description": "Splunk Observability Cloud Access Token.  A number Between 1-64 to denote the variables splunk_observability_access_token_[1-64].  i.e. `export splunk_observability_access_token_1='a1234567-abcd-1234-5678-abcdef123456'`.\n\nKey Requirements:\n  * Required for Splunk Observability Cloud ingestion and API operations\n  * Length: 1 to 512 characters\n  * No whitespace characters\n  * Best Practice: Store in environment variables and rotate regularly",
+                    "maxLength": 512,
+                    "minLength": 1,
+                    "pattern": "^[\\S]{1,512}$",
+                    "title": "splunk_observability_access_token",
+                    "type": "string"
+                },
+                "splunk_observability_nexus_password": {
+                    "default": "",
+                    "description": "The Password for the Nexus Device List.  A number Between 1-64 to denote the variables splunk_observability_nexus_password_[1-64].  i.e. `export splunk_observability_nexus_password_1='cisco123'`.\n\nKey Requirements:\n  * Length: 8 to 127 characters.\n  * No whitespace characters.\n  * Best Practice: Use a mix of uppercase letters, lowercase letters, digits, and special characters.",
+                    "maxLength": 127,
+                    "minLength": 8,
+                    "pattern": "^[\\S]{8,127}$",
+                    "title": "splunk_observability_nexus_password",
+                    "type": "string"
+                },
+                "splunk_platform_token": {
+                    "default": "",
+                    "description": "Splunk Platform Token.  A number Between 1-64 to denote the variables splunk_platform_token_[1-64].  i.e. `export splunk_platform_token_1='a1234567-abcd-1234-5678-abcdef123456'`.\n\nKey Requirements:\n  * Required for Splunk Platform HTTP Event Collector (HEC) authentication\n  * Length: 1 to 512 characters\n  * No whitespace characters\n  * Best Practice: Store in environment variables and rotate regularly",
+                    "maxLength": 512,
+                    "minLength": 1,
+                    "pattern": "^[\\S]{1,512}$",
+                    "title": "splunk_platform_token",
+                    "type": "string"
+                },
                 "ssh_public_key": {
                     "default": "",
                     "description": "SSH public key in OpenSSH authorized_keys format.\n\nSupported key types:\n  * `ssh-ed25519` \u2014 256-bit EdDSA (recommended)\n  * `ecdsa-sha2-nistp256` / `ecdsa-sha2-nistp384` / `ecdsa-sha2-nistp521` \u2014 ECDSA\n  * `ssh-rsa` \u2014 RSA (minimum 2048-bit recommended)\n  * `ssh-dss` \u2014 DSA (deprecated, avoid)\n\nFormat: `<key-type> <base64-encoded-key> [optional-comment]`\n\nExamples:\n  * `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA... user@host`\n  * `ssh-rsa AAAAB3NzaC1yc2EAAAA... user@host`",
@@ -493,6 +637,15 @@
                     "minLength": 20,
                     "pattern": "^(ssh-ed25519|ssh-rsa|ssh-dss|ecdsa-sha2-nistp256|ecdsa-sha2-nistp384|ecdsa-sha2-nistp521) [A-Za-z0-9+/]+=*( .*)?$",
                     "title": "ssh_public_key",
+                    "type": "string"
+                },
+                "switch_control_aes_primary_key": {
+                    "default": "",
+                    "description": "Switch control AES primary key. Must contain between 16 and 32 alphanumeric characters.  A number Between 1-64 to denote the variables switch_control_aes_primary_key_[1-64].  i.e. `export switch_control_aes_primary_key_1='A1B2C3D4E5F6G7H8'`.",
+                    "maxLength": 32,
+                    "minLength": 16,
+                    "pattern": "^[a-zA-Z0-9]{16,32}$",
+                    "title": "switch_control_aes_primary_key",
                     "type": "string"
                 },
                 "vmedia_password": {
@@ -2037,7 +2190,7 @@
             "description": "This dictionary provides the security settings for Everpure.\n\nOptional fields are:\n  * `directory_service` - LDAP Integration\n  * `users` - Local Users",
             "properties": {
                 "array_certificates": {
-                    "description": "Imported Array Certificates.\n\nRequired fields are:\n  * `certificate`\n  * `name`\n  * `private_key`\n\nOptional fields are:\n  * `intermediate_certificate`\n  * `key_passphrase`",
+                    "description": "Imported Array Certificates.\n\nRequired fields are:\n  * `array_fqdns`\n  * `certificate_file`\n  * `name`\n\nOptional fields are:\n  * `intermediate_certificate_file`\n  * `private_key_file`\n  * `key_passphrase`",
                     "items": {
                         "$ref": "#/definitions/everpure.settings.security.certificates.array_certificates"
                     },
@@ -2065,7 +2218,7 @@
         },
         "everpure.settings.security.certificates.array_certificates": {
             "additionalProperties": false,
-            "description": "Imported Array Certificates.\n\nRequired fields are:\n  * `array_fqdns`\n  * `certificate`\n  * `name`\n  * `private_key`\n\nOptional fields are:\n  * `intermediate_certificate`\n  * `key_passphrase`",
+            "description": "Imported Array Certificates.\n\nRequired fields are:\n  * `array_fqdns`\n  * `certificate_file`\n  * `name`\n\nOptional fields are:\n  * `intermediate_certificate_file`\n  * `private_key_file`\n  * `key_passphrase`",
             "properties": {
                 "array_fqdns": {
                     "description": "The Fully Qualified Domain Name(s) of the storage array(s) to assign the certificate to.",
@@ -2125,7 +2278,7 @@
                 },
                 "private_key_passphrase": {
                     "default": 1,
-                    "description": "The default value is `1`.  If the private key is encrypted with a passphrase, enter the passphrase.  A number Between 1-64 to denote the variables cert_mgmt_passphrase_[1-64].  i.e. `export cert_mgmt_passphrase_1='cisco123'`.",
+                    "description": "The default value is `1`.  If the private key is encrypted with a passphrase, enter the passphrase.  A number Between 1-64 to denote the variables private_key_passphrase_[1-64].  i.e. `export private_key_passphrase_1='cisco123'`.",
                     "maximum": 64,
                     "minimum": 1,
                     "title": "Private Key Passphrase",
@@ -2256,7 +2409,7 @@
                 },
                 "bind_password": {
                     "default": 1,
-                    "description": "The default value is `1`.  The LDAP Binding Password Sensitive Variable Identifier.  A number Between 1-64 to denote the variables ldap_bind_password_[1-64].  i.e. `export ldap_bind_password_1='cisco123'`.",
+                    "description": "The default value is `1`.  The LDAP Binding Password Sensitive Variable Identifier.  A number Between 1-64 to denote the variables ldap_binding_password_[1-64].  i.e. `export ldap_binding_password_1='cisco123'`.",
                     "maximum": 64,
                     "minimum": 1,
                     "title": "Bind Password",
@@ -3354,7 +3507,7 @@
             "properties": {
                 "community": {
                     "default": 1,
-                    "description": "The default value is `1`.  A number Between 1-64 to denote to use one of the variables snmp_community_[1-64].  A number Between 1-64 to denote the variables snmp_community_[1-64].  i.e. `export snmp_community_1='cisco123'`.",
+                    "description": "The default value is `1`.  A number Between 1-64 to denote the variables everpure_snmp_community_[1-64].  i.e. `export everpure_snmp_community_1='cisco123'`.",
                     "maximum": 64,
                     "minimum": 1,
                     "title": "Community String Number",
@@ -3417,7 +3570,7 @@
             "properties": {
                 "auth_passphrase": {
                     "default": 1,
-                    "description": "The default value is `1`.  A number Between 1-64 to denote to use one of the variables snmp_auth_passphrase_[1-64].  A number Between 1-64 to denote the variables snmp_auth_passphrase_[1-64].  i.e. `export snmp_auth_passphrase_1='cisco123'`.",
+                    "description": "The default value is `1`.  A number Between 1-64 to denote to use one of the variables everpure_snmp_auth_passphrase_[1-64].  i.e. `export everpure_snmp_auth_passphrase_1='cisco123'`.",
                     "maximum": 64,
                     "minimum": 1,
                     "title": "Authentication Passphrase number",
@@ -3468,7 +3621,7 @@
                 },
                 "privacy_passphrase": {
                     "default": 1,
-                    "description": "The default value is `1`.  A number Between 1-64 to denote to use one of the variables snmp_privacy_passphrase_[1-64].  A number Between 1-64 to denote the variables snmp_privacy_passphrase_[1-64].  i.e. `export snmp_privacy_passphrase_1='cisco123'`.",
+                    "description": "The default value is `1`.  A number Between 1-64 to denote the variables everpure_snmp_privacy_passphrase_[1-64].  i.e. `export everpure_snmp_privacy_passphrase_1='cisco123'`.",
                     "maximum": 64,
                     "minimum": 1,
                     "title": "Privacy Passphrase number",
@@ -3522,7 +3675,7 @@
             "properties": {
                 "auth_passphrase": {
                     "default": 1,
-                    "description": "The default value is `1`.  A number Between 1-64 to denote to use one of the variables snmp_auth_passphrase_[1-64].  A number Between 1-64 to denote the variables snmp_auth_passphrase_[1-64].  i.e. `export snmp_auth_passphrase_1='cisco123'`.",
+                    "description": "The default value is `1`.  A number Between 1-64 to denote the variables everpure_snmp_auth_passphrase_[1-64].  i.e. `export everpure_snmp_auth_passphrase_1='cisco123'`.",
                     "maximum": 64,
                     "minimum": 1,
                     "title": "Authentication Passphrase number",
@@ -3541,7 +3694,7 @@
                 },
                 "community": {
                     "default": 1,
-                    "description": "The default value is `1`.  A number Between 1-64 to denote to use one of the variables snmp_community_[1-64].  A number Between 1-64 to denote the variables snmp_community_[1-64].  i.e. `export snmp_community_1='cisco123'`.",
+                    "description": "The default value is `1`.  A number Between 1-64 to denote the variables everpure_snmp_community_[1-64].  i.e. `export everpure_snmp_community_1='cisco123'`.",
                     "maximum": 64,
                     "minimum": 1,
                     "title": "Community String Number",
@@ -3549,7 +3702,7 @@
                 },
                 "privacy_passphrase": {
                     "default": 1,
-                    "description": "The default value is `1`.  A number Between 1-64 to denote to use one of the variables snmp_privacy_passphrase_[1-64].  A number Between 1-64 to denote the variables snmp_privacy_passphrase_[1-64].  i.e. `export snmp_privacy_passphrase_1='cisco123'`.",
+                    "description": "The default value is `1`.  A number Between 1-64 to denote the variables everpure_snmp_privacy_passphrase_[1-64].  i.e. `export everpure_snmp_privacy_passphrase_1='cisco123'`.",
                     "maximum": 64,
                     "minimum": 1,
                     "title": "Privacy Passphrase number",
@@ -13980,9 +14133,7 @@
                     "examples": [
                         "/etc/pki/certs/server.crt"
                     ],
-                    "maxLength": 4096,
-                    "minLength": 1,
-                    "pattern": "^(?:(?:/(?:[^\\0/]+/)*[^\\0/]+)|(?:[A-Za-z]:[\\\\/](?:[^<>:\"|?*\\r\\n]+[\\\\/])*[^<>:\"|?*\\r\\n]+)|(?:\\.{1,2}[\\\\/])?(?:[^<>:\"|?*\\r\\n\\\\/]+[\\\\/])*[^<>:\"|?*\\r\\n\\\\/]+)$",
+                    "$ref": "#/definitions/abstract.cert_file_path",
                     "title": "certificate_file",
                     "type": "string"
                 },
@@ -14011,9 +14162,7 @@
                     "examples": [
                         "/etc/pki/private/server.key"
                     ],
-                    "maxLength": 4096,
-                    "minLength": 1,
-                    "pattern": "^(?:(?:/(?:[^\\0/]+/)*[^\\0/]+)|(?:[A-Za-z]:[\\\\/](?:[^<>:\"|?*\\r\\n]+[\\\\/])*[^<>:\"|?*\\r\\n]+)|(?:\\.{1,2}[\\\\/])?(?:[^<>:\"|?*\\r\\n\\\\/]+[\\\\/])*[^<>:\"|?*\\r\\n\\\\/]+)$",
+                    "$ref": "#/definitions/abstract.cert_file_path",
                     "title": "private_key_file",
                     "type": "string"
                 },
@@ -19860,7 +20009,7 @@
                 },
                 "secret": {
                     "default": 1,
-                    "description": "The default value is `1`.  The MacSec Key Secret Sensitive Variable Identifier.  A number Between 1-64 to denote the variables mac_sec_fallback_key_chain_secret_[1-64].  i.e. `export mac_sec_fallback_key_chain_secret_1='cisco123'`.",
+                    "description": "The default value is `1`.  The MacSec Key Secret Sensitive Variable Identifier.  A number Between 1-64 to denote the variables mac_sec_fallback_key_chain_secret_[1-64].  i.e. `export mac_sec_fallback_key_chain_secret_1='J1B2C3D4E5F67890AABBCCDDEEFF0011A1B2C3D4E5F67890AABBCCDDEEFF0011A1B2C3D4E5F67890AABBCCDDEEFF0011AAAA'`.",
                     "intersight_api": "OctetString",
                     "maximum": 64,
                     "minimum": 1,
@@ -19994,7 +20143,7 @@
                 },
                 "secret": {
                     "default": 1,
-                    "description": "The default value is `1`.  The MacSec Key Secret Sensitive Variable Identifier.  A number Between 1-64 to denote the variables mac_sec_primary_key_chain_secret_[1-64].  i.e. `export mac_sec_primary_key_chain_secret_1='cisco123'`.",
+                    "description": "The default value is `1`.  The MacSec Key Secret Sensitive Variable Identifier.  A number Between 1-64 to denote the variables mac_sec_primary_key_chain_secret_[1-64].  i.e. `export mac_sec_primary_key_chain_secret_1='J1B2C3D4E5F67890AABBCCDDEEFF0011A1B2C3D4E5F67890AABBCCDDEEFF0011A1B2C3D4E5F67890AABBCCDDEEFF0011AAAA'`.",
                     "intersight_api": "OctetString",
                     "maximum": 64,
                     "minimum": 1,
@@ -36601,9 +36750,7 @@
                     "examples": [
                         "/home/user/pki/api_cert_chain_file.cer"
                     ],
-                    "maxLength": 4096,
-                    "minLength": 1,
-                    "pattern": "^(?:(?:/(?:[^\\0/]+/)*[^\\0/]+)|(?:[A-Za-z]:[\\\\/](?:[^<>:\"|?*\\r\\n]+[\\\\/])*[^<>:\"|?*\\r\\n]+)|(?:\\.{1,2}[\\\\/])?(?:[^<>:\"|?*\\r\\n\\\\/]+[\\\\/])*[^<>:\"|?*\\r\\n\\\\/]+)$",
+                    "$ref": "#/definitions/abstract.cert_file_path",
                     "title": "API Certificate Chain File",
                     "type": "string"
                 },
@@ -36622,9 +36769,7 @@
                     "examples": [
                         "/home/user/pki/api_key_file.key"
                     ],
-                    "maxLength": 4096,
-                    "minLength": 1,
-                    "pattern": "^(?:(?:/(?:[^\\0/]+/)*[^\\0/]+)|(?:[A-Za-z]:[\\\\/](?:[^<>:\"|?*\\r\\n]+[\\\\/])*[^<>:\"|?*\\r\\n]+)|(?:\\.{1,2}[\\\\/])?(?:[^<>:\"|?*\\r\\n\\\\/]+[\\\\/])*[^<>:\"|?*\\r\\n\\\\/]+)$",
+                    "$ref": "#/definitions/abstract.cert_file_path",
                     "title": "API Key File",
                     "type": "string"
                 },
@@ -37195,18 +37340,6 @@
                             "default": "2001:db8::9",
                             "description": "OpenShift Cluster API - IPv6 address.",
                             "title": "OpenShift Cluster API - IPv6 address"
-                        },
-                        "v7": {
-                            "default": "2001:db8::9",
-                            "description": "The default value is `2001:db8::9`.  OpenShift Cluster API - IPv6 address.",
-                            "examples": [
-                                "2001:db8::9"
-                            ],
-                            "maxLength": 39,
-                            "minLength": 6,
-                            "pattern": "^((?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|:(?::[0-9A-Fa-f]{1,4}){1,7}|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?:(?::[0-9A-Fa-f]{1,4}){1,6})|:(?:(?::[0-9A-Fa-f]{1,4}){1,6}))$",
-                            "title": "OpenShift Cluster API - IPv6 address",
-                            "type": "string"
                         }
                     },
                     "required": [],

@@ -114,6 +114,25 @@ everpure:
               - 8.8.4.4
               - 8.8.8.8
     security:
+      certificates:
+        array_certificates:
+          - array_fqdns:
+              - array01.example.com
+            certificate_file: /home/blah/downloads/certificate1.pem
+            name: array01-cert
+            private_key_file: /home/blah/downloads/private_key1.pem
+            private_key_passphrase: 1
+          - array_fqdns:
+              - array02.example.com
+            certificate_file: /home/blah/downloads/certificate2.pem
+            name: array02-cert
+            private_key_file: /home/blah/downloads/private_key2.pem
+            private_key_passphrase: 2
+          - array_fqdns:
+              - array01.example.com
+              - array02.example.com
+            certificate_file: /home/blah/downloads/root-ca.pem
+            name: root-cert
       directory_service:
         configuration:
           - base_dn: DC=example,DC=com

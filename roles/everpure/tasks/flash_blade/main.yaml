@@ -1,6 +1,6 @@
 ---
 - name: FlashBlade | Get facts for {{ array_fqdn }}
-  purestorage.flashblade.purefb_info:
+  everpure.flashblade.purefb_info:
     api_token: "{{ api_token }}"
     fb_url: "{{ array_url }}"
   register: array_info

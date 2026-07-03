@@ -6,66 +6,111 @@
 * [Main README](README.md)
 
 ## Table of Contents
+* [Quick Start (Automated Script)](#quick-start-automated-script)
+* [iServer Setup](#iserver-setup)
 * [Module Dependencies](#module-dependencies)
-* [Install Git](#install-git)
-* [Configure Git Credentials](#configure-git-credentials)
-* [Clone Repositories](#clone-repositories)
 * [Install Visual Studio Code](#install-visual-studio-code)
 * [Install Visual Studio Code Extensions](#install-visual-studio-code-extensions)
-* [Install Python](#install-python)
-* [Create a Virtual Environment through Visual Studio Code](#create-a-virtual-environment-through-visual-studio-code)
 * [YAML Schema for auto-completion, Help, and Error Validation](#yaml-schema-for-auto-completion-help-and-error-validation)
-* [Install Ansible](#install-ansible-on-ubuntu)
+* [Create a Virtual Environment](#create-a-virtual-environment)
 
-## Module Dependencies
+## Quick Start (Automated Script)
 
-| Component | Minimum Version | Recommended | Notes |
-|-----------|----------------|-------------|-------|
-| Ansible | 2.15.0 | 2.17+ | Storage automation |
-| Everpure Collection | 1.35 | Latest | Install from repository root `requirements.yaml` |
-| Python | 3.9 | 3.9+ | Ansible and OpenShift dependency |
-| Python Modules | N/A | Latest | Install from repository root `requirements.txt` |
-
-### [<ins>Back to Table of Contents<ins>](#table-of-contents)
-
-## Install Git
+**Step 1: Install Git**
 
 ```bash
 sudo apt update && sudo apt install -y git
 ```
 
-### Validate Git Installation
+**Step 2: Clone the Repository**
 
 ```bash
-git --version
-```
-
-### Example Output
-
-```bash
-$ git --version
-git version 2.34.1
-$ 
-```
-
-### [<ins>Back to Table of Contents<ins>](#table-of-contents)
-
-## Configure Git Credentials
-
-```bash
-git config --global user.name "<username>"   
-git config --global user.email "<email>"
-```
-
-### [<ins>Back to Table of Contents<ins>](#table-of-contents)
-
-## Clone Repositories
-
-```bash
-git clone https://github.com/scotttyso/intersight-tools
 git clone https://github.com/scotttyso/Cisco-AI-Pods
 cd Cisco-AI-Pods
 ```
+
+**Step 3: Run the Complete Setup Script**
+
+```bash
+./scripts/setup.sh
+```
+
+Optional flags:
+
+```bash
+./scripts/setup.sh --git-name "<username>" --git-email "<email>"
+./scripts/setup.sh --skip-apt
+./scripts/setup.sh --venv-dir ".venv-cisco"
+./scripts/setup.sh --iserver-dir "/custom/iserver/path"
+./scripts/setup.sh --skip-env-setup         # Skip environment prep, only download iServer
+./scripts/setup.sh --skip-iserver           # Skip iServer, only prepare environment
+```
+
+What the script does:
+- Auto-detects and uses apt, dnf, or yum to install Git and Python prerequisites
+- Configures Git identity (if provided via flags)
+- Creates and activates a Python virtual environment
+- Installs Ansible tooling using centralized constraints (`constraints/python-tooling.txt`), Python dependencies (`requirements.txt`), and Ansible collections (`requirements.yaml`)
+- Validates key dependencies and Ansible installation
+- Downloads and extracts the latest iServer release
+- Prints the remaining manual VS Code configuration and iServer setup steps
+
+> If your distro does not use apt, dnf, or yum, install Git and Python manually, then run the script with `--skip-apt`.
+
+#### GitHub API Rate Limiting
+
+The setup script downloads the latest iServer release from GitHub. Unauthenticated requests have a 60 req/hour limit per IP.
+
+If you encounter a rate limit error:
+```bash
+GitHub API rate limit exceeded. Export GITHUB_TOKEN with a GitHub PAT and re-run setup.sh
+```
+
+To fix it, generate a Personal Access Token and re-run:
+```bash
+export GITHUB_TOKEN=<your-github-pat>
+./scripts/setup.sh [options]
+```
+
+How to create a GitHub Personal Access Token:
+1. Go to [https://github.com/settings/tokens](https://github.com/settings/tokens)
+2. Click "Generate new token" → "Generate new token (classic)"
+3. Give it a name (e.g., "iserver-setup")
+4. Select scope: `public_repo` (read-only access to public repositories)
+5. Copy the token and use it as shown above
+
+### [<ins>Back to Table of Contents<ins>](#table-of-contents)
+
+## iServer Setup
+
+The setup script (run in Step 3 above) automatically downloads the latest iServer release for OpenShift assisted installer.
+
+iServer will be extracted into the `assisted-installer/` directory by default.
+
+**Next Step: Review iServer Console documentation**
+
+After setup completes, follow the iServer Console configuration guide:
+[https://github.com/datacenter/iserver/blob/main/doc/ocp/Console.md](https://github.com/datacenter/iserver/blob/main/doc/ocp/Console.md)
+
+This guide covers:
+- iServer web console setup and access
+- OpenShift cluster configuration
+- Assisted installer workflows
+- Network and storage provisioning options
+
+> Note: The `assisted-installer/` directory is excluded from git (`.gitignore`). Each environment will need its own copy.
+> You can also run the setup with `--skip-env-setup` flag to download iServer only on subsequent runs.
+
+### [<ins>Back to Table of Contents<ins>](#table-of-contents)
+
+## Module Dependencies
+
+| Component | Minimum Version | Recommended | Notes |
+|-----------|----------------|-------------|-------|
+| Ansible Core | 2.15.0 | 2.20+ | Storage automation |
+| Everpure Collection | 1.35 | Latest | Install from repository root `requirements.yaml` |
+| Python | 3.12 | 3.12+ | Ansible and OpenShift dependency |
+| Python Modules | N/A | Latest | Install from repository root `requirements.txt` |
 
 ### [<ins>Back to Table of Contents<ins>](#table-of-contents)
 
@@ -76,6 +121,7 @@ cd Cisco-AI-Pods
 ## Install Visual Studio Code Extensions
 
 - Recommended Extensions: 
+  - Ansible - Author Red Hat
   - GitHub Pull Requests and Issues - Author GitHub
   - Pylance - Author Microsoft
   - Python - Author Microsoft
@@ -85,40 +131,7 @@ cd Cisco-AI-Pods
 
 ### [<ins>Back to Table of Contents<ins>](#table-of-contents)
 
-## Install Python
-
-```bash
-sudo apt update && sudo apt install -y python3 python3-pip python3-venv
-```
-
-### Validate Python Install
-
-```bash
-python3 --version
-```
-
-### Example Output
-
-```bash
-$ python3 --version
-Python 3.10.12
-$
-```
-
-### Create and Activate a Virtual Environment (Recommended)
-
-```bash
-cd ~
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip setuptools wheel
-```
-
-> Note: Keep the virtual environment active for all Python and Ansible commands in this guide.
-
-### [<ins>Back to Table of Contents<ins>](#table-of-contents)
-
-### Create a Virtual Environment through Visual Studio Code
+## Create a Virtual Environment
 
 To create local environments in VS Code using virtual environments, you can follow these steps: open the Command Palette (Ctrl+Shift+P), search for the Python: Create Environment command, and select it.
 
@@ -156,66 +169,10 @@ Add the Following to `YAML: Schemas` in Visual Studio Code: Settings > Search fo
     },
 ```
 
-### [<ins>Back to Table of Contents<ins>](#table-of-contents)
-
-## Install Ansible on Ubuntu
-
-[Others](https://docs.ansible.com/ansible/latest/installation_guide/installation_distros.html)
-
-Install Ansible inside the active virtual environment:
-
-```bash
-python -m pip install "ansible>=9,<11"
-```
-
-Install Python module dependencies used by automation:
-
-```bash
-cd Cisco-AI-Pods
-python -m pip install -r requirements.txt
-```
-
-Verify Python dependencies:
-
-```bash
-python -m pip show purestorage py-pure-client kubernetes openshift
-```
-
-Install Ansible collections used by automation:
-
-```bash
-cd Cisco-AI-Pods
-ansible-galaxy collection install -r requirements.yaml
-```
-
-Verify installed collections:
-
-```bash
-ansible-galaxy collection list | grep -E "kubernetes.core|purestorage.flasharray|purestorage.flashblade|ansible.posix"
-```
-
-### Validate Ansible Installation
-
-```bash
-ansible --version
-```
-
-### Example Output
-
-```bash
-$ ansible --version
-ansible [core 2.x]
-  config file = None
-  executable location = /home/<user>/.venv/bin/ansible
-  python version = 3.x.x
-$ 
-```
-
-### [<ins>Back to Table of Contents<ins>](#table-of-contents)
-
 If needed, reactivate the virtual environment:
 
 ```bash
-source ~/.venv/bin/activate
+source .venv/bin/activate
 ```
 
+### [<ins>Back to Table of Contents<ins>](#table-of-contents)

@@ -3,7 +3,7 @@
 # Certificates
 ############################
 - name: Settings > Security > Certificates > Array Certificates | for {{ array_fqdn }}
-  purestorage.flashblade.purefb_certs:
+  everpure.flashblade.purefb_certs:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -21,7 +21,7 @@
   when: security.certificates is defined and security.certificates.array_certificates is defined and array_fqdn in element.array_fqdns
 
 - name: Settings > Security > Certificates > Certificate Groups | for {{ array_fqdn }}
-  purestorage.flashblade.purefb_certgrp:
+  everpure.flashblade.purefb_certgrp:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -42,7 +42,7 @@
     _ds: "{{ security.directory_service | default({}) }}"
 
 - name: Settings > Security > Directory Service > Role Mappings | for {{ array_fqdn }}
-  purestorage.flashblade.purefb_dsrole:
+  everpure.flashblade.purefb_dsrole:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -58,7 +58,7 @@
   when: _ds.configuration is defined and _ds.role_mappings is defined
 
 - name: Settings > Security > Directory Service > Configuration | for {{ array_fqdn }}
-  purestorage.flashblade.purefb_ds:
+  everpure.flashblade.purefb_ds:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"

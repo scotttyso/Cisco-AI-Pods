@@ -3,7 +3,7 @@
 # Link Aggregation Groups
 ############################
 - name: Settings > Link Aggregation Groups for {{ array_fqdn }}
-  purestorage.flashblade.purefb_lag:
+  everpure.flashblade.purefb_lag:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -20,7 +20,7 @@
 # Subnets and Interfaces
 ############################
 - name: Settings > Subnets and Interfaces > Subnets for {{ array_fqdn }}
-  purestorage.flashblade.purefb_subnet:
+  everpure.flashblade.purefb_subnet:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -38,7 +38,7 @@
   when: network.subnets_and_interfaces is defined  and network.subnets_and_interfaces.subnets is defined and array_fqdn in element.array_fqdns
 
 - name: Settings > Subnets and Interfaces > Interfaces for {{ array_fqdn }}
-  purestorage.flashblade.purefb_network:
+  everpure.flashblade.purefb_network:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -57,7 +57,7 @@
 # DNS Configuration
 ############################
 - name: Settings > DNS > DNS Configuration for {{ array_fqdn }}
-  purestorage.flashblade.purefb_dns:
+  everpure.flashblade.purefb_dns:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"

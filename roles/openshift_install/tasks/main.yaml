@@ -1,10 +1,10 @@
 ---
-- name: Validate Openshift Install Environment Variables
+- name: Create Temporary Directory for Assisted Installer Manifest Generation
   block:
-    - name: Create temporary directory for validation
+    - name: Create temporary directory for assisted installer manifest generation
       ansible.builtin.tempfile:
         state: directory
-        prefix: everpure_validation_
+        prefix: assisted_installer_
       register: temp_dir
 
 - name: Save OpenShift Dictionary to Temporary File
@@ -14,34 +14,19 @@
     mode: '0644'
   changed_when: false
 
-- name: Validate + Generate Server and NMState Manifest Templates from Inventory
+- name: Generate Server and NMState Manifest Templates from Inventory
   ansible.builtin.command:
-    cmd: "python3 {{ role_path }}/library/generate_server_and_nmstate_templates.py --config {{ temp_dir.path }}/openshift.json"
+    cmd: "python3 {{ role_path }}/library/generate_server_and_nmstate_templates.py --vars-file {{ temp_dir.path }}/openshift.json"
   register: validation_result
   failed_when: validation_result.rc != 0
   changed_when: false
 
-- name: Validate required install configuration exists
-  ansible.builtin.assert:
-    that:
-      - openshift.install is defined
-      - openshift.install.bare_metal is defined
-      - openshift.install.bare_metal.ssh_public_key is defined
-    fail_msg: "Required values missing under openshift.install.bare_metal (including ssh_public_key)"
-
-
 - name: Set Facts for assisted installer manifests & SSH public key
   ansible.builtin.set_fact:
-    assisted_installer_directory: "{{ playbook_dir.rstrip('/') | dirname }}/assisted-installer"
+    assisted_installer_directory: "{{ playbook_dir | dirname }}/assisted-installer"
     openshift_install: "{{ openshift.install.bare_metal | default({}) }}"
     ssh_public_key_env_name: "{{ 'ssh_public_key_' + (openshift_install.ssh_public_key | string) }}"
     ssh_public_key_value: "{{ lookup('ansible.builtin.env', 'ssh_public_key_' + (openshift_install.ssh_public_key | string)) }}"
-
-- name: Validate SSH public key environment variable is set
-  ansible.builtin.assert:
-    that:
-      - ssh_public_key_value | length > 0
-    fail_msg: "Missing required environment variable: {{ ssh_public_key_env_name }}"
 
 - name: Ensure the Assisted Installer Folder Exists
   ansible.builtin.file:

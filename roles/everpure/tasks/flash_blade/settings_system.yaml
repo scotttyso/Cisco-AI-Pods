@@ -4,7 +4,7 @@
 ############################
 
 - name: Settings > System > Alerts and Notifications > Alert Routing | for {{ array_fqdn }}
-  purestorage.flashblade.purefb_smtp:
+  everpure.flashblade.purefb_smtp:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -14,7 +14,7 @@
   when: system.alerts_and_notifications is defined and system.alerts_and_notifications.alert_routing is defined
 
 - name: Settings > System > Alerts and Notifications > Alert Watchers | for {{ array_fqdn }}
-  purestorage.flashblade.purefb_alert:
+  everpure.flashblade.purefb_alert:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -33,7 +33,7 @@
 ############################
 
 - name: Settings > System > Array Name | for {{ array_fqdn }}
-  purestorage.flashblade.purefb_bladename:
+  everpure.flashblade.purefb_bladename:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -42,7 +42,7 @@
   when: system.array_details is defined
 
 - name: Settings > System > Array Details > Idle Timeout | for {{ array_fqdn }}
-  purestorage.flashblade.purefb_timeout:
+  everpure.flashblade.purefb_timeout:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -52,7 +52,7 @@
   when: system.array_details is defined and system.array_details.idle_timeout is defined
 
 - name: Settings > System > Array Details > Login Banner | for {{ array_fqdn }}
-  purestorage.flashblade.purefb_banner:
+  everpure.flashblade.purefb_banner:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -62,7 +62,7 @@
   when: system.array_details is defined and system.array_details.login_banner is defined
 
 - name: Settings > System > Array Details > Timezone | for {{ array_fqdn }}
-  purestorage.flashblade.purefb_tz:
+  everpure.flashblade.purefb_tz:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -75,7 +75,7 @@
 ############################
 
 - name: Settings > System > NTP Servers | for {{ array_fqdn }}
-  purestorage.flashblade.purefb_ntp:
+  everpure.flashblade.purefb_ntp:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -89,7 +89,7 @@
 ############################
 
 - name: Settings > System > Monitoring > Syslog Server Connections | for {{ array_fqdn }}
-  purestorage.flashblade.purefb_syslog:
+  everpure.flashblade.purefb_syslog:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -106,7 +106,7 @@
   when: system.monitoring is defined and system.monitoring.syslog_server_connections is defined
 
 - name: Settings > System > Monitoring > SNMP > Add SNMP Manager v2c | for {{ array_fqdn }}
-  purestorage.flashblade.purefb_snmp_mgr:
+  everpure.flashblade.purefb_snmp_mgr:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -123,7 +123,7 @@
   when: system.monitoring is defined and system.monitoring.snmp.add_snmp_manager is defined and system.monitoring.snmp.add_snmp_manager.v2c is defined
 
 - name: Settings > System > Monitoring > SNMP > Add SNMP Manager v3 | for {{ array_fqdn }}
-  purestorage.flashblade.purefb_snmp_mgr:
+  everpure.flashblade.purefb_snmp_mgr:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -148,7 +148,7 @@
 ############################
 
 - name: Settings > System > Support > Phone Home | for {{ array_fqdn }}
-  purestorage.flashblade.purefb_phonehome:
+  everpure.flashblade.purefb_phonehome:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -157,7 +157,7 @@
   when: system.support is defined and (system.support.phone_home_enabled | bool)
 
 - name: Settings > System > Support > Proxy Server | for {{ array_fqdn }}
-  purestorage.flashblade.purefb_proxy:
+  everpure.flashblade.purefb_proxy:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -169,7 +169,7 @@
   when: system.support is defined and system.support.proxy_server is defined
 
 - name: Settings > System > Support > Remote Assist | for {{ array_fqdn }}
-  purestorage.flashblade.purefb_ra:
+  everpure.flashblade.purefb_ra:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"

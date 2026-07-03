@@ -8,10 +8,6 @@ import os
 import sys
 import argparse
 import re
-import tarfile
-import textwrap
-from urllib.error import URLError, HTTPError
-from urllib.request import Request, urlopen
 from ipaddress import ip_address, ip_interface
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -22,132 +18,20 @@ from jinja2 import Environment, FileSystemLoader
 
 SSH_PUBLIC_KEY_TYPE_PATTERN = re.compile(r"^(ssh-|ecdsa-|sk-)")
 
-# Module-level sensitive schema properties, populated once by load_schema().
-_SENSITIVE_SCHEMA_PROPS: Dict[str, Any] = {}
-
-# Relative path from this file to the JSON schema.
-_SCHEMA_PATH = Path(__file__).parent.parent.parent.parent / \
-    "schema" / "cisco-ai-pods.json"
-
-
-def load_schema() -> None:
-    """Load abstract.sensitive_variables properties from the JSON schema into _SENSITIVE_SCHEMA_PROPS."""
-    global _SENSITIVE_SCHEMA_PROPS  # pylint: disable=global-statement
-    try:
-        with open(_SCHEMA_PATH, encoding="utf-8") as schema_file:
-            schema = json.load(schema_file)
-        definitions = schema.get("definitions", {})
-        sensitive_def = definitions.get("abstract.sensitive_variables", {})
-        _SENSITIVE_SCHEMA_PROPS = (
-            sensitive_def.get("properties", {})
-            if isinstance(sensitive_def, dict)
-            else {}
-        )
-    except (FileNotFoundError, json.JSONDecodeError) as exc:
-        print(
-            f"Warning: Could not load schema for sensitive variable validation: {exc}")
-        _SENSITIVE_SCHEMA_PROPS = {}
-
-
-def _wrap_cli_text(text: Any, indent: str = "  ", width: int = 100) -> str:
-    """Wrap long text blocks to keep CLI error output readable."""
-    rendered = str(text) if text not in (None, "") else "N/A"
-    return textwrap.fill(
-        rendered,
-        width=width,
-        initial_indent=indent,
-        subsequent_indent=indent,
-        break_long_words=False,
-        break_on_hyphens=False,
-    )
-
-
-def _format_sensitive_constraints(context_label: str, schema_rule: Any) -> str:
-    """Build a wrapped, human-readable constraint block for error messages."""
-    if not isinstance(schema_rule, dict):
-        return ""
-    description = schema_rule.get("description", "N/A")
-    pattern = schema_rule.get("pattern", "N/A")
-    min_length = schema_rule.get("minLength", "N/A")
-    max_length = schema_rule.get("maxLength", "N/A")
-    return (
-        f"\n\nSensitive Variable Constraints for '{context_label}':\n"
-        f"Description:\n{_wrap_cli_text(description)}\n"
-        f"Pattern:\n{_wrap_cli_text(pattern)}\n"
-        f"Min Length: {min_length}\n"
-        f"Max Length: {max_length}"
-    )
-
-
-def _validate_sensitive_value(  # pylint: disable=too-many-arguments
-    value: Any,
-    schema_rule: Any,
-    env_var_name: str,
-    context: str,
-    schema_key: Optional[str] = None,
-    sensitive_properties: Optional[Dict[str, Any]] = None,
-) -> None:
-    """Validate a resolved sensitive value against schema minLength/maxLength/pattern."""
-    if value in (None, ""):
-        error_msg = (
-            f"Missing required environment variable '{env_var_name}' for {context}.\n"
-            f"\n  To fix this, run:\n"
-            f"    export {env_var_name}='<your_value_here>'")
-        if schema_key and sensitive_properties and schema_key in sensitive_properties:
-            error_msg += _format_sensitive_constraints(
-                schema_key, sensitive_properties[schema_key])
-        raise ValueError(error_msg)
-
-    if not isinstance(schema_rule, dict):
-        return
-
-    text_value = str(value)
-    min_length = schema_rule.get("minLength")
-    max_length = schema_rule.get("maxLength")
-    pattern = schema_rule.get("pattern")
-    constraint_info = _format_sensitive_constraints(context, schema_rule)
-
-    if isinstance(min_length, int) and len(text_value) < min_length:
-        raise ValueError(
-            f"Environment variable '{env_var_name}' for {context} is too short "
-            f"({len(text_value)} < {min_length}). Value is sensitive and hidden."
-            f"{constraint_info}")
-    if isinstance(max_length, int) and len(text_value) > max_length:
-        raise ValueError(
-            f"Environment variable '{env_var_name}' for {context} is too long "
-            f"({len(text_value)} > {max_length}). Value is sensitive and hidden."
-            f"{constraint_info}")
-    if isinstance(pattern, str) and pattern:
-        try:
-            compiled = re.compile(pattern)
-        except re.error as exc:
-            raise ValueError(
-                f"Invalid regex pattern in abstract.sensitive_variables for {context}: {exc}"
-            ) from exc
-        if compiled.search(text_value) is None:
-            raise ValueError(
-                f"Environment variable '{env_var_name}' for {context} does not match "
-                f"the schema pattern. Value is sensitive and hidden."
-                f"{constraint_info}")
-
-
 def _resolve_sensitive_identifier(  # pylint: disable=too-many-arguments
     var_id: Any,
     env_prefix: str,
-    schema_key: Optional[str],
+    _schema_key: Optional[str],
     context: str,
-    sensitive_properties: Dict[str, Any],
     resolved_vars: Dict[str, str],
 ) -> None:
-    """Resolve one sensitive variable identifier to its env value and validate.
+    """Resolve one sensitive variable identifier to its env value.
 
     Args:
         var_id:               Integer identifier from the model (1-64).
         env_prefix:           Environment variable name prefix (without _N suffix).
-        schema_key:           Key inside abstract.sensitive_variables for validation rules,
-                              or None if no schema entry exists.
+        _schema_key:          Unused compatibility argument.
         context:              Human-readable path used in error messages.
-        sensitive_properties: Dict returned by accessing _SENSITIVE_SCHEMA_PROPS.
         resolved_vars:        Mutable dict where resolved env_var_name -> value is stored.
     """
     if var_id in (None, ""):
@@ -160,20 +44,10 @@ def _resolve_sensitive_identifier(  # pylint: disable=too-many-arguments
     env_var_name = f"{env_prefix}_{var_id}"
     env_value = os.environ.get(env_var_name)
     if env_value in (None, ""):
-        error_msg = (
+        raise ValueError(
             f"Missing required environment variable '{env_var_name}' for {context}.\n"
             f"\n  To fix this, run:\n"
-            f"    export {env_var_name}='<your_value_here>'")
-        if schema_key and schema_key in sensitive_properties:
-            error_msg += _format_sensitive_constraints(
-                schema_key, sensitive_properties[schema_key])
-        raise ValueError(error_msg)
-
-    if schema_key:
-        schema_rule = sensitive_properties.get(schema_key, {})
-        _validate_sensitive_value(
-            env_value, schema_rule, env_var_name, context,
-            schema_key, sensitive_properties,
+            f"    export {env_var_name}='<your_value_here>'"
         )
 
     resolved_vars[env_var_name] = str(env_value)
@@ -192,8 +66,7 @@ def _resolve_sensitive_var(
     """
     resolved: Dict[str, str] = {}
     _resolve_sensitive_identifier(
-        var_id, env_prefix, schema_key, context,
-        _SENSITIVE_SCHEMA_PROPS, resolved,
+        var_id, env_prefix, schema_key, context, resolved,
     )
     env_var_name = f"{env_prefix}_{var_id}"
     return resolved[env_var_name]
@@ -679,98 +552,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _github_request(url: str) -> Any:
-    """Perform a GitHub API request with optional token auth."""
-    headers = {
-        "Accept": "application/vnd.github+json",
-        "User-Agent": "iserver-installer-generator",
-    }
-    github_token = os.getenv("GITHUB_TOKEN")
-    if github_token:
-        headers["Authorization"] = f"Bearer {github_token}"
-
-    request = Request(url, headers=headers)
-    with urlopen(request, timeout=60) as response:
-        return json.load(response)
-
-
-def _safe_extract_tar(archive_path: Path, destination: Path) -> None:
-    """Safely extract tar.gz contents into destination directory."""
-    destination_resolved = destination.resolve()
-    with tarfile.open(archive_path, "r:gz") as tar_handle:
-        for member in tar_handle.getmembers():
-            member_path = (destination / member.name).resolve()
-            if os.path.commonpath([str(destination_resolved), str(
-                    member_path)]) != str(destination_resolved):
-                raise ValueError(
-                    f"Unsafe path in archive member: {member.name}")
-        tar_handle.extractall(destination)
-
-
-def download_and_extract_latest_iserver_release(output_dir: Path) -> None:  # pylint: disable=too-many-locals
-    """Download latest Linux tar.gz release asset from datacenter/iserver and extract it.
-
-    If an iServer Linux tar.gz already exists in the output directory, skip downloading
-    and extract from the existing local archive.
-    """
-    existing_archives = sorted(path for path in output_dir.glob(
-        "*.tar.gz") if "iserver" in path.name.lower() and "linux" in path.name.lower())
-
-    if existing_archives:
-        archive_path = existing_archives[0]
-        print(f"Using existing iServer Linux archive: {archive_path}")
-    else:
-        release_api = "https://api.github.com/repos/datacenter/iserver/releases/latest"
-        try:
-            release_data = _github_request(release_api)
-        except (HTTPError, URLError, TimeoutError) as error:
-            raise RuntimeError(
-                f"Failed to fetch latest release metadata from {release_api}: {error}") from error
-
-        assets = release_data.get("assets", [])
-        linux_tar_asset = None
-        for asset in assets:
-            name = str(asset.get("name", "")).lower()
-            if "linux" in name and name.endswith(".tar.gz"):
-                linux_tar_asset = asset
-                break
-
-        if not linux_tar_asset:
-            raise RuntimeError(
-                "No Linux .tar.gz asset found in latest datacenter/iserver release")
-
-        download_url = linux_tar_asset.get("browser_download_url")
-        asset_name = linux_tar_asset.get("name", "iserver-linux.tar.gz")
-        if not download_url:
-            raise RuntimeError(
-                "Latest release Linux asset is missing browser_download_url")
-
-        archive_path = output_dir / asset_name
-        try:
-            headers = {"User-Agent": "iserver-installer-generator"}
-            github_token = os.getenv("GITHUB_TOKEN")
-            if github_token:
-                headers["Authorization"] = f"Bearer {github_token}"
-
-            request = Request(download_url, headers=headers)
-            with urlopen(request, timeout=120) as response, open(archive_path, "wb") as file_handle:
-                file_handle.write(response.read())
-        except (HTTPError, URLError, TimeoutError) as error:
-            raise RuntimeError(
-                f"Failed to download asset {asset_name}: {error}") from error
-
-        print(
-            f"Downloaded latest iServer Linux release archive: {archive_path}")
-
-    try:
-        _safe_extract_tar(archive_path, output_dir)
-    except (tarfile.TarError, ValueError) as error:
-        raise RuntimeError(
-            f"Failed to extract asset {archive_path}: {error}") from error
-
-    print(f"Extracted iServer Linux release asset into: {output_dir}")
-
-
 def resolve_fabric_interconnect(
         fi_ref: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
     """Resolve fabric interconnect reference against bare metal fabric_interconnects list."""
@@ -943,7 +724,6 @@ def generate_server_json(
 def main() -> None:  # pylint: disable=too-many-statements
     """Parse arguments, load config, and generate nmstate/server templates."""
     args = parse_args()
-    load_schema()
 
     script_dir = Path(__file__).parent
     vars_path = args.vars_file if args.vars_file else script_dir.parent / "script_vars"
@@ -967,11 +747,6 @@ def main() -> None:  # pylint: disable=too-many-statements
         return
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    try:
-        download_and_extract_latest_iserver_release(output_dir)
-    except RuntimeError as error:
-        print(f"Error: {error}")
-        sys.exit(1)
 
     env = Environment(loader=FileSystemLoader(str(templates_dir)))
 

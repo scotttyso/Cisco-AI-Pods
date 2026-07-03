@@ -1,6 +1,6 @@
 ---
 - name: Flash Blade | Portworx | Ensure user is missing
-  purestorage.flashblade.purefb_user:
+  everpure.flashblade.purefb_user:
     api_token: "{{ lookup('ansible.builtin.env', 'pure_api_token_{{ item.api_token_id }}') }}"
     disable_warnings: true
     fb_url: "{{ item.array_url }}"
@@ -10,7 +10,7 @@
   delegate_to: localhost
 
 - name: Flash Blade | Portworx | Create Storage Admin user for each Array
-  purestorage.flashblade.purefb_user:
+  everpure.flashblade.purefb_user:
     api_token: "{{ lookup('ansible.builtin.env', 'pure_api_token_{{ item.api_token_id }}') }}"
     disable_warnings: true
     fb_url: "{{ item.array_url }}"

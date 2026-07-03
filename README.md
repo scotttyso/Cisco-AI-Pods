@@ -110,28 +110,43 @@ All documentation is in the `docs/` folder:
 
 ## Environment Preparation
 
-Prepare tools and dependencies first:
+Run the automated setup script from the repository root:
 
-1. Follow [docs/guide_prepare_the_environment.md](docs/guide_prepare_the_environment.md).
-2. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Install Ansible collections:
-   ```bash
-   ansible-galaxy collection install -r requirements.yaml
-   ```
+```bash
+./scripts/setup.sh
+```
+
+This script will:
+- Install Git and Python prerequisites (auto-detects apt/dnf/yum)
+- Create a Python virtual environment
+- Install Ansible, Python dependencies, and Ansible collections
+- Download and extract the latest iServer release for OpenShift
+
+For detailed setup instructions and optional flags, see [docs/guide_prepare_the_environment.md](docs/guide_prepare_the_environment.md).
 
 ## Quick Start Workflow
 
-### 1. Prepare Environment
+### 1. Prepare Environment and Download iServer
+
+From the repository root:
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
-ansible-galaxy collection install -r requirements.yaml
+./scripts/setup.sh --git-name "Your Name" --git-email "your@email.com"
+```
 
-# Copy example variables to host_vars/ and customize for your environment
+Activate the virtual environment:
+
+```bash
+source .venv/bin/activate
+```
+
+Then follow the iServer setup instructions: [https://github.com/datacenter/iserver/blob/main/doc/ocp/Console.md](https://github.com/datacenter/iserver/blob/main/doc/ocp/Console.md)
+
+### 2. Prepare Deployment Variables
+
+Copy example variables to `host_vars/` and customize for your environment:
+
+```bash
 mkdir -p host_vars
 cp -r examples/intersight host_vars/
 cp -r examples/openshift host_vars/
@@ -139,19 +154,19 @@ cp -r examples/everpure host_vars/
 cp -r examples/splunk_observability host_vars/
 ```
 
-### 2. Deploy Full Stack (All Domains)
+### 3. Deploy Full Stack (All Domains)
 
 ```bash
 ansible-playbook playbooks/deploy_ai_pod.yaml
 ```
 
-Custom `host_vars` location
+Custom `host_vars` location:
 
 ```bash
 ansible-playbook playbooks/deploy_ai_pod.yaml -e host_vars_dir=/some/custom/path
 ```
 
-### 3. Deploy Specific Domains (Optional)
+### 4. Deploy Specific Domains (Optional)
 
 **Intersight and UCS only:**
 ```bash

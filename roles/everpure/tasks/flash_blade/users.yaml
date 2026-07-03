@@ -3,7 +3,7 @@
 # Flash Blade - Local Users
 ############################
 - name: Settings > Security > Users  > Users - Absent
-  purestorage.flashblade.purefb_user:
+  everpure.flashblade.purefb_user:
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"
     fb_url: "{{ array_url }}"
@@ -14,7 +14,7 @@
   loop: "{{ everpure.settings.security.users }}"
 
 - name: Settings > Security > Users > Users
-  purestorage.flashblade.purefb_user:
+  everpure.flashblade.purefb_user:
     api: "{{ element.api_token | default(false) }}"
     api_token: "{{ api_token }}"
     disable_warnings: "{{ disable_certificate_warnings | default(true) | bool }}"

@@ -18,20 +18,15 @@ If comments or blank lines are added, sanity can fail with errors similar to:
 
 ## Why These Entries Exist
 
-Current ignore entries are focused on generated Helm template YAML and one shell script:
+Current sanity ignore entries are intentionally minimal:
 
 - `roles/splunk_observability/library/get_helm.sh shellcheck!skip`
   - Shellcheck skip for helper script behavior not aligned with shellcheck expectations.
-- `roles/openshift_gitops/helm/gpu-operator-installation/... yamllint!skip`
-  - GPU operator manifests rendered from Helm templates.
-- `roles/openshift_gitops/helm/infrastructure-utilities/... yamllint!skip`
-  - Infrastructure utility operator manifests rendered from Helm templates.
-- `roles/openshift_gitops/helm/observability-stack/... yamllint!skip`
-  - Observability stack operator manifests rendered from Helm templates.
-- `roles/openshift_gitops/helm/rhoai-stack/... yamllint!skip`
-  - RHOAI stack manifests rendered from Helm templates.
-- `roles/openshift_gitops/helm/workload-scaling/... yamllint!skip`
-  - Workload scaling/operator manifests rendered from Helm templates.
+
+Important:
+
+- `yamllint!skip` entries are not permitted by ansible sanity (`sanity[cannot-ignore]`).
+- Helm template YAML under `roles/openshift_gitops/helm/**/templates/**/*.yaml` is ignored through `.yamllint`, not through sanity ignore files.
 
 ## Maintenance
 
