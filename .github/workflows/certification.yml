@@ -14,7 +14,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  call:
-    uses: ansible-collections/partner-certification-checker/.github/workflows/certification-reusable.yml@v1.2.0
-    with:
-      python-versions: '["3.9", "3.10", "3.11", "3.12"]'
+  build-import:
+    name: Build and import collection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "ansible-core==2.16.0" "galaxy-importer==0.4.31"
+
+      - name: Build tarball and run galaxy-importer
+        run: python -m galaxy_importer.main --git-clone-path . --output-path /tmp
+
+  sanity:
+    name: Sanity (${{ matrix.ansible }}, Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ansible: [stable-2.16]
+        python: ['3.9', '3.10', '3.11', '3.12']
+    steps:
+      - name: Perform sanity testing
+        uses: ansible-community/ansible-test-gh-action@d3a8ec7a59694e25e210fcd44738910149537f0e # v1.17.0
+        with:
+          ansible-core-version: ${{ matrix.ansible }}
+          testing-type: sanity
+          target-python-version: ${{ matrix.python }}
+          collection-root: .
+          pull-request-change-detection: false
