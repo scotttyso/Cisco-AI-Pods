@@ -18,6 +18,7 @@ from jinja2 import Environment, FileSystemLoader
 
 SSH_PUBLIC_KEY_TYPE_PATTERN = re.compile(r"^(ssh-|ecdsa-|sk-)")
 
+
 def _resolve_sensitive_identifier(  # pylint: disable=too-many-arguments
     var_id: Any,
     env_prefix: str,
