@@ -15,9 +15,25 @@ concurrency:
 
 jobs:
   ansible-lint:
-    uses: ansible/ansible-content-actions/.github/workflows/ansible_lint.yaml@v1.1.0
-    with:
-      args: "--offline --skip-list sanity ."
+    runs-on: ubuntu-latest
+    env:
+      LINT_VER: 24.12.2
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install ansible-lint
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "ansible-lint==${LINT_VER}"
+
+      - name: Run ansible-lint
+        run: ansible-lint --profile=production --skip-list sanity .
   all_green:
     if: ${{ always() }}
     needs:
