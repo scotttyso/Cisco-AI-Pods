@@ -2,6 +2,8 @@
 openshift:
   ldap:
     base_dn: DC=rich,DC=ciscolabs,DC=com
+    base_dn_groups: OU=Groups,DC=rich,DC=ciscolabs,DC=com
+    base_dn_users: OU=Users,DC=rich,DC=ciscolabs,DC=com
     bind_dn: CN=Network Service,OU=Service Accounts,DC=rich,DC=ciscolabs,DC=com
     certificate_file_path: ca1.crt
     cluster_admins:
