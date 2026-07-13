@@ -2,15 +2,17 @@
 - name: Verify Required Environment Variables Are Set
   ansible.builtin.assert:
     that:
-      - openshift_token | length > 0
-      - openshift_api_url | length > 0
+      - >-
+        (lookup('ansible.builtin.env', 'K8S_AUTH_KUBECONFIG') | length > 0)
+        or (lookup('ansible.builtin.env', 'KUBECONFIG') | length > 0)
+        or ((openshift_token | length > 0) and (openshift_api_url | length > 0))
       - openshift.certificates.user_ca_bundle_file | length > 0
       - openshift.certificates.ingress_cert_chain_file | length > 0
       - openshift.certificates.ingress_key_file | length > 0
       - openshift.certificates.api_cert_chain_file | length > 0
       - openshift.certificates.api_key_file | length > 0
       - openshift.certificates.api_server_hostname | length > 0
-    fail_msg: "One or more required environment variables are missing for certificate deployment"
+    fail_msg: "Certificate deployment requires OpenShift authentication via K8S_AUTH_KUBECONFIG or KUBECONFIG, or both openshift_token_id and openshift_api_url, plus the certificate file inputs."
 
 - name: Verify Certificate and Key Files Exist
   ansible.builtin.stat:

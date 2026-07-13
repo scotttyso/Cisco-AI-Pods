@@ -230,13 +230,18 @@
       when: openshift.install is defined and openshift.install.bare_metal is defined
       tags: always
 
-    - name: Require OpenShift API URL and token for environment-backed roles
-      ansible.builtin.assert:
-        that:
-          - openshift_api_url_resolved | length > 0
-          - openshift_token_id_resolved | length > 0
-        fail_msg: "Could not resolve openshift_api_url/openshift_token_id from kubeconfig. Ensure kubeconfig includes a token user or export these environment variables explicitly."
-      when: openshift.install is defined and openshift.install.bare_metal is defined
+    - name: Note when kubeconfig does not expose token-backed environment variables
+      ansible.builtin.debug:
+        msg:
+          - "Cluster kubeconfig selected: {{ openshift_kubeconfig_path }}"
+          - "The kubeconfig did not expose both openshift_api_url and openshift_token_id."
+          - "Post-install roles will continue with kubeconfig-based authentication."
+          - "If you run a role outside this playbook and it still expects env vars, export them explicitly."
+      when:
+        - openshift.install is defined
+        - openshift.install.bare_metal is defined
+        - openshift_kubeconfig_path | length > 0
+        - openshift_api_url_resolved | length == 0 or openshift_token_id_resolved | length == 0
       tags: always
 
     - name: Verify OpenShift API readiness before post-install roles
@@ -263,6 +268,7 @@
           - "  export K8S_AUTH_KUBECONFIG={{ openshift_kubeconfig_path }}"
           - "  export openshift_api_url={{ openshift_api_url_resolved }}"
           - "  export openshift_token_id=<redacted-token>"
+          - "Only export openshift_api_url/openshift_token_id if a standalone role or external tool requires them."
       when: openshift.install is defined and openshift.install.bare_metal is defined
       tags: always
 

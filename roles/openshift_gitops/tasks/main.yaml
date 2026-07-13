@@ -2,9 +2,14 @@
 - name: Verify Required Environment Variables Are Set
   ansible.builtin.assert:
     that:
-      - lookup('ansible.builtin.env', 'openshift_token_id') | length > 0
-      - lookup('ansible.builtin.env', 'openshift_api_url') | length > 0
-    fail_msg: "Required environment variables not set: openshift_token_id, openshift_api_url"
+      - >-
+        (lookup('ansible.builtin.env', 'K8S_AUTH_KUBECONFIG') | length > 0)
+        or (lookup('ansible.builtin.env', 'KUBECONFIG') | length > 0)
+        or (
+          (lookup('ansible.builtin.env', 'openshift_token_id') | length > 0)
+          and (lookup('ansible.builtin.env', 'openshift_api_url') | length > 0)
+        )
+    fail_msg: "OpenShift authentication is not configured. Set K8S_AUTH_KUBECONFIG or KUBECONFIG, or export both openshift_token_id and openshift_api_url."
 
 - name: Validate Required GitOps Configuration
   ansible.builtin.assert:
