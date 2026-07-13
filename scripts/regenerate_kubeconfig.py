@@ -64,7 +64,10 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--output",
-        help="Path to the regenerated kubeconfig file.",
+        help=(
+            "Path to the regenerated kubeconfig file. Defaults to overwriting "
+            "--kubeconfig-path in place."
+        ),
     )
     parser.add_argument(
         "--context",
@@ -96,8 +99,7 @@ def parse_args() -> argparse.Namespace:
             args.kubeconfig_path = str(kubeconfig_env)
 
     if not args.output:
-        source_path = Path(args.kubeconfig_path).expanduser()
-        args.output = str(source_path.with_name(f"{source_path.name}.updated"))
+        args.output = args.kubeconfig_path
 
     return args
 
