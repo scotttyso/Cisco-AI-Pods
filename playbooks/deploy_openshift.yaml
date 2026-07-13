@@ -49,7 +49,23 @@
     - name: Validate Sensitive Environment Variables
       ansible.builtin.command:
         cmd: "{{ ansible_python_interpreter }} {{ playbook_dir }}/../scripts/validate_sensitive_variables.py --models {{ sensitive_model_file.path }}"
+      register: sensitive_validation_result
       changed_when: false
+      failed_when: false
+      tags: always
+
+    - name: Fail with readable sensitive variable validation output
+      ansible.builtin.fail:
+        msg: |
+          Sensitive environment variable validation failed.
+
+          {% if sensitive_validation_result.stdout_lines | default([]) | length > 0 %}Summary:
+          {{ sensitive_validation_result.stdout_lines | join('\n') }}
+
+          {% endif %}{% if sensitive_validation_result.stderr_lines | default([]) | length > 0 %}Details:
+          {{ sensitive_validation_result.stderr_lines | join('\n') }}
+          {% endif %}
+      when: sensitive_validation_result.rc != 0
       tags: always
 
     - name: Remove Temporary Model File
@@ -137,7 +153,23 @@
     - name: Validate Sensitive Environment Variables
       ansible.builtin.command:
         cmd: "{{ ansible_python_interpreter }} {{ playbook_dir }}/../scripts/validate_sensitive_variables.py --models {{ sensitive_model_file.path }}"
+      register: sensitive_validation_result
       changed_when: false
+      failed_when: false
+      tags: always
+
+    - name: Fail with readable sensitive variable validation output
+      ansible.builtin.fail:
+        msg: |
+          Sensitive environment variable validation failed.
+
+          {% if sensitive_validation_result.stdout_lines | default([]) | length > 0 %}Summary:
+          {{ sensitive_validation_result.stdout_lines | join('\n') }}
+
+          {% endif %}{% if sensitive_validation_result.stderr_lines | default([]) | length > 0 %}Details:
+          {{ sensitive_validation_result.stderr_lines | join('\n') }}
+          {% endif %}
+      when: sensitive_validation_result.rc != 0
       tags: always
 
     - name: Remove Temporary Model File
