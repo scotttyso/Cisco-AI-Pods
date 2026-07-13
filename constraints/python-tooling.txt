@@ -1,0 +1,14 @@
+# Centralized Python tooling constraints for local development and CI.
+#
+# Purpose:
+# - Keep ansible-core, ansible-lint, and tox aligned across Python 3.12+
+# - Prevent accidental upgrades that cause CLI/module mismatch
+#
+# Update process:
+# 1) Validate new versions across supported Python versions in CI
+# 2) Update pins below
+# 3) Re-run scripts/check_ansible_env.sh after environment bootstrap
+
+ansible-core==2.20.7
+ansible-lint==26.6.0
+tox==4.56.1
