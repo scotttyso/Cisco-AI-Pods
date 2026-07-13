@@ -16,18 +16,20 @@ groupUIDNameMapping:
   "{{ k }}": {{ v }}
 {% endfor %}
 augmentedActiveDirectory:
-    groupsQuery:
-        derefAliases: never
-        pageSize: 0
-        timeout: 0
     groupUIDAttribute: dn
     groupNameAttributes: [ cn ]
+    groupMembershipAttributes: [ "memberOf" ]
+    groupsQuery:
+        baseDN: {{ ldap.base_dn_groups | default(ldap.base_dn) }}
+        derefAliases: never
+        pageSize: 500
+        scope: sub
+        timeout: 120
+    userNameAttributes: [ sAMAccountName ]
     usersQuery:
         baseDN: {{ ldap.base_dn_users | default(ldap.base_dn) }}
         derefAliases: never
-        filter: (objectclass=person)
-        pageSize: 0
+        filter: "(&(objectCategory=person)(objectClass=user))"
+        pageSize: 500
         scope: sub
-        timeout: 0
-    userNameAttributes: [ sAMAccountName ]
-    groupMembershipAttributes: [ "memberOf:1.2.840.113556.1.4.1941:" ]
+        timeout: 120

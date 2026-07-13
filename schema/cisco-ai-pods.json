@@ -37669,7 +37669,7 @@
         },
         "openshift.ldap": {
             "additionalProperties": false,
-            "description": "This dictionary defines the LDAP Identity Provider settings for OpenShift.\n\nRequired fields are:\n  * `base_dn`\n  * `bind_dn`\n  * `secure_ldap`\n  * `url`\n\nOptional fields are:\n  * `base_dn_users`",
+            "description": "This dictionary defines the LDAP Identity Provider settings for OpenShift.\n\nRequired fields are:\n  * `base_dn`\n  * `bind_dn`\n  * `secure_ldap`\n  * `url`\n\nOptional fields are:\n  * `base_dn_groups`\n  * `base_dn_users`",
             "properties": {
                 "base_dn": {
                     "description": "The LDAP Base Distinguished Name used as the search base for authentication to the cluster (e.g. `DC=example,DC=com`).",
@@ -37679,6 +37679,16 @@
                     "maxLength": 512,
                     "minLength": 1,
                     "title": "LDAP Base Distinguished Name",
+                    "type": "string"
+                },
+                "base_dn_groups": {
+                    "description": "The LDAP Base Distinguished Name used as the search base for group entries, if unique from `base_dn`.  (e.g. `OU=Groups,DC=example,DC=com`).",
+                    "examples": [
+                        "OU=Groups,DC=example,DC=com"
+                    ],
+                    "maxLength": 512,
+                    "minLength": 1,
+                    "title": "LDAP Base Distinguished Name for Groups",
                     "type": "string"
                 },
                 "base_dn_users": {
