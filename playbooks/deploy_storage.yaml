@@ -58,6 +58,6 @@
       tags: [everpure]
       when: (everpure.flash_arrays is defined or everpure.flash_blades is defined) and everpure.settings is defined
 
-    - role: portworx_csi
+    - role: portworx_enterprise
       tags: [portworx]
       when: (everpure.flash_arrays is defined or everpure.flash_blades is defined) and everpure.portworx is defined

@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  role_name: portworx_csi
+  role_name: portworx_enterprise
   author: Tyson Scott
   company: Cisco Systems
   description: Deploy Portworx Enterprise CSI on OpenShift with Pure Storage backend for AI Pod persistent storage.

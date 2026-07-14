@@ -9,7 +9,7 @@ authors:
 description: >-
   Ansible collection for deploying and managing Cisco AI Pod infrastructure.
   Covers Cisco Intersight server provisioning, Red Hat OpenShift cluster setup,
-  Pure Storage configuration, Portworx CSI deployment, and Splunk Observability
+  Pure Storage configuration, Portworx Enterprise deployment, and Splunk Observability
   integration for AI inferencing workloads.
 license:
   - Apache-2.0

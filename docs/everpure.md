@@ -47,7 +47,7 @@ Critical dependency: Portworx installation must occur only after OpenShift insta
 
 - `host_vars/everpure/everpure.ezai.yaml`: Everpure and Portworx input variables
 - `roles/everpure/tasks/main.yaml`: Everpure role entry point
-- `roles/portworx_csi/tasks/main.yaml`: Portworx role entry point
+- `roles/portworx_enterprise/tasks/main.yaml`: Portworx role entry point
 
 Edit variables in Visual Studio Code:
 
@@ -118,7 +118,7 @@ The combined Everpure + Portworx flow does the following:
 4. Creates StorageCluster
 5. Creates StorageClass resources from configured entries
 
-Role details: [roles/portworx_csi/README.md](../roles/portworx_csi/README.md)
+Role details: [roles/portworx_enterprise/README.md](../roles/portworx_enterprise/README.md)
 
 ## Validation
 

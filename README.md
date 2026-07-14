@@ -25,7 +25,7 @@ This repository contains automation and runbooks for Cisco AI Pods infrastructur
 The repository provides centralized Ansible-based automation for complete Cisco AI Pods infrastructure deployment across:
 
 - **Intersight and UCS** - Policy provisioning, resource pool management, and server profile deployment
-- **Everpure Storage** - FlashArray and FlashBlade configuration with Portworx CSI integration
+- **Everpure Storage** - FlashArray and FlashBlade configuration with Portworx Enterprise integration
 - **Red Hat OpenShift** - Cluster installation, authentication, certificates, GitOps, and ArgoCD
 - **Splunk Observability** - Full-stack visibility and monitoring integration
 
@@ -47,7 +47,7 @@ All workflows execute through centralized Ansible playbooks from the repository 
 3. **Everpure Storage and Portworx** (`playbooks/deploy_ai_pod.yaml --tags everpure,portworx`)
    - Guide: [docs/everpure.md](docs/everpure.md)
   - Role details: [roles/everpure/README.md](roles/everpure/README.md)
-  - Role details: [roles/portworx_csi/README.md](roles/portworx_csi/README.md)
+  - Role details: [roles/portworx_enterprise/README.md](roles/portworx_enterprise/README.md)
 
 4. **OpenShift Platform** (`playbooks/deploy_openshift.yaml` or `playbooks/deploy_ai_pod.yaml --tags openshift`)
    - Guide: [docs/openshift.md](docs/openshift.md)
@@ -82,7 +82,7 @@ Cisco-AI-Pods/
     intersight_*/
     openshift_*/
     everpure/
-    portworx_csi/
+    portworx_enterprise/
     splunk_observability/
   host_vars/                     # Environment variables (auto-loaded)
     everpure/

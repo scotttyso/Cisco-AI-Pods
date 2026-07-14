@@ -245,8 +245,8 @@
       tags: [openshift, auth]
       when: openshift.ldap is defined and openshift.ldap.url | length > 0
 
-    # - role: cisco.ai_pods.portworx_csi
-    - role: portworx_csi
+    # - role: cisco.ai_pods.portworx_enterprise
+    - role: portworx_enterprise
       tags: [storage, portworx]
       when: (everpure.flash_arrays is defined or everpure.flash_blades is defined) and everpure.portworx is defined
 
