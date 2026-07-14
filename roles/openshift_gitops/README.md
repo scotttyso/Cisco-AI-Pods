@@ -53,6 +53,7 @@ Include in `operators_to_install`:
 - `external-secrets-operator`
 - `gpu-operator`
 - `infrastructure-operators`
+- `intersight-operator`
 - `kubernetes-nmstate-operator`
 - `node-feature-discovery-operator`
 - `nvidia-gpu-operator`
