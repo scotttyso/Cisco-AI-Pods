@@ -289,12 +289,12 @@
 
     - role: openshift_argo_cd
       tags: [argocd]
-      when: openshift.operators.openshift_gitops.enabled | default(false) | bool
+      when: openshift.operators.openshift_gitops.enable | default(false) | bool
 
     # - role: cisco.ai_pods.openshift_gitops
     - role: openshift_gitops
       tags: [gitops]
-      when: openshift.operators.openshift_gitops.enabled | default(false) | bool
+      when: openshift.operators.openshift_gitops.enable | default(false) | bool
 
     # - role: cisco.ai_pods.gpu_operators
     #   tags: [gpu]
