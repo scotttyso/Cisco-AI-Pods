@@ -161,6 +161,19 @@
     prompt: "Operator appears ready. Press Enter to continue, or Ctrl+C then A to abort."
   when: prompt_before_storagecluster_apply | bool
 
+- name: Enable Portworx Console plugin
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: operator.openshift.io/v1
+      kind: Console
+      metadata:
+        name: cluster
+      spec:
+        plugins:
+          - portworx
+    validate_certs: "{{ validate_certificates }}"
+
 - name: Deploy Portworx StorageCluster (Version 3.5.2)
   kubernetes.core.k8s:
     state: present

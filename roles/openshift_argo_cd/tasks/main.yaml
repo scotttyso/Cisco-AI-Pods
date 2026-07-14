@@ -51,3 +51,16 @@
   until: deployment_info.resources[0].status.availableReplicas | default(0) > 0
   retries: 10
   delay: 30
+
+- name: Enable Portworx Console plugin
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: operator.openshift.io/v1
+      kind: Console
+      metadata:
+        name: cluster
+      spec:
+        plugins:
+          - gitops-plugin
+    validate_certs: "{{ validate_certificates }}"
