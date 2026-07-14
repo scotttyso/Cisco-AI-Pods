@@ -68,8 +68,8 @@
 
 - name: Create the OpenShift GitOps (ArgoCD) Application YAML Files for LLDP DaemonSet from Template
   ansible.builtin.copy:
-    content: "{{ lookup('template', 'lldp-daemonset.yaml.j2') }}"
-    dest: "{{ destination_directory }}/olm-catalog/operators/lldp-daemonset.yaml"
+    content: "{{ lookup('template', 'lldpd-daemonset.yaml.j2') }}"
+    dest: "{{ destination_directory }}/olm-catalog/operators/lldpd-daemonset.yaml"
     mode: '0755'
 
 - name: Remove Standalone Operators from Operator List if Red Hat OpenShift AI is Present

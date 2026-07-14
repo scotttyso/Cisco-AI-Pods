@@ -2,17 +2,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: external-secrets-operator
+  name: openshift-cert-manager-operator
   namespace: openshift-gitops
 spec:
   project: default
   source:
     repoURL: '{{ openshift.operators.openshift_gitops.gitops_repo_url }}'
     targetRevision: HEAD
-    path: olm-catalog/external-secrets-operator
+    path: olm-catalog/openshift-cert-manager-operator
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: external-secrets-operator
+    namespace: cert-manager-operator
   syncPolicy:
     automated:
       prune: {{ openshift.operators.openshift_gitops.prune | default('false') }}
