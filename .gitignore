@@ -234,6 +234,8 @@ __marimo__/
 # Security and editor artifacts
 .env.*
 vault_pass*
+.vault_pass*
+vault.yaml
 credentials*
 *.retry
 .vscode/

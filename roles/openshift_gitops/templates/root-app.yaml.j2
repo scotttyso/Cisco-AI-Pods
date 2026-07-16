@@ -1,0 +1,19 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-bootstrap
+  namespace: openshift-gitops
+spec:
+  project: default
+  source:
+    repoURL: '{{ openshift.operators.openshift_gitops.gitops_repo_url }}'
+    targetRevision: HEAD
+    path: argocd-apps
+  destination:
+    server: 'https://default.svc'
+    namespace: openshift-gitops
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

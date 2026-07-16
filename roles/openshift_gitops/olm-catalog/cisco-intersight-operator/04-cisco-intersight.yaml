@@ -1,0 +1,12 @@
+---
+apiVersion: intersight.cisco.com/v1
+kind: CiscoIntersight
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  name: intersight-resource
+  labels:
+    os.discoverytool.install: intersight
+  namespace: cisco-intersight
+spec:
+  OsDiscoveryToolInstall: true

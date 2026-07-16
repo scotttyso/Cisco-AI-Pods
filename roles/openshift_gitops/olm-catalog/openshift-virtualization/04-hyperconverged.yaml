@@ -4,7 +4,7 @@ kind: HyperConverged
 metadata:
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    argocd.argoproj.io/sync-wave: "5" # Ensures this is applied AFTER the operator is ready
+    argocd.argoproj.io/sync-wave: "9" # Ensures this is applied AFTER the operator is ready
     deployOVS: 'false'
   name: kubevirt-hyperconverged
   namespace: openshift-cnv

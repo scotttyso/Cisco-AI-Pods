@@ -50,10 +50,10 @@ Set in `host_vars/openshift/operators.ezai.yaml`:
 Include in `operators_to_install`:
 
 - `ansible-automation-platform`
+- `cisco-intersight-operator`
 - `external-secrets-operator`
 - `gpu-operator`
 - `infrastructure-operators`
-- `intersight-operator`
 - `kubernetes-nmstate-operator`
 - `node-feature-discovery-operator`
 - `nvidia-gpu-operator`

@@ -1,0 +1,145 @@
+---
+# Everpure FlashBlade S3 bucket provisioning for AI Pod tenants
+- name: Create Everpure S3 Bucket
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  pre_tasks:
+    - name: Load Vault Variables
+      ansible.builtin.include_vars:
+        file: "{{ playbook_dir }}/../vault.yaml"
+
+    - name: Debug Received Variables
+      ansible.builtin.debug:
+        msg:
+          everpure_mgmt_endpoint: "{{ everpure_mgmt_endpoint }}"
+          requester: "{{ requester }}"
+          project_name: "{{ project_name | default(requester) | lower }}-cai-ns"
+
+    - name: Fail if OpenShift API Token Is Not Available
+      ansible.builtin.fail:
+        msg: "OpenShift API token is not available. Ensure vault_openshift_token is defined in your variable files."
+      when: vault_openshift_token is not defined or vault_openshift_token == ""
+
+    - name: Get Existing Object Store (S3) Accounts
+      everpure.flashblade.purefb_info:
+        api_token: "{{ everpure_api_token }}"
+        disable_warnings: true
+        fb_url: "{{ everpure_mgmt_endpoint }}"
+        gather_subset: accounts
+      register: existing_accounts
+
+    - name: Set Account Info Variable
+      ansible.builtin.set_fact:
+        account_info: "{{ existing_accounts.purefb_info.accounts.get(requester | lower + '-cai-stg', {}) }}"
+        account_name: "{{ requester | lower + '-cai-stg' }}"
+        user_name: "{{ requester | lower }}"
+
+  tasks:
+    - name: Create Object Store (S3) Account
+      everpure.flashblade.purefb_s3acc:
+        api_token: "{{ everpure_api_token }}"
+        disable_warnings: true
+        fb_url: "{{ everpure_mgmt_endpoint }}"
+        state: present
+        # Module specific settings
+        block_new_public_policies: true
+        block_public_access: true
+        default_quota: 10T
+        name: "{{ requester | lower }}-cai-stg"
+        quota: 10T
+      register: s3_account_info
+      when: account_name not in (existing_accounts.purefb_info.accounts | default({}) | dict2items | map(attribute='key') | list)
+
+    - name: Remove Existing Keys for User, If Already Defined
+      no_log: true
+      everpure.flashblade.purefb_s3user:
+        api_token: "{{ everpure_api_token }}"
+        disable_warnings: true
+        fb_url: "{{ everpure_mgmt_endpoint }}"
+        state: remove_key
+        # Module specific settings
+        access_key: "{{ item.name }}"
+        account: "{{ requester | lower }}-cai-stg"
+        name: "{{ requester | lower }}"
+      loop: "{{ account_info.get('users', {}).get(user_name, {}).get('keys', []) }}"
+      when: user_name in account_info.get('users', {})
+
+    - name: Create Object Store (S3) Account - User
+      no_log: true
+      everpure.flashblade.purefb_s3user:
+        api_token: "{{ everpure_api_token }}"
+        disable_warnings: true
+        fb_url: "{{ everpure_mgmt_endpoint }}"
+        state: present
+        # Module specific settings
+        access_key: true
+        account: "{{ requester | lower }}-cai-stg"
+        name: "{{ requester | lower }}"
+        policy:
+          - pure:policy/full-access
+      register: user_info
+
+    - name: Create the S3 Bucket
+      everpure.flashblade.purefb_bucket:
+        api_token: "{{ api_token }}"
+        disable_warnings: true
+        fb_url: "{{ everpure_mgmt_endpoint }}"
+        state: present
+        # Module specific settings
+        account: "{{ requester | lower }}-cai-stg"
+        block_new_public_policies: true
+        block_public_access: true
+        mode: classic
+        name: "{{ requester | lower }}-s3"
+        quota: 10T
+        versioning: enabled
+      register: bucket_info
+
+    - name: Display Object Store (S3) Bucket Details
+      ansible.builtin.debug:
+        msg: |
+          S3 bucket created successfully!
+
+          To use the bucket, set these environment variables:
+
+          export AWS_ACCESS_KEY_ID="{{ user_info.s3user_info.fb_s3user.access_id }}"
+          export AWS_DEFAULT_REGION=us-east-1
+          export AWS_S3_BUCKET="{{ requester | lower }}-s3"
+          export AWS_S3_ENDPOINT="{{ everpure_storage_endpoint }}"
+          export AWS_SECRET_ACCESS_KEY="{{ user_info.s3user_info.fb_s3user.access_key }}"
+          export S3_VERIFY_SSL="true"
+
+          Or set all at once:
+          export AWS_ACCESS_KEY_ID="{{ user_info.s3user_info.fb_s3user.access_id }}" AWS_DEFAULT_REGION=us-east-1 AWS_S3_BUCKET="{{ requester | lower }}-s3" AWS_S3_ENDPOINT="{{ everpure_storage_endpoint }}" AWS_SECRET_ACCESS_KEY="{{ user_info.s3user_info.fb_s3user.access_key }}" S3_VERIFY_SSL="true"
+
+  #   - name: Apply Pure Storage S3 Secret
+  #     no_log: true
+  #     kubernetes.core.k8s:
+  #       state: present
+  #       host: "{{ vault_openshift_host }}"
+  #       api_key: "{{ vault_openshift_token }}"
+  #       validate_certs: "{{ vault_openshift_verify_ssl | default('false') | bool }}"
+  #       definition:
+  #         apiVersion: v1
+  #         kind: Secret
+  #         metadata:
+  #           name: "{{ requester | lower }}-s3"
+  #           namespace: "{{ project_name | default(requester) | lower }}-cai-ns"
+  #           labels:
+  #             opendatahub.io/dashboard: 'true'
+  #             opendatahub.io/managed: 'true'
+  #           annotations:
+  #             opendatahub.io/connection-type: s3
+  #             opendatahub.io/connection-type-ref: s3
+  #             openshift.io/description: ''
+  #             openshift.io/display-name: "{{ requester | lower }}-s3"
+  #         stringData:
+  #           AWS_ACCESS_KEY_ID: "{{ user_info.s3user_info.fb_s3user.access_id }}"
+  #           AWS_DEFAULT_REGION: us-east-1
+  #           AWS_S3_BUCKET: "{{ requester | lower }}-s3"
+  #           AWS_S3_ENDPOINT: "{{ everpure_storage_endpoint }}"
+  #           AWS_SECRET_ACCESS_KEY: "{{ user_info.s3user_info.fb_s3user.access_key }}"
+  #           S3_VERIFY_SSL: "true"
+  #         type: Opaque

@@ -110,7 +110,7 @@ openshift:
     operators_to_install:
       - ansible-automation-platform
       - external-secrets-operator
-      - intersight-operator
+      - cisco-intersight-operator
       - kubernetes-nmstate-operator
       - node-feature-discovery-operator
       - nvidia-gpu-operator

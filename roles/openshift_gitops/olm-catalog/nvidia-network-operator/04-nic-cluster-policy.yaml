@@ -5,7 +5,7 @@ apiVersion: mellanox.com/v1alpha1
 kind: NicClusterPolicy
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "15" # Ensures this is applied AFTER the operator is ready
+    argocd.argoproj.io/sync-wave: "9" # Ensures this is applied AFTER the operator is ready
   name: nic-cluster-policy
 spec:
   docaTelemetryService:

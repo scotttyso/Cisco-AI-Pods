@@ -3,7 +3,7 @@ apiVersion: nfd.openshift.io/v1
 kind: NodeFeatureDiscovery
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "1" # Ensures this is applied AFTER the operator is ready
+    argocd.argoproj.io/sync-wave: "9" # Ensures this is applied AFTER the operator is ready
   name: nfd-instance
   namespace: openshift-nfd
 spec:

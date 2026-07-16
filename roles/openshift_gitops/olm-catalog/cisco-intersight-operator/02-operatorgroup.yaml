@@ -2,11 +2,11 @@
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
+  name: cisco-intersight
+  namespace: cisco-intersight
   annotations:
     argocd.argoproj.io/sync-wave: "2"
-  name: cert-manager-operator-group
-  namespace: cert-manager-operator
+    olm.providedAPIs: CiscoIntersight.v1.intersight.cisco.com
 spec:
   targetNamespaces:
-  - cert-manager-operator
-  upgradeStrategy: Default
+    - cisco-intersight

@@ -1,4 +1,5 @@
 # Centralized Python dependencies for Cisco-AI-Pods automation
+boto3
 distro
 dotmap
 intersight-auth
