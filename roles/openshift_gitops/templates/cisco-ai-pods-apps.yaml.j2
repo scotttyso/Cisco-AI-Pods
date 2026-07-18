@@ -1,0 +1,51 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cisco-ai-pods-app-waves
+  namespace: openshift-gitops
+spec:
+  generators:
+    - git:
+        repoURL: '{{ openshift.operators.openshift_gitops.gitops_repo_url }}'
+        revision: HEAD
+        files:
+          - path: "apps/**/config.json"
+  template:
+    metadata:
+      # We wrap Argo CD tokens in raw so Ansible does not try to process them
+      name: '{% raw %}{{path.basename}}{% endraw %}'
+      annotations:
+        argocd.argoproj.io/sync-wave: '{% raw %}{{config.deploymentWave}}{% endraw %}'
+    spec:
+      project: default
+      source:
+        repoURL: '{{ openshift.operators.openshift_gitops.gitops_repo_url }}'
+        targetRevision: HEAD
+        path: '{% raw %}{{path.directory}}{% endraw %}'
+        directory:
+          exclude: "config.json"
+      destination:
+        server: 'https://kubernetes.default.svc'
+        namespace: '{% raw %}{{path.basename}}{% endraw %}'
+      syncPolicy:
+        automated:
+          prune: {{ openshift.operators.openshift_gitops.prune | default('false') | lower }}
+          selfHeal: {{ openshift.operators.openshift_gitops.self_heal | default('false') | lower }}
+        managedNamespaceMetadata:
+          labels:
+            argocd.argoproj.io/managed-by: openshift-gitops
+            openshift.io/cluster-monitoring: "true"
+          annotations:
+            openshift.io/node-selector: ""
+        retry:
+          limit: 10
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
+        syncOptions:
+          - CreateNamespace=true
+          - RespectIgnoreDifferences=true
+          - SkipDryRunOnMissingResource=true
+          - ServerSideApply=true

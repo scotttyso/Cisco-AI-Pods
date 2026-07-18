@@ -1,25 +1,26 @@
 ---
-apiVersion: argoproj.io/v1alpha1
-kind: Application
+apiVersion: aap.ansible.com/v1alpha1
+kind: AnsibleAutomationPlatform
 metadata:
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
-  name: ansible-automation-platform
-  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  name: ansible
+  namespace: aap
 spec:
-  project: default
-  source:
-    repoURL: '{{ openshift.operators.openshift_gitops.gitops_repo_url }}'
-    targetRevision: HEAD
-    path: olm-catalog/ansible-automation-platform
-  destination:
-    server: 'https://kubernetes.default.svc'
-    namespace: aap
-  syncPolicy:
-    automated:
-      prune: {{ openshift.operators.openshift_gitops.prune | default('false') }}
-      selfHeal: {{ openshift.operators.openshift_gitops.self_heal | default('false') }}
-    syncOptions:
-      - CreateNamespace=true
-      - PruneLast={{ openshift.operators.openshift_gitops.prune | default('false') }}
-      - SkipDryRunOnMissingResource=true # Important: The AAP Instance CRDs won't exist during the first dry-run
+  api:
+    log_level: INFO
+    replicas: 1
+  controller:
+    disabled: false
+  database:
+    postgres_data_volume_init: false
+    idle_disabled: false
+  hub:
+    disabled: false
+    file_storage_size: 100Gi
+    file_storage_storage_class: {{ openshift.file_storage_class }}
+    storage_type: file
+  image_pull_policy: IfNotPresent
+  no_log: true
+  redis_mode: standalone
+  route_tls_termination_mechanism: Edge

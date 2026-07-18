@@ -1,0 +1,12 @@
+---
+apiVersion: operators.coreos.com/v1alpha2
+kind: OperatorGroup
+metadata:
+  annotations:
+    olm.providedAPIs: LeaderWorkerSetOperator.v1.operator.openshift.io
+    argocd.argoproj.io/sync-wave: "1"
+  name: openshift-lws-operator-group
+  namespace: openshift-lws-operator
+spec:
+  targetNamespaces:
+    - openshift-lws-operator

@@ -4,6 +4,11 @@ openshift:
   cluster_name: ai-pods
   destination_directory: /home/user/my_repos/openshift-gitops-repo
   file_storage_class: portworx-shared-gp3
+  gpu_models:
+    - H200 SXM
+    - H100 NVL
+    - RTX PRO 6000 Blackwell Server Edition
+  nvidia_ai_enterprise_version: 8.1
   operators:
     cilium:
       cluster_network:
@@ -15,7 +20,11 @@ openshift:
       download_url: https://docs.isovalent.com/v25.11/public/clife/clife-v1.18.8.tar.gz
     gitea:
       enable: true
+    nvidia_gpu_operator:
+      enable_rdma: true
     nvidia_network_operator:
+      doca_driver_version: doca3.2.0-25.10-1.2.8.0-2
+      doca_telemetry_version: 1.23.4-doca3.2.0-host
       mac_vlan:
         - exclude_ips:
             - 198.18.11.1/32
@@ -49,6 +58,7 @@ openshift:
             - 198.18.18.1/32
           ip_range: 198.18.18.0/24
           master_interface: ens208f0np0
+      network_operator_version: v26.4.0
       persistent_net_rules:
         - hostname: hgx-worker-01
           interfaces:
@@ -108,13 +118,16 @@ openshift:
       prune: false
       self_heal: false
     operators_to_install:
-      - ansible-automation-platform
+      - aap
       - external-secrets-operator
-      - cisco-intersight-operator
+      - cisco-intersight
       - kubernetes-nmstate-operator
       - node-feature-discovery-operator
       - nvidia-gpu-operator
       - nvidia-network-operator
       - openshift-virtualization
+      - redhat-ods-operator
     portworx:
       enabled: true
+    redhat_ods_operator:
+      enable_distributed_workloads: true

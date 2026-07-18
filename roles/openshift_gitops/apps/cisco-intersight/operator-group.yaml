@@ -1,0 +1,12 @@
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    olm.providedAPIs: CiscoIntersight.v1.intersight.cisco.com
+  name: cisco-intersight
+  namespace: cisco-intersight
+spec:
+  targetNamespaces:
+    - cisco-intersight

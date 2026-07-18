@@ -1,0 +1,13 @@
+#  This file is used to create a ConfigMap that contains the DCGM metrics configuration for the NVIDIA GPU Operator.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: metrics-config
+  namespace: nvidia-gpu-operator
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "8" # Ensures this is applied AFTER the operator is ready
+data:
+  dcgm-metrics.csv: |-
+    {{ .Files.Get "files/dcgm-metrics.csv" | nindent 4 }}

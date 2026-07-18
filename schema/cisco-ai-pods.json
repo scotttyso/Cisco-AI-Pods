@@ -36688,6 +36688,48 @@
                             "title": "OpenShift File Storage Class",
                             "type": "string"
                         },
+                        "gpu_models": {
+                            "description": "List of GPU models available in the OpenShift cluster.\n\nOptions are:\n  * `B300 SXM`\n  * `H100`\n  * `H100 NVL`\n  * `H100 SXM`\n  * `H200 NVL`\n  * `H200 SXM`\n  * `L40`\n  * `L40S`\n  * `RTX PRO 4500 Blackwell Server Edition`\n  * `RTX PRO 6000 Blackwell Server Edition`",
+                            "examples": [
+                                ["H200 SXM", "H100 NVL", "RTX PRO 6000 Blackwell Server Edition"]
+                            ],
+                            "items": {
+                                "enum": [
+                                    "B300 SXM",
+                                    "H100",
+                                    "H100 NVL",
+                                    "H100 SXM",
+                                    "H200 NVL",
+                                    "H200 SXM",
+                                    "L40",
+                                    "L40S",
+                                    "RTX PRO 4500 Blackwell Server Edition",
+                                    "RTX PRO 6000 Blackwell Server Edition"
+                                ],
+                                "type": "string"
+                            },
+                            "title": "NVIDIA GPU Models in the Cluster",
+                            "type": "array",
+                            "uniqueItems": true
+                        },
+                        "nvidia_ai_enterprise_version": {
+                            "default": "8.1",
+                            "description": "The version of NVIDIA AI Enterprise installed in the OpenShift cluster.",
+                            "enum": [
+                                "7.0",
+                                "7.1",
+                                "7.2",
+                                "7.3",
+                                "7.4",
+                                "7.5",
+                                "7.6",
+                                "7.7",
+                                "8.1",
+                                "8.1"
+                            ],
+                            "title": "NVIDIA AI Enterprise Version",
+                            "type": "string"
+                        },
                         "install": {
                             "$ref": "#/definitions/openshift.install"
                         },
@@ -36700,7 +36742,7 @@
                     }
                 }
             ],
-            "description": "This dictionary defines the OpenShift Container Platform (OCP) deployment settings.\n\nTo Install OpenShift the Required fields are:\n  * `install`\n\nTo Install API and Ingress Certificates after Install the Required fields are:\n  * `certificates`\n\nTo Configure OpenShift Auth after Install the Required fields are:\n  * `ldap`\n\nTo Install OpenShift Operators the Required fields are:\n  * `base_dns_domain`\n  * `cluster_name`\n  * `destination_directory`\n  * `file_storage_class`\n  * `operators`",
+            "description": "This dictionary defines the OpenShift Container Platform (OCP) deployment settings.\n\nTo Install OpenShift the Required fields are:\n  * `install`\n\nTo Install API and Ingress Certificates after Install the Required fields are:\n  * `certificates`\n\nTo Configure OpenShift Auth after Install the Required fields are:\n  * `ldap`\n\nTo Install OpenShift Operators the Required fields are:\n  * `base_dns_domain`\n  * `cluster_name`\n  * `destination_directory`\n  * `file_storage_class`\n  * `gpu_models`\n  * `nvidia_ai_enterprise_version`\n  * `operators`",
             "oneOf": [
                 {
                     "required": [
@@ -36708,6 +36750,8 @@
                         "cluster_name",
                         "destination_directory",
                         "file_storage_class",
+                        "gpu_models",
+                        "nvidia_ai_enterprise_version",
                         "operators"
                     ]
                 },
@@ -36921,7 +36965,7 @@
                     "type": "object"
                 }
             ],
-            "description": "This dictionary provides the required configuration settings for Cisco AI Pods - RedHat Openshift cluster deployment.\n\nRequired fields are:`cluster_name`\n  * `cluster_domain`\n  * `cluster_networking`\n  * `cluster_version`\n  * `iso_web_server`\n  * `ssh_public_key`\n\nOptional fields are:`cpu_architecture`\n  * `fabric_interconnects`\n  * `iso`\n  * `ntp_servers`\n  * `proxy_servers`",
+            "description": "This dictionary provides the required configuration settings for Cisco AI Pods - Red Hat Openshift cluster deployment.\n\nRequired fields are:`cluster_name`\n  * `cluster_domain`\n  * `cluster_networking`\n  * `cluster_version`\n  * `iso_web_server`\n  * `ssh_public_key`\n\nOptional fields are:`cpu_architecture`\n  * `fabric_interconnects`\n  * `iso`\n  * `ntp_servers`\n  * `proxy_servers`",
             "title": "OpenShift Container Platform (OCP) - Bare Metal Provisioning",
             "unevaluatedProperties": false
         },
@@ -37320,7 +37364,7 @@
                     "type": "object"
                 }
             ],
-            "description": "This dictionary provides the required configuration settings for RedHat Openshift cluster network configuration.\n\nRequired fields are:\n  * `api`\n  * `ingress`\n  * `machine_network_gateway`\n  * `routes`\n\nOptional fields are:\n  * `container_network_interface`\n  * `container_network_version`\n  * `dns_search_domains`\n  * `dns_servers`\n  * `service_network`",
+            "description": "This dictionary provides the required configuration settings for Red Hat Openshift cluster network configuration.\n\nRequired fields are:\n  * `api`\n  * `ingress`\n  * `machine_network_gateway`\n  * `routes`\n\nOptional fields are:\n  * `container_network_interface`\n  * `container_network_version`\n  * `dns_search_domains`\n  * `dns_servers`\n  * `service_network`",
             "title": "OpenShift Container Platform (OCP) - Networking",
             "unevaluatedProperties": false
         },
@@ -37346,7 +37390,7 @@
                     "type": "object"
                 }
             ],
-            "description": "This dictionary provides the required configuration settings for RedHat Openshift cluster API addressing.\n\nOptional fields are:\n  * `v4`\n  * `v6`",
+            "description": "This dictionary provides the required configuration settings for Red Hat Openshift cluster API addressing.\n\nOptional fields are:\n  * `v4`\n  * `v6`",
             "title": "OpenShift Container Platform (OCP) - Networking - API",
             "unevaluatedProperties": false
         },
@@ -37406,7 +37450,7 @@
                     "type": "object"
                 }
             ],
-            "description": "This dictionary provides the required configuration settings for RedHat Openshift cluster network addressing.  The cluster network refers to the interconnected system of logical and physical links that enable communication within a Kubernetes cluster, adhering to the Kubernetes networking model.\n\nOptional fields are:\n  * `v4_cidr`\n  * `v4_host_prefix`\n  * `v6_cidr`\n  * `v6_host_prefix`",
+            "description": "This dictionary provides the required configuration settings for Red Hat Openshift cluster network addressing.  The cluster network refers to the interconnected system of logical and physical links that enable communication within a Kubernetes cluster, adhering to the Kubernetes networking model.\n\nOptional fields are:\n  * `v4_cidr`\n  * `v4_host_prefix`\n  * `v6_cidr`\n  * `v6_host_prefix`",
             "title": "OpenShift Container Platform (OCP) - Cluster Network",
             "unevaluatedProperties": false
         },
@@ -37444,7 +37488,7 @@
                     "type": "object"
                 }
             ],
-            "description": "This dictionary provides the required configuration settings for RedHat Openshift cluster ingress addressing.\n\nOptional fields are:\n  * `v4`\n  * `v6`",
+            "description": "This dictionary provides the required configuration settings for Red Hat Openshift cluster ingress addressing.\n\nOptional fields are:\n  * `v4`\n  * `v6`",
             "title": "OpenShift Container Platform (OCP) - Networking - Ingress",
             "unevaluatedProperties": false
         },
@@ -37482,7 +37526,7 @@
                     "type": "object"
                 }
             ],
-            "description": "This dictionary provides the required configuration settings for RedHat Openshift machine network gateway addressing.  A \"k8s machine network\" refers to the networking infrastructure within a Kubernetes cluster that allows all its components\u2014including containers, pods, and nodes\u2014to communicate with each other and with external services.\n\nOptional fields are:\n  * `v4`\n  * `v6`",
+            "description": "This dictionary provides the required configuration settings for Red Hat Openshift machine network gateway addressing.  A \"k8s machine network\" refers to the networking infrastructure within a Kubernetes cluster that allows all its components\u2014including containers, pods, and nodes\u2014to communicate with each other and with external services.\n\nOptional fields are:\n  * `v4`\n  * `v6`",
             "title": "OpenShift Container Platform (OCP) - Machine Network Gateway",
             "unevaluatedProperties": false
         },
@@ -37555,7 +37599,7 @@
                     "type": "object"
                 }
             ],
-            "description": "This dictionary provides the required configuration settings for RedHat Openshift service network addressing.   The \"service network\" refers to the system that enables communication between different parts of your application and exposes services both within and outside the cluster. It provides a stable and reliable way to access your applications, abstracting away the dynamic nature of individual Pods.\n\nOptional fields are:\n  * `v4_cidr`\n  * `v6_cidr`",
+            "description": "This dictionary provides the required configuration settings for Red Hat Openshift service network addressing.   The \"service network\" refers to the system that enables communication between different parts of your application and exposes services both within and outside the cluster. It provides a stable and reliable way to access your applications, abstracting away the dynamic nature of individual Pods.\n\nOptional fields are:\n  * `v4_cidr`\n  * `v6_cidr`",
             "title": "OpenShift Container Platform (OCP) - Service Network",
             "unevaluatedProperties": false
         },
@@ -37784,7 +37828,7 @@
         },
         "openshift.operators": {
             "additionalProperties": false,
-            "description": "This dictionary defines the OpenShift operator configuration settings.\n\nRequired fields are:\n  * `operators_to_install`\n\nOptional fields are:\n  * `cilium`\n  * `gitea`\n  * `nvidia_network_operator`\n  * `openshift_gitops`",
+            "description": "This dictionary defines the OpenShift operator configuration settings.\n\nRequired fields are:\n  * `operators_to_install`\n\nOptional fields are:\n  * `cilium`\n  * `gitea`\n  * `nvidia_gpu_operator`\n  * `nvidia_network_operator`\n  * `openshift_gitops`\n  * `portworx`\n  * `redhat_ods_operator`",
             "dependentRequired": {
                 "operators_to_install": [
                     "openshift_gitops"
@@ -37797,6 +37841,9 @@
                 "gitea": {
                     "$ref": "#/definitions/openshift.operators.gitea"
                 },
+                "nvidia_gpu_operator": {
+                    "$ref": "#/definitions/openshift.operators.nvidia_gpu_operator"
+                },
                 "nvidia_network_operator": {
                     "$ref": "#/definitions/openshift.operators.nvidia_network_operator"
                 },
@@ -37804,31 +37851,35 @@
                     "$ref": "#/definitions/openshift.operators.openshift_gitops"
                 },
                 "operators_to_install": {
-                    "description": "List of operators to install on the OpenShift cluster.  Supported operators include:\n  * `ansible-automation-platform`\n  * `cisco-intersight-operator`\n  * `external-secrets-operator`\n  * `kubernetes-nmstate-operator`\n  * `node-feature-discovery-operator`\n  * `nvidia-gpu-operator`\n  * `nvidia-network-operator`\n  * `openshift-cert-manager-operator`\n  * `openshift-virtualization`\n  * `rhoai-application`",
+                    "description": "List of operators to install on the OpenShift cluster.  Supported operators include:\n  * `aap` - Ansible Automation Platform\n  * `cert-manager-operator` - cert-manager Operator for Red Hat OpenShift\n  * `cisco-intersight` - Cisco Intersight Operator\n  * `external-secrets-operator` - External Secrets Operator for Red Hat OpenShift\n  * `nvidia-gpu-operator` - NVIDIA GPU Operator\n  * `nvidia-network-operator` - NVIDIA Network Operator\n  * `openshift-cnv` - OpenShift Virtualization\n  * `openshift-nmstate` - Kubernetes NMState Operator\n  * `openshift-nfd` - Node Feature Discovery Operator\n  * `openshift-sriov-network-operator` - SR-IOV Network Operator\n  * `redhat-ods-operator` - Red Hat OpenShift AI\n\nNotes:\n\nThe following will automatically be installed:\n\n  * `lldpd` - The LLDPD DaemonSet for Network Discovery\n\nThe `openshift_gitops` operator is automatically installed if `operators_to_install` includes any operators.\n\nThe `openshift-ods-operator` (AKA Red Hat OpenShift AI) will also install the following operators:\n\n  * `cert-manager-operator` - cert-manager Operator for Red Hat OpenShift - If not already selected.\n  * `nvidia-gpu-operator` - NVIDIA GPU Operator.  If not already selected.\n  * `nvidia-network-operator` - NVIDIA Network Operator.  If not already selected.\n  * `openshift-cluster-observability-operator` - Cluster Observability Operator.\n  * `openshift-connectivity-link` - Red Hat Connectivity Link.  The Authorino, DNS, and Limitador Operators are automatically installed as dependencies of the Red Hat Connectivity Link Operator.\n  * `openshift-jobset-operator` - Job Set Operator.  Unless `redhat_ods_operator`: `enable_distributed_workloads` is set to `false`.\n  * `openshift-keda` - Custom Metrics Autoscaler\n  * `openshift-kmm` - Kernel Module Management\n  * `openshift-kueue-operator` - Red Hat build of Kueue.  Unless `redhat_ods_operator`: `enable_distributed_workloads` is set to `false`.\n  * `openshift-lws-operator` - Red Hat build of Leader Worker Set\n  * `openshift-nfd` - Node Feature Discovery Operator.  If not already selected.\n  * `openshift-opentelemetry-operator` - Red Hat build of OpenTelemetry\n  * `openshift-sriov-network-operator` - SR-IOV Network Operator.  If not already selected.\n  * `openshift-tempo-operator` - Tempo Operator",
                     "items": {
                         "description": "Operator name to install.",
                         "enum": [
-                            "ansible-automation-platform",
-                            "cisco-intersight-operator",
+                            "aap",
+                            "cert-manager-operator",
+                            "cisco-intersight",
                             "external-secrets-operator",
-                            "kubernetes-nmstate-operator",
-                            "node-feature-discovery-operator",
                             "nvidia-gpu-operator",
                             "nvidia-network-operator",
-                            "openshift-cert-manager-operator",
-                            "openshift-virtualization",
-                            "rhoai-application"
+                            "openshift-nfd",
+                            "openshift-nmstate",
+                            "openshift-cnv",
+                            "openshift-sriov-network-operator",
+                            "redhat-ods-operator"
                         ],
-                        "title": "Operator Name",
+                        "title": "Operator's to Install - Based on the Operator Namespace",
                         "type": "string"
                     },
                     "minItems": 1,
-                    "title": "Operators to Install",
+                    "title": "Operators to Install - Based on the Operator Namespace",
                     "type": "array",
                     "uniqueItems": true
                 },
                 "portworx": {
                     "$ref": "#/definitions/openshift.operators.portworx"
+                },
+                "redhat_ods_operator": {
+                    "$ref": "#/definitions/openshift.operators.redhat_ods_operator"
                 }
             },
             "required": [
@@ -37919,7 +37970,7 @@
         },
         "openshift.operators.nvidia_network_operator": {
             "additionalProperties": false,
-            "description": "This dictionary defines the NVIDIA Network Operator configuration.",
+            "description": "This dictionary defines the NVIDIA Network Operator configuration.\n\nRequired fields are:\n  * `mac_vlan`\n  * `network_operator_version`\n  * `persistent_net_rules`",
             "properties": {
                 "mac_vlan": {
                     "description": "List of MacVLAN network configurations for the NVIDIA Network Operator.",
@@ -37929,6 +37980,21 @@
                     "minItems": 1,
                     "title": "MacVLAN Configurations",
                     "type": "array"
+                },
+                "network_operator_version": {
+                    "default": "v26.4.0",
+                    "description": "The version of the NVIDIA Network Operator.",
+                    "examples": [
+                        "v25.10.0",
+                        "v26.1.0",
+                        "v26.4.0",
+                        "v26.7.0"
+                    ],
+                    "maxLength": 25,
+                    "minLength": 1,
+                    "pattern": "^v\\d{2,3}\\.\\d{1,2}\\.\\d{1,2}$",
+                    "title": "Network Operator Version",
+                    "type": "string"
                 },
                 "persistent_net_rules": {
                     "description": "List of persistent network interface name rules per host.",
@@ -37942,6 +38008,7 @@
             },
             "required": [
                 "mac_vlan",
+                "network_operator_version",
                 "persistent_net_rules"
             ],
             "title": "NVIDIA Network Operator Configuration",

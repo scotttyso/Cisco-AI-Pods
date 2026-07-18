@@ -1,0 +1,10 @@
+---
+apiVersion: operators.coreos.com/v1alpha2
+kind: OperatorGroup
+metadata:
+  annotations:
+    olm.providedAPIs: Kueue.v1.kueue.openshift.io
+    argocd.argoproj.io/sync-wave: "1"
+  name: openshift-kueue-operator-group
+  namespace: openshift-kueue-operator
+spec: {}
