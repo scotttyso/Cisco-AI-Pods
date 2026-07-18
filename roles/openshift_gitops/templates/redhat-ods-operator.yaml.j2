@@ -1,0 +1,40 @@
+---
+# Red Hat OpenShift AI (RHODS) - Helm-based Application
+# Tier 4: AI Platform, Scheduling, & Apps - Deploys at sync-wave -10
+# AI/ML platform runtime and Jupyter notebook provisioning
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: redhat-ods-operator-helm
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  project: default
+  source:
+    repoURL: '{{ openshift.operators.openshift_gitops.gitops_repo_url }}'
+    targetRevision: HEAD
+    path: helm/redhat-ods-operator
+    helm:
+      releaseName: redhat-ods-operator
+      values: |
+        replicas: {{ openshift.operators.redhat_ods_operator.replicas | default('1') }}
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: redhat-ods-operator
+  syncPolicy:
+    automated:
+      prune: {{ openshift.operators.openshift_gitops.prune | default('false') | lower }}
+      selfHeal: {{ openshift.operators.openshift_gitops.self_heal | default('false') | lower }}
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+      - SkipDryRunOnMissingResource=true
+      - ServerSideApply=true
+    retry:
+      limit: 10
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 3

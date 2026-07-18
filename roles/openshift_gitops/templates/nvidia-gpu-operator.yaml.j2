@@ -1,0 +1,41 @@
+---
+# NVIDIA GPU Operator - Helm-based Application
+# Tier 3: Hardware Acceleration & Mesh - Deploys at sync-wave -20
+# GPU driver injection and CUDA runtime initialization
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nvidia-gpu-operator-helm
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  project: default
+  source:
+    repoURL: '{{ openshift.operators.openshift_gitops.gitops_repo_url }}'
+    targetRevision: HEAD
+    path: helm/nvidia-gpu-operator
+    helm:
+      releaseName: nvidia-gpu-operator
+      values: |
+        nvidiaGpuVersion: "{{ openshift.operators.nvidia_gpu_operator.gpu_operator_version | default('gpu-operator-certified.v26.3.0') }}"
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: nvidia-gpu-operator
+  syncPolicy:
+    automated:
+      prune: {{ openshift.operators.openshift_gitops.prune | default('false') | lower }}
+      selfHeal: {{ openshift.operators.openshift_gitops.self_heal | default('false') | lower }}
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+      - SkipDryRunOnMissingResource=true
+      - ServerSideApply=true
+    retry:
+      limit: 10
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 3
+
