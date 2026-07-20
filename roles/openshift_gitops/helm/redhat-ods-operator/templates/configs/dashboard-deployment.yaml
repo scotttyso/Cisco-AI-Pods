@@ -4,10 +4,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
   name: rhods-dashboard
   namespace: redhat-ods-applications
-  annotations:
-    argocd.argoproj.io/sync-wave: "35"
 spec:
   replicas: {{ . }}
 {{- end }}
