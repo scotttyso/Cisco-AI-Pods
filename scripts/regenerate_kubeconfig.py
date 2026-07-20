@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Regenerate a kubeconfig with an updated cluster CA.
 
 This helper preserves the selected context and user authentication from an
