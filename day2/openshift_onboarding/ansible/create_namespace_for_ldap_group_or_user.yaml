@@ -24,6 +24,8 @@
                 | replace('_', '-')
                 | lower
           }}
+        suffix_namespace: "{{ suffix_namespace | default('') }}"
+        suffix_service_account: "{{ suffix_service_account | default('') }}"
 
     - name: Set Facts for Workflow Variables
       ansible.builtin.set_fact:
@@ -32,17 +34,17 @@
         project_name: >-
           {{
             (
-              requester | lower ~ '-cai-ns'
+              requester | lower ~ suffix_namespace
               if (project_type | default('user') | lower) == 'user'
-              else project_name | default(ldap_group_map ~ '-cai-ns')
+              else project_name | default(ldap_group_map ~ suffix_namespace)
             )
           }}
         project_service_account: >-
           {{
             (
-              requester | lower ~ '-cai-sa'
+              requester | lower ~ suffix_service_account
               if (project_type | default('user') | lower) == 'user'
-              else project_name | default(ldap_group_map ~ '-cai-sa')
+              else project_name | default(ldap_group_map ~ suffix_service_account)
             )
           }}
         project_type: "{{ project_type | default('user') }}"
