@@ -1,0 +1,145 @@
+---
+# ServiceNow-OpenShift Integration Vault Template
+# This file contains all sensitive variables used across the project
+# 
+# USAGE:
+# 1. Copy this file to vault.yml: cp vault.yml.template vault.yml
+# 2. Replace all placeholder values with your actual credentials
+# 3. Encrypt the file: ansible-vault encrypt vault.yml --vault-password-file .vault_pass
+#
+# SECURITY WARNING: Never commit unencrypted credentials to git!
+
+# =============================================================================
+# SERVICENOW CONFIGURATION
+# =============================================================================
+
+# ServiceNow Instance Configuration
+servicenow_url: "https://dev295398.service-now.com"
+servicenow_username: "admin"
+
+# ServiceNow Admin Passwords (multiple variables for compatibility)
+vault_servicenow_password: "REPLACE_WITH_SERVICENOW_ADMIN_PASSWORD"
+vault_servicenow_admin_password: "REPLACE_WITH_SERVICENOW_ADMIN_PASSWORD"
+
+# ServiceNow OAuth Client Secrets
+vault_servicenow_client_secret: "servicenow-secret-2025"
+servicenow_client_secret: "servicenow-secret-2025"
+
+# =============================================================================
+# KEYCLOAK/RH-SSO CONFIGURATION
+# =============================================================================
+
+# Keycloak Instance Configuration
+rhsso_url: "https://keycloak-sso.apps.cluster-lgkp4.lgkp4.sandbox1321.opentlc.com"
+rhsso_admin_username: "admin"
+
+# Keycloak Admin Passwords (multiple variables for compatibility)
+vault_keycloak_password: "REPLACE_WITH_KEYCLOAK_ADMIN_PASSWORD"
+vault_rhsso_admin_password: "REPLACE_WITH_KEYCLOAK_ADMIN_PASSWORD"
+vault_keycloak_password: "REPLACE_WITH_KEYCLOAK_ADMIN_PASSWORD"
+
+# User Domain 
+default_email_domain: "example.com"
+
+# =============================================================================
+# OPENSHIFT CONFIGURATION
+# =============================================================================
+
+# OpenShift API Configuration
+openshift_api_url: "https://api.cluster-lgkp4.lgkp4.sandbox1321.opentlc.com:6443"
+openshift_apps_domain: "apps.cluster-lgkp4.lgkp4.sandbox1321.opentlc.com"
+
+# OpenShift Authentication Token
+vault_openshift_token: "REPLACE_WITH_OPENSHIFT_ADMIN_TOKEN"
+
+# OpenShift OAuth Client Secrets
+vault_openshift_client_secret: "openshift-secret-2025"
+openshift_client_secret: "openshift-secret-2025"
+
+# =============================================================================
+# ANSIBLE AUTOMATION PLATFORM (AAP) CONFIGURATION
+# =============================================================================
+
+# AAP Instance Configuration
+aap_url: "https://ansible-aap.apps.cluster-lgkp4.lgkp4.sandbox1321.opentlc.com"
+aap_username: "admin"
+
+# AAP Admin Password
+vault_aap_password: "REPLACE_WITH_AAP_ADMIN_PASSWORD"
+
+# =============================================================================
+# OAUTH INTEGRATION CONFIGURATION
+# =============================================================================
+
+# OAuth Application Settings
+oauth_redirect_url: "https://dev295398.service-now.com/oauth_redirect.do"
+oauth_app_name: "Keycloak SSO Integration"
+
+# Realm and Client Configuration
+servicenow_realm_name: "servicenow"
+servicenow_client_id: "servicenow-client"
+openshift_client_id: "openshift"
+
+# OAuth Profile Names (ServiceNow)
+oauth_entity_profile_name: "keycloak_profile"
+oauth_auth_profile_name: "Keycloak OAuth2 Profile"
+
+# =============================================================================
+# FLOW DESIGNER CONFIGURATION
+# =============================================================================
+
+# Flow Designer Workflow Names
+user_provisioning_flow_name: "Keycloak User Provisioning"
+project_management_flow_name: "OpenShift Project Management"
+monitoring_integration_flow_name: "OpenShift Monitoring Integration"
+
+# Workflow Enablement Flags
+enable_user_provisioning: true
+enable_project_management: true
+enable_monitoring_integration: true
+
+# ServiceNow Tables
+user_request_table: "sc_request"
+project_request_table: "sc_req_item"
+incident_table: "incident"
+
+# =============================================================================
+# VARIABLE MAPPING FOR COMPATIBILITY
+# =============================================================================
+# These variables ensure compatibility across different playbooks and roles
+
+# Alternative variable names used in different contexts
+rhsso_external_url: "{{ rhsso_url }}"
+servicenow_instance_url: "{{ servicenow_url }}"
+openshift_cluster_domain: "{{ openshift_apps_domain }}"
+
+# Role-specific variable mappings
+rhsso_admin_password: "{{ vault_keycloak_password }}"
+servicenow_password: "{{ vault_servicenow_password }}"
+servicenow_admin_password: "{{ vault_servicenow_admin_password }}"
+aap_password: "{{ vault_aap_password }}"
+
+# =============================================================================
+# INSTRUCTIONS FOR UPDATING CREDENTIALS
+# =============================================================================
+#
+# 1. ServiceNow Credentials:
+#    - Login to your ServiceNow instance as admin
+#    - Use the admin password for vault_servicenow_password
+#
+# 2. Keycloak/RH-SSO Credentials:
+#    - Get admin password from OpenShift secret:
+#      oc get secret credential-rhsso -n sso -o jsonpath='{.data.ADMIN_PASSWORD}' | base64 -d
+#
+# 3. OpenShift Token:
+#    - Get current token: oc whoami -t
+#    - Or create service account token for automation
+#
+# 4. AAP Credentials:
+#    - Get admin password from OpenShift secret:
+#      oc get secret automation-controller-admin-password -n aap -o jsonpath='{.data.password}' | base64 -d
+#
+# 5. Client Secrets:
+#    - Use consistent secrets across environments
+#    - Update in both Keycloak and ServiceNow configurations
+#
