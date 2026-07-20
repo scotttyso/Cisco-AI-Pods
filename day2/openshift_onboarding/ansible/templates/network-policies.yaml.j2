@@ -1,0 +1,114 @@
+---
+# Default Deny All Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: "default-deny-all"
+  namespace: "{{ project_name }}"
+  labels:
+    servicenow-request: "{{ servicenow_request_number }}"
+    managed-by: "ansible-automation-platform"
+    policy-type: "security"
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+
+---
+# Allow DNS Resolution
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: "allow-dns"
+  namespace: "{{ project_name }}"
+  labels:
+    servicenow-request: "{{ servicenow_request_number }}"
+    managed-by: "ansible-automation-platform"
+    policy-type: "dns"
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+---
+# Allow Internal Communication (if enabled)
+{% if allow_internal_communication | default(true) %}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: "allow-internal"
+  namespace: "{{ project_name }}"
+  labels:
+    servicenow-request: "{{ servicenow_request_number }}"
+    managed-by: "ansible-automation-platform"
+    policy-type: "internal"
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: "{{ project_name }}"
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: "{{ project_name }}"
+{% endif %}
+
+# Allow OpenShift Ingress (if web services are enabled)
+{% if enable_web_services | default(true) %}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: "allow-openshift-ingress"
+  namespace: "{{ project_name }}"
+  labels:
+    servicenow-request: "{{ servicenow_request_number }}"
+    managed-by: "ansible-automation-platform"
+    policy-type: "ingress"
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: ingress
+{% endif %}
+
+---
+# Allow Monitoring (OpenShift Prometheus)
+{% if enable_monitoring | default(true) %}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: "allow-monitoring"
+  namespace: "{{ project_name }}"
+  labels:
+    servicenow-request: "{{ servicenow_request_number }}"
+    managed-by: "ansible-automation-platform"
+    policy-type: "monitoring"
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: monitoring
+{% endif %}

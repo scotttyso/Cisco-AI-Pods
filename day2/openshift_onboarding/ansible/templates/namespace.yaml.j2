@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    openshift.io/display-name: "{{ project_name | replace("-cai-ns", " CAI Namespace") }}"
+    openshift.io/description: "{{ project_description | default('Project created via Ansible Automation Platform') }}"
+    openshift.io/requester: "{{ requester }}"
+    servicenow.com/request-item: "{{ servicenow_request_item | default('') }}"
+    servicenow.com/sys-id: "{{ servicenow_sys_id | default('') }}"
+    created-by: "ansible-automation-platform"
+  labels:
+    servicenow-request: "{{ servicenow_request_number }}"
+    environment: "{{ project_environment | default('development') }}"
+    managed-by: "ansible-automation-platform"
+    project-type: "{{ project_type }}"
+  name: "{{ project_name }}"

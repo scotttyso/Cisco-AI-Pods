@@ -1,0 +1,108 @@
+---
+# Compute Resource Quota
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: "compute-quota"
+  namespace: "{{ project_name }}"
+  labels:
+    servicenow-request: "{{ servicenow_request_number }}"
+    managed-by: "ansible-automation-platform"
+    quota-type: "compute"
+spec:
+  hard:
+    # CPU and Memory limits based on environment
+{% if project_environment == 'production' %}
+    # limits.cpu: "{{ cpu_limits | default('128') }}"
+    # limits.memory: "{{ memory_limits | default('512Gi') }}"
+    requests.cpu: "{{ cpu_requests | default('128') }}"
+    requests.nvidia.com/gpu: " {{ gpu_requests | default('4') }}"
+    requests.memory: "{{ memory_requests | default('512Gi') }}"
+{% elif project_environment == 'staging' %}
+    # limits.cpu: "{{ cpu_limits | default('16') }}"
+    # limits.memory: "{{ memory_limits | default('64Gi') }}"
+    requests.cpu: "{{ cpu_requests | default('16') }}"
+    requests.nvidia.com/gpu: " {{ gpu_requests | default('1') }}"
+    requests.memory: "{{ memory_requests | default('64Gi') }}"
+{% else %}
+    # limits.cpu: "{{ cpu_limits | default('8') }}"
+    # limits.memory: "{{ memory_limits | default('16Gi') }}"
+    requests.cpu: "{{ cpu_requests | default('8') }}"
+    requests.nvidia.com/gpu: " {{ gpu_requests | default('1') }}"
+    requests.memory: "{{ memory_requests | default('16Gi') }}"
+{% endif %}
+    
+    # Pod and storage limits
+    pods: "{{ max_pods | default('40') }}"
+    persistentvolumeclaims: "{{ max_pvcs | default('30') }}"
+    requests.storage: "{{ storage_requests | default('20Ti') }}"
+    
+    # Object count limits
+    services: "{{ max_services | default('10') }}"
+    secrets: "{{ max_secrets | default('20') }}"
+    configmaps: "{{ max_configmaps | default('20') }}"
+
+# Storage Resource Quota (if storage class is specified)
+{% if storage_class is defined %}
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: "storage-quota-{{ storage_class }}"
+  namespace: "{{ project_name }}"
+  labels:
+    servicenow-request: "{{ servicenow_request_number }}"
+    managed-by: "ansible-automation-platform"
+    quota-type: "storage"
+spec:
+  hard:
+    "{{ storage_class }}.storageclass.storage.k8s.io/requests.storage": "{{ storage_quota | default('20Ti') }}"
+    "{{ storage_class }}.storageclass.storage.k8s.io/persistentvolumeclaims": "{{ max_pvcs | default('50') }}"
+{% endif %}
+
+---
+# Limit Range for individual containers
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: "container-limits"
+  namespace: "{{ project_name }}"
+  labels:
+    servicenow-request: "{{ servicenow_request_number }}"
+    managed-by: "ansible-automation-platform"
+spec:
+  limits:
+    - type: Container
+      default:
+{% if project_environment == 'production' %}
+        cpu: "16"
+        memory: "64Gi"
+{% elif project_environment == 'staging' %}
+        cpu: "1"
+        memory: "2Gi"
+{% else %}
+        cpu: "500m"
+        memory: "1Gi"
+{% endif %}
+      defaultRequest:
+{% if project_environment == 'production' %}
+        cpu: "500m"
+        memory: "1Gi"
+{% elif project_environment == 'staging' %}
+        cpu: "250m"
+        memory: "512Mi"
+{% else %}
+        cpu: "100m"
+        memory: "256Mi"
+{% endif %}
+      max:
+{% if project_environment == 'production' %}
+        cpu: "64"
+        memory: "256Gi"
+{% elif project_environment == 'staging' %}
+        cpu: "2"
+        memory: "4Gi"
+{% else %}
+        cpu: "1"
+        memory: "2Gi"
+{% endif %}

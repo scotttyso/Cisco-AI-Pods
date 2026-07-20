@@ -1,0 +1,27 @@
+---
+# Admin Role Binding for Project Requester
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations:
+    description: "Admin access for project requester via LDAP authentication"
+  labels:
+    servicenow-request: "{{ servicenow_request_number | default('') }}"
+    managed-by: "ansible-automation-platform"
+  name: "{{ ldap_group_map }}-admin"
+  namespace: "{{ project_name }}"
+{% if project_type | default('user') | lower == 'group' %}
+subjects:
+  - kind: Group
+    name: "{{ ldap_group_map }}"
+    apiGroup: rbac.authorization.k8s.io
+{% elif project_type | default('user') | lower == 'user' %}
+subjects:
+  - kind: User
+    name: "{{ requester }}"
+    apiGroup: rbac.authorization.k8s.io
+{% endif %}
+roleRef:
+  kind: ClusterRole
+  name: admin
+  apiGroup: rbac.authorization.k8s.io

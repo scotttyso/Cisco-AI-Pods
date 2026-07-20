@@ -1,0 +1,173 @@
+---
+# ansible/servicenow_project_creation.yml
+
+# These variables would be passed in from the AAP Job Template,
+# which in turn gets them from the ServiceNow Flow Designer call.
+# ldap_security_group: CN=DUMMY GROUP,OU=Groups,DC=example,DC=com
+# project_environment: production
+# requester: user_id
+
+- name: Create OpenShift Project for LDAP Security Group
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Set LDAP-derived facts
+      ansible.builtin.set_fact:
+        ldap_security_group: "{{ ldap_security_group | default('CN=DUMMY GROUP,OU=Groups,DC=example,DC=com') }}"
+        ldap_group_map: >-
+          {{
+            ldap_security_group.split(',')[0]
+                | regex_replace('^CN=', '')
+                | replace(' ', '')
+                | replace('_', '-')
+                | lower
+          }}
+
+    - name: Set Facts for Workflow Variables
+      ansible.builtin.set_fact:
+        openshift_api_url: "{{ openshift_api_url | default('https://api.my-cluster.example.com:6443') }}"
+        project_environment: "{{ project_env | default(env_type) | default('development') }}"
+        project_name: >-
+          {{
+            (
+              requester | lower ~ '-cai-ns'
+              if (project_type | default('user') | lower) == 'user'
+              else project_name | default(ldap_group_map ~ '-cai-ns')
+            )
+          }}
+        project_service_account: >-
+          {{
+            (
+              requester | lower ~ '-cai-sa'
+              if (project_type | default('user') | lower) == 'user'
+              else project_name | default(ldap_group_map ~ '-cai-sa')
+            )
+          }}
+        project_type: "{{ project_type | default('user') }}"
+        requester: "{{ requester | upper | default('UNDEFINED') }}"
+        service_now_request_number: "{{ servicenow_request_number | default('') }}"
+
+    - name: Debug received variables
+      ansible.builtin.debug:
+        msg: |
+          Received variables:
+          - ldap_group_map: {{ ldap_group_map }}
+          - ldap_security_group: {{ ldap_security_group }}
+          - project_environment: "{{ project_environment }}"
+          - project_name: "{{ project_name }}"
+          - project_type: "{{ project_type }}"
+          - openshift_api_url: {{ openshift_api_url }}
+          - requester: {{ requester }}
+
+    - name: Set OpenShift API authentication facts
+      ansible.builtin.set_fact:
+        openshift_auth:
+          api_key: "{{ lookup('env', 'K8S_AUTH_API_KEY') | default(lookup('env', 'OPENSHIFT_API_TOKEN')) | default(vault_openshift_token, true) }}"
+          host: "{{ lookup('env', 'K8S_AUTH_HOST') | default(openshift_api_url) }}"
+          verify_ssl: "{{ lookup('env', 'K8S_AUTH_VERIFY_SSL') | default('false') }}"
+      no_log: true
+
+    - name: Fail if OpenShift API token is not available
+      ansible.builtin.fail:
+        msg: "OpenShift API token is not available. Set K8S_AUTH_API_KEY or OPENSHIFT_API_TOKEN environment variable or ensure vault_openshift_token is defined."
+      when: openshift_auth.api_key is not defined or openshift_auth.api_key == ""
+
+    - name: Create OpenShift Project (Namespace)
+      kubernetes.core.k8s:
+        state: present
+        host: "{{ openshift_auth.host }}"
+        api_key: "{{ openshift_auth.api_key }}"
+        validate_certs: "{{ openshift_auth.verify_ssl | bool }}"
+        definition: "{{ lookup('template', 'namespace.yaml.j2') | from_yaml }}"
+
+    - name: Apply RBAC Permissions
+      kubernetes.core.k8s:
+        state: present
+        host: "{{ openshift_auth.host }}"
+        api_key: "{{ openshift_auth.api_key }}"
+        validate_certs: "{{ openshift_auth.verify_ssl | bool }}"
+        definition: "{{ item }}"
+      loop: "{{ lookup('template', 'rbac-permissions.yaml.j2') }}"
+
+    # - name: Apply Resource Quotas and Limits
+    #   kubernetes.core.k8s:
+    #     state: present
+    #     host: "{{ openshift_auth.host }}"
+    #     api_key: "{{ openshift_auth.api_key }}"
+    #     validate_certs: "{{ openshift_auth.verify_ssl | bool }}"
+    #     definition: "{{ item }}"
+    #   loop: "{{ lookup('template', 'resource-quotas.yaml.j2') | from_yaml_all | list }}"
+
+    - name: Apply Network Policies
+      kubernetes.core.k8s:
+        state: absent
+        host: "{{ openshift_auth.host }}"
+        api_key: "{{ openshift_auth.api_key }}"
+        validate_certs: "{{ openshift_auth.verify_ssl | bool }}"
+        definition: "{{ item }}"
+      loop: "{{ lookup('template', 'network-policies.yaml.j2') | from_yaml_all | list }}"
+
+    - name: Apply Artifactory Secret
+      kubernetes.core.k8s:
+        state: present
+        host: "{{ openshift_auth.host }}"
+        api_key: "{{ openshift_auth.api_key }}"
+        validate_certs: "{{ openshift_auth.verify_ssl | bool }}"
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: artifactory-prod
+            namespace: "{{ project_name }}"
+          data:
+            .dockerconfigjson: "{{ artifactory_secret }}"
+          type: kubernetes.io/dockerconfigjson
+
+    - name: Check if Namespace Service Account exists
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: ServiceAccount
+        name: "{{ project_service_account }}"
+        namespace: "{{ project_name }}"
+        host: "{{ openshift_auth.host }}"
+        api_key: "{{ openshift_auth.api_key }}"
+        validate_certs: false
+      register: existing_service_account
+      ignore_errors: true
+
+    - name: Create Namespace Service Account
+      kubernetes.core.k8s:
+        state: present
+        host: "{{ openshift_auth.host }}"
+        api_key: "{{ openshift_auth.api_key }}"
+        validate_certs: false
+        definition:
+          apiVersion: v1
+          kind: ServiceAccount
+          metadata:
+            name: "{{ project_service_account }}"
+            namespace: "{{ project_name }}"
+            annotations:
+              description: "Service account for cluster-admin permissions integration"
+              created-by: "ansible-automation-platform"
+      when: existing_service_account.resources | length == 0
+
+    - name: Bind anyuid SCC to ServiceAccount
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: allow-anyuid-scc
+            namespace: "{{ project_name }}"
+          subjects:
+            - kind: ServiceAccount
+              name: "{{ project_service_account }}"
+              namespace: "{{ project_name }}"
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: system:openshift:scc:anyuid
