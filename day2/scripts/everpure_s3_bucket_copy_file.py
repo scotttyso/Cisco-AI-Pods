@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Upload file to Everpure FlashBlade S3 bucket.
 

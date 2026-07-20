@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 List files in Everpure FlashBlade S3 bucket.
 

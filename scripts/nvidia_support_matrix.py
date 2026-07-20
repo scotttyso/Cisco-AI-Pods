@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 NVIDIA AI Enterprise Support Matrix Script
 
@@ -390,7 +389,7 @@ class NVIDIASupportMatrix:
         """Format data as a human-readable table."""
         output = f"\n{'=' * 180}\n"
         output += f"NVIDIA AI Enterprise Infrastructure Support Matrix v{ai_version}\n"
-        output += f"Deployment: Bare Metal - Kubernetes - OpenShift\n"
+        output += "Deployment: Bare Metal - Kubernetes - OpenShift\n"
         output += f"{'=' * 180}\n\n"
 
         headers = [
