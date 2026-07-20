@@ -27,7 +27,7 @@ import base64
 import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 try:
     import yaml

@@ -52,7 +52,7 @@ def validate_environment() -> dict:
     
     missing = [k for k, v in required_vars.items() if not v]
     if missing:
-        logger.error(f"Missing environment variables: {', '.join(missing)}")
+        logger.error("Missing environment variables: %s", ', '.join(missing))
         print("\n" + "="*70)
         print("To set the missing environment variables, run:")
         print("="*70)
@@ -72,7 +72,7 @@ def validate_environment() -> dict:
         print("       AWS_SECRET_ACCESS_KEY=<secret> AWS_S3_BUCKET=<bucket>")
         print("="*70 + "\n")
         sys.exit(1)
-    
+
     return required_vars
 
 
@@ -81,9 +81,6 @@ def setup_proxy_bypass() -> None:
     for proxy_var in ['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy']:
         os.environ[proxy_var] = ''
     os.environ['NO_PROXY'] = '*'
-
-
-def create_s3_client(endpoint: str, access_key: str, secret_key: str) -> boto3.client:
     """Create and return S3 client."""
     try:
         return boto3.client(
@@ -94,7 +91,7 @@ def create_s3_client(endpoint: str, access_key: str, secret_key: str) -> boto3.c
             verify=False
         )
     except Exception as e:
-        logger.error(f"Failed to create S3 client: {e}")
+        logger.error("Failed to create S3 client: %s", e)
         sys.exit(1)
 
 
@@ -112,19 +109,19 @@ def validate_file(filepath: str) -> Path:
         FileNotFoundError: If file doesn't exist
     """
     file_path = Path(filepath)
-    
+
     if not file_path.exists():
-        logger.error(f"File not found: {filepath}")
+        logger.error("File not found: %s", filepath)
         sys.exit(1)
     
     if not file_path.is_file():
-        logger.error(f"Path is not a file: {filepath}")
+        logger.error("Path is not a file: %s", filepath)
         sys.exit(1)
     
     if not os.access(file_path, os.R_OK):
-        logger.error(f"File is not readable: {filepath}")
+        logger.error("File is not readable: %s", filepath)
         sys.exit(1)
-    
+
     return file_path
 
 
@@ -149,29 +146,30 @@ def upload_file(
     # Use provided key or default to filename
     object_key = s3_key or file_path.name
     file_size = file_path.stat().st_size
-    
+
     try:
-        logger.info(f"Uploading {file_path.name} ({file_size:,} bytes) to s3://{bucket_name}/{object_key}")
-        
+        logger.info("Uploading %s (%d bytes) to s3://%s/%s", file_path.name, file_size, bucket_name, object_key)
+
         s3_client.upload_file(
             Filename=str(file_path),
             Bucket=bucket_name,
             Key=object_key,
             ExtraArgs={'Metadata': {'uploaded-by': 'everpure-s3-script'}}
         )
-        
-        logger.info(f"✓ Successfully uploaded to s3://{bucket_name}/{object_key}")
+
+
+        logger.info("✓ Successfully uploaded to s3://%s/%s", bucket_name, object_key)
         return True
-        
+
     except ClientError as e:
         error_code = e.response['Error']['Code']
-        logger.error(f"S3 error ({error_code}): {e}")
+        logger.error("S3 error (%s): %s", error_code, e)
         return False
     except NoCredentialsError:
         logger.error("AWS credentials not found or invalid")
         return False
     except Exception as e:
-        logger.error(f"Unexpected error during upload: {e}")
+        logger.error("Unexpected error during upload: %s", e)
         return False
 
 
@@ -227,3 +225,4 @@ def main() -> None:
 
 if __name__ == '__main__':
     main()
+

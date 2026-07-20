@@ -17,7 +17,7 @@ from typing import Optional
 
 import boto3
 import urllib3
-from botocore.exceptions import ClientError, NoCredentialsError
+from botocore.exceptions import ClientError
 
 # Suppress SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -41,7 +41,7 @@ def validate_environment() -> dict:
     
     missing = [k for k, v in required_vars.items() if not v]
     if missing:
-        logger.error(f"Missing environment variables: {', '.join(missing)}")
+        logger.error("Missing environment variables: %s", ', '.join(missing))
         print("\n" + "="*70)
         print("To set the missing environment variables, run:")
         print("="*70)
@@ -61,7 +61,7 @@ def validate_environment() -> dict:
         print("       AWS_SECRET_ACCESS_KEY=<secret> AWS_S3_BUCKET=<bucket>")
         print("="*70 + "\n")
         sys.exit(1)
-    
+
     return required_vars
 
 
@@ -83,7 +83,7 @@ def create_s3_client(endpoint: str, access_key: str, secret_key: str) -> boto3.c
             verify=False
         )
     except Exception as e:
-        logger.error(f"Failed to create S3 client: {e}")
+        logger.error("Failed to create S3 client: %s", e)
         sys.exit(1)
 
 
@@ -111,15 +111,15 @@ def list_bucket_contents(
         
         object_count = 0
         total_size = 0
-        
+
         for page in page_iterator:
             if 'Contents' not in page:
                 continue
-            
+
             for obj in page['Contents']:
                 object_count += 1
                 total_size += obj.get('Size', 0)
-                
+
                 if verbose:
                     modified = obj.get('LastModified', 'N/A')
                     size = obj.get('Size', 0)
@@ -127,13 +127,13 @@ def list_bucket_contents(
                 else:
                     print(f"  {obj['Key']}")
         
-        logger.info(f"Total: {object_count} objects, {total_size:,} bytes")
-        
+        logger.info("Total: %d objects, %d bytes", object_count, total_size)
+
     except ClientError as e:
-        logger.error(f"S3 error listing bucket: {e}")
+        logger.error("S3 error listing bucket: %s", e)
         sys.exit(1)
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        logger.error("Unexpected error: %s", e)
         sys.exit(1)
 
 
@@ -167,7 +167,7 @@ def main() -> None:
     # Validate environment
     env_vars = validate_environment()
     setup_proxy_bypass()
-    
+
     # Create S3 client
     s3_client = create_s3_client(
         endpoint=env_vars['AWS_S3_ENDPOINT'],
@@ -176,9 +176,9 @@ def main() -> None:
     )
     
     # List bucket contents
-    logger.info(f"Listing objects in bucket: {env_vars['AWS_S3_BUCKET']}")
+    logger.info("Listing objects in bucket: %s", env_vars['AWS_S3_BUCKET'])
     if args.prefix:
-        logger.info(f"Filter prefix: {args.prefix}")
+        logger.info("Filter prefix: %s", args.prefix)
     
     list_bucket_contents(
         s3_client=s3_client,
@@ -190,3 +190,4 @@ def main() -> None:
 
 if __name__ == '__main__':
     main()
+

@@ -15,7 +15,7 @@ import yaml
 import argparse
 import sys
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, List
 from tabulate import tabulate
 
 # Hardcoded support matrix data from NVIDIA documentation
@@ -421,7 +421,7 @@ class NVIDIASupportMatrix:
         ]
 
         output += tabulate(table_data, headers=headers, tablefmt="grid")
-        output += f"\n\nSource: https://docs.nvidia.com/ai-enterprise/support-matrix/latest/index.html\n"
+        output += "\n\nSource: https://docs.nvidia.com/ai-enterprise/support-matrix/latest/index.html\n"
         return output
 
     def _format_json(self, data: List[Dict], ai_version: str) -> str:

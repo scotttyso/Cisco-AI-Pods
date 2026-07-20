@@ -295,10 +295,10 @@ def _map_var_name_to_schema_key(env_var_name: str) -> Optional[str]:
             return base_name
     
     # Strategy 3: Pattern-based mapping from predefined patterns
-    for pattern_prefix, (schema_key, _) in _SENSITIVE_VAR_PATTERNS.items():
+    for pattern_prefix, (schema_key, unused_desc) in _SENSITIVE_VAR_PATTERNS.items():
         if env_var_name.startswith(pattern_prefix):
             return schema_key
-    
+
     return None
 
 
