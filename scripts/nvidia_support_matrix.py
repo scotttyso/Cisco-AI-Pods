@@ -299,7 +299,7 @@ class NVIDIASupportMatrix:
 
         Returns:
             Formatted compatibility report
-            
+
         Raises:
             ValueError: If GPU models are not supported by the selected AI Enterprise version
         """
@@ -308,21 +308,21 @@ class NVIDIASupportMatrix:
 
         gpu_models = self.extract_gpu_models()
         ai_version = self.extract_ai_enterprise_version()
-        
+
         # Debug: check version and available versions
         available_versions = list(NVIDIA_SUPPORT_MATRIX.keys())
         print(f"✓ NVIDIA AI Enterprise version: {ai_version}")
         print(f"✓ Available versions in matrix: {available_versions}")
         print(f"✓ GPU models found: {gpu_models}")
-        
+
         # Ensure version is a string and convert if needed
         ai_version = str(ai_version).strip()
-        
+
         if ai_version not in NVIDIA_SUPPORT_MATRIX:
             print(f"Warning: Version '{ai_version}' not found in support matrix.")
             print(f"Available versions: {', '.join(available_versions)}")
             ai_version = "8.1"  # Default to latest
-        
+
         supported_software = NVIDIA_SUPPORT_MATRIX.get(ai_version, {}).get(
             "infrastructure_software", {}
         )
@@ -339,7 +339,7 @@ class NVIDIASupportMatrix:
         )
         selected_gpu_models = set(gpu_models)
         unsupported_models = selected_gpu_models - supported_gpu_models
-        
+
         if unsupported_models:
             raise ValueError(
                 f"Error: NVIDIA AI Enterprise v{ai_version} does not support the following GPU models:\n"
@@ -388,10 +388,10 @@ class NVIDIASupportMatrix:
 
     def _format_table(self, data: List[Dict], ai_version: str) -> str:
         """Format data as a human-readable table."""
-        output = f"\n{'='*180}\n"
+        output = f"\n{'=' * 180}\n"
         output += f"NVIDIA AI Enterprise Infrastructure Support Matrix v{ai_version}\n"
         output += f"Deployment: Bare Metal - Kubernetes - OpenShift\n"
-        output += f"{'='*180}\n\n"
+        output += f"{'=' * 180}\n\n"
 
         headers = [
             "GPU Model",

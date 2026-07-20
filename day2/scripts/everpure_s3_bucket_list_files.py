@@ -38,14 +38,14 @@ def validate_environment() -> dict:
         'AWS_SECRET_ACCESS_KEY': os.environ.get('AWS_SECRET_ACCESS_KEY'),
         'AWS_S3_BUCKET': os.environ.get('AWS_S3_BUCKET'),
     }
-    
+
     missing = [k for k, v in required_vars.items() if not v]
     if missing:
         logger.error("Missing environment variables: %s", ', '.join(missing))
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("To set the missing environment variables, run:")
-        print("="*70)
-        
+        print("=" * 70)
+
         for var in missing:
             if var == 'AWS_S3_ENDPOINT':
                 print(f"export {var}=<flashblade-hostname>  # e.g., flashblade.example.com")
@@ -55,11 +55,11 @@ def validate_environment() -> dict:
                 print(f"export {var}=<your-secret-key>")
             elif var == 'AWS_S3_BUCKET':
                 print(f"export {var}=<bucket-name>")
-        
+
         print("\nOr set them all at once:")
         print("export AWS_S3_ENDPOINT=<endpoint> AWS_ACCESS_KEY_ID=<key> \\\\")
         print("       AWS_SECRET_ACCESS_KEY=<secret> AWS_S3_BUCKET=<bucket>")
-        print("="*70 + "\n")
+        print("=" * 70 + "\n")
         sys.exit(1)
 
     return required_vars
@@ -95,7 +95,7 @@ def list_bucket_contents(
 ) -> None:
     """
     List all objects in S3 bucket with pagination support.
-    
+
     Args:
         s3_client: Boto3 S3 client
         bucket_name: Name of the bucket
@@ -108,7 +108,7 @@ def list_bucket_contents(
             Bucket=bucket_name,
             Prefix=prefix or ''
         )
-        
+
         object_count = 0
         total_size = 0
 
@@ -126,7 +126,7 @@ def list_bucket_contents(
                     print(f"  {obj['Key']:60s} | Size: {size:12d} | Modified: {modified}")
                 else:
                     print(f"  {obj['Key']}")
-        
+
         logger.info("Total: %d objects, %d bytes", object_count, total_size)
 
     except ClientError as e:
@@ -158,12 +158,12 @@ def main() -> None:
         action='store_true',
         help='Enable debug logging'
     )
-    
+
     args = parser.parse_args()
-    
+
     if args.debug:
         logger.setLevel(logging.DEBUG)
-    
+
     # Validate environment
     env_vars = validate_environment()
     setup_proxy_bypass()
@@ -174,12 +174,12 @@ def main() -> None:
         access_key=env_vars['AWS_ACCESS_KEY_ID'],
         secret_key=env_vars['AWS_SECRET_ACCESS_KEY']
     )
-    
+
     # List bucket contents
     logger.info("Listing objects in bucket: %s", env_vars['AWS_S3_BUCKET'])
     if args.prefix:
         logger.info("Filter prefix: %s", args.prefix)
-    
+
     list_bucket_contents(
         s3_client=s3_client,
         bucket_name=env_vars['AWS_S3_BUCKET'],
@@ -190,4 +190,3 @@ def main() -> None:
 
 if __name__ == '__main__':
     main()
-

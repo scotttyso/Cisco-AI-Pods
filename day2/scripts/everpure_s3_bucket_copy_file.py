@@ -11,10 +11,10 @@ Environment Variables:
 Examples:
     # Upload with auto-generated S3 key
     python everpure_s3_bucket_copy_file.py /path/to/file.txt
-    
+
     # Upload with custom S3 key
     python everpure_s3_bucket_copy_file.py /path/to/file.txt -k custom-name.txt
-    
+
     # Upload to subdirectory
     python everpure_s3_bucket_copy_file.py /path/to/file.txt -k folder/file.txt
 """
@@ -49,14 +49,14 @@ def validate_environment() -> dict:
         'AWS_SECRET_ACCESS_KEY': os.environ.get('AWS_SECRET_ACCESS_KEY'),
         'AWS_S3_BUCKET': os.environ.get('AWS_S3_BUCKET'),
     }
-    
+
     missing = [k for k, v in required_vars.items() if not v]
     if missing:
         logger.error("Missing environment variables: %s", ', '.join(missing))
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("To set the missing environment variables, run:")
-        print("="*70)
-        
+        print("=" * 70)
+
         for var in missing:
             if var == 'AWS_S3_ENDPOINT':
                 print(f"export {var}=<flashblade-hostname>  # e.g., flashblade.example.com")
@@ -66,11 +66,11 @@ def validate_environment() -> dict:
                 print(f"export {var}=<your-secret-key>")
             elif var == 'AWS_S3_BUCKET':
                 print(f"export {var}=<bucket-name>")
-        
+
         print("\nOr set them all at once:")
         print("export AWS_S3_ENDPOINT=<endpoint> AWS_ACCESS_KEY_ID=<key> \\\\")
         print("       AWS_SECRET_ACCESS_KEY=<secret> AWS_S3_BUCKET=<bucket>")
-        print("="*70 + "\n")
+        print("=" * 70 + "\n")
         sys.exit(1)
 
     return required_vars
@@ -81,6 +81,10 @@ def setup_proxy_bypass() -> None:
     for proxy_var in ['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy']:
         os.environ[proxy_var] = ''
     os.environ['NO_PROXY'] = '*'
+    """Create and return S3 client."""
+
+
+def create_s3_client(endpoint: str, access_key: str, secret_key: str) -> boto3.client:
     """Create and return S3 client."""
     try:
         return boto3.client(
@@ -98,13 +102,13 @@ def setup_proxy_bypass() -> None:
 def validate_file(filepath: str) -> Path:
     """
     Validate that file exists and is readable.
-    
+
     Args:
         filepath: Path to the file
-        
+
     Returns:
         Path object
-        
+
     Raises:
         FileNotFoundError: If file doesn't exist
     """
@@ -113,11 +117,11 @@ def validate_file(filepath: str) -> Path:
     if not file_path.exists():
         logger.error("File not found: %s", filepath)
         sys.exit(1)
-    
+
     if not file_path.is_file():
         logger.error("Path is not a file: %s", filepath)
         sys.exit(1)
-    
+
     if not os.access(file_path, os.R_OK):
         logger.error("File is not readable: %s", filepath)
         sys.exit(1)
@@ -133,13 +137,13 @@ def upload_file(
 ) -> bool:
     """
     Upload file to S3 bucket.
-    
+
     Args:
         s3_client: Boto3 S3 client
         bucket_name: Name of the bucket
         file_path: Path to file to upload
         s3_key: S3 object key (defaults to filename)
-        
+
     Returns:
         True if successful, False otherwise
     """
@@ -156,7 +160,6 @@ def upload_file(
             Key=object_key,
             ExtraArgs={'Metadata': {'uploaded-by': 'everpure-s3-script'}}
         )
-
 
         logger.info("✓ Successfully uploaded to s3://%s/%s", bucket_name, object_key)
         return True
@@ -194,24 +197,24 @@ def main() -> None:
         action='store_true',
         help='Enable debug logging'
     )
-    
+
     args = parser.parse_args()
-    
+
     if args.debug:
         logger.setLevel(logging.DEBUG)
-    
+
     # Validate environment and file
     env_vars = validate_environment()
     file_path = validate_file(args.filename)
     setup_proxy_bypass()
-    
+
     # Create S3 client
     s3_client = create_s3_client(
         endpoint=env_vars['AWS_S3_ENDPOINT'],
         access_key=env_vars['AWS_ACCESS_KEY_ID'],
         secret_key=env_vars['AWS_SECRET_ACCESS_KEY']
     )
-    
+
     # Upload file
     success = upload_file(
         s3_client=s3_client,
@@ -219,10 +222,9 @@ def main() -> None:
         file_path=file_path,
         s3_key=args.key
     )
-    
+
     sys.exit(0 if success else 1)
 
 
 if __name__ == '__main__':
     main()
-

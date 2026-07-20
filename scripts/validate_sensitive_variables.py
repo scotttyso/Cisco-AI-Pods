@@ -277,7 +277,7 @@ def _validate_value_against_schema(
 def _map_var_name_to_schema_key(env_var_name: str) -> Optional[str]:
     """
     Map an environment variable name to its schema key.
-    
+
     Tries multiple strategies:
     1. Exact match in schema
     2. Strip _N suffix and match
@@ -286,14 +286,14 @@ def _map_var_name_to_schema_key(env_var_name: str) -> Optional[str]:
     # Strategy 1: Direct lookup
     if env_var_name in _SENSITIVE_SCHEMA_PROPS:
         return env_var_name
-    
+
     # Strategy 2: Strip trailing _N and try again
     match = re.match(r'^(.+?)_\d{1,2}$', env_var_name)
     if match:
         base_name = match.group(1)
         if base_name in _SENSITIVE_SCHEMA_PROPS:
             return base_name
-    
+
     # Strategy 3: Pattern-based mapping from predefined patterns
     for pattern_prefix, (schema_key, unused_desc) in _SENSITIVE_VAR_PATTERNS.items():
         if env_var_name.startswith(pattern_prefix):
@@ -307,7 +307,7 @@ def collect_required_sensitive_variables(
 ) -> Dict[str, Tuple[str, Optional[str]]]:
     """
     Dynamically collect ALL sensitive variable references from model.
-    
+
     Discovers any value that is an integer 1-64, treats the key as a variable name,
     and maps it to its schema key if available.
 
@@ -405,7 +405,7 @@ def collect_required_sensitive_variables(
                             _add_env_var("ipmi_encryption_key", sid)
                         elif "switch_control" in current_path:
                             _add_env_var("switch_control_aes_primary_key", sid)
-                
+
                 # Also check predefined patterns for context-aware detection
                 # (keeps backward compatibility with path-aware detection)
                 for env_prefix, pattern_values in _SENSITIVE_VAR_PATTERNS.items():
@@ -718,7 +718,7 @@ def print_covered_variables(models: List[Dict[str, Any]], verbose: bool = False)
     # Group by schema key for readability
     schema_keys: Dict[Optional[str], Set[str]] = {}
     undocumented_vars: List[str] = []
-    
+
     for env_var_name, (env_prefix, schema_key) in sorted(all_required_vars.items()):
         if schema_key is None:
             undocumented_vars.append(env_var_name)
