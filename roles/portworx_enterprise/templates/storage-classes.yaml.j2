@@ -8,7 +8,7 @@ metadata:
 {% endif %}
 {% if item.default_virtual_class is defined and item.default_virtual_class == true %}
   annotations:
-    storageclass.kubernetes.io/is-default-virt-class: 'true'
+    storageclass.kubevirt.io/is-default-virt-class: 'true'
 {% endif %}
 allowVolumeExpansion: true
 parameters:

@@ -1,0 +1,34 @@
+apiVersion: nvidia.com/v1alpha1
+kind: NVIDIADriver
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "11"
+  name: nvidia-driver-standard
+  namespace: nvidia-gpu-operator
+spec:
+  certConfig:
+    name: ''
+  driverType: gpu
+  image: driver
+  imagePullSecrets: []
+  repository: nvcr.io/nvidia
+  kernelModuleConfig:
+    name: ''
+  kernelModuleType: auto
+  licensingConfig:
+    secretName: ''
+    nlsEnabled: true
+  # Target nodes with Mellanox cards using your cluster's node labels
+  # oc label node <node_name> hardware.network/mellanox: false
+  nodeSelector:
+    hardware.network/mellanox: 'false'
+  repoConfig:
+    name: ''
+  virtualTopologyConfig:
+    name: ''
+  # RDMA disabled to avoid errors on standard hosts
+  rdma:
+    enabled: false
+    useHostMofed: false
+  version: "{{ .Values.nvidiaGpuDriverVersion }}"

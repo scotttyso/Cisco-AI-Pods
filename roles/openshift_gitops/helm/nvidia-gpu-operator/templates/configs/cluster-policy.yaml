@@ -34,45 +34,8 @@ spec:
     mps:
       root: /run/nvidia/mps
   driver:
-    certConfig:
-      name: ''
-    enabled: true
-    image: driver
-    imagePullSecrets: []
-    kernelModuleConfig:
-      name: ''
-    kernelModuleType: proprietary
-    licensingConfig:
-      configMapName: ''
-      nlsEnabled: true
-    {{- if .Values.enableRdma }}
-    rdma:
-      enabled: true
-      useHostMofed: false
-    {{- end }}
-    repoConfig:
-      configMapName: ''
-    repository: nvcr.io/nvidia
-    upgradePolicy:
-      autoUpgrade: true
-      drain:
-        deleteEmptyDir: false
-        enable: false
-        force: false
-        timeoutSeconds: 300
-      maxParallelUpgrades: 1
-      maxUnavailable: 25%
-      podDeletion:
-        deleteEmptyDir: false
-        force: false
-        timeoutSeconds: 300
-      waitForCompletion:
-        timeoutSeconds: 0
-    useOpenKernelModules: false
-    useNvidiaDriverCRD: false
-    version: {{ .Values.nvidiaGpuDriverVersion }}
-    virtualTopology:
-      config: ''
+    enabled: false
+    useNvidiaDriverCRD: true
   gdrcopy:
     enabled: false
   gds:

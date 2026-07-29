@@ -1,0 +1,33 @@
+apiVersion: nvidia.com/v1alpha1
+kind: NVIDIADriver
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "11"
+  name: nvidia-driver-mellanox
+  namespace: nvidia-gpu-operator
+spec:
+  certConfig:
+    name: ''
+  driverType: gpu
+  image: driver
+  imagePullSecrets: []
+  repository: nvcr.io/nvidia
+  kernelModuleConfig:
+    name: ''
+  kernelModuleType: auto
+  licensingConfig:
+    secretName: ''
+    nlsEnabled: true
+  # Target nodes with Mellanox cards using your cluster's node labels
+  nodeSelector:
+    feature.node.kubernetes.io/pci-15b3.sriov.capable: 'true'
+  repoConfig:
+    name: ''
+  virtualTopologyConfig:
+    name: ''
+  # RDMA specifically enabled for Mellanox hosts
+  rdma:
+    enabled: true
+    useHostMofed: false
+  version: "{{ .Values.nvidiaGpuDriverVersion }}"

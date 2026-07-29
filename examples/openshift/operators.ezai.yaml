@@ -23,8 +23,6 @@ openshift:
     nvidia_gpu_operator:
       enable_rdma: true
     nvidia_network_operator:
-      doca_driver_version: doca3.2.0-25.10-1.2.8.0-2
-      doca_telemetry_version: 1.23.4-doca3.2.0-host
       mac_vlan:
         - exclude_ips:
             - 198.18.11.1/32
@@ -58,7 +56,6 @@ openshift:
             - 198.18.18.1/32
           ip_range: 198.18.18.0/24
           master_interface: ens208f0np0
-      network_operator_version: v26.4.0
       persistent_net_rules:
         - hostname: hgx-worker-01
           interfaces:
@@ -125,6 +122,7 @@ openshift:
       - node-feature-discovery-operator
       - nvidia-gpu-operator
       - nvidia-network-operator
+      - openshift-nmstate
       - openshift-virtualization
       - redhat-ods-operator
     portworx:

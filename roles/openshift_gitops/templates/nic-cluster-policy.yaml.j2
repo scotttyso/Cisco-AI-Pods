@@ -1,18 +1,3 @@
-# https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/hardware_accelerators/rdma-remote-direct-memory-access#rdma-configuring-the-nvidia-network-operator_rdma-remote-direct-memory-access
-# https://docs.nvidia.com/networking/display/kubernetes2570/getting-started-openshift.html#network-operator-installation-using-openshift-oc-cli
-{% set _nno = openshift.operators.nvidia_network_operator | default({}) %}
-{# DOCA Version Mapping - Maps Network Operator versions to DOCA driver and telemetry versions #}
-{% set _doca_versions = {
-  '25.10': {'driver': 'doca3.2.0-25.10-1.2.8.0-2', 'telemetry': '1.23.4-doca3.2.0-host'},
-  '26.1': {'driver': 'doca3.3.0-26.01-1.0.0.0-0', 'telemetry': '1.23.4-doca3.2.0-host'},
-  '26.4': {'driver': 'doca3.4.0-26.04-0.8.6.0-0', 'telemetry': '1.25.5-doca3.4.0-host'},
-  '26.7': {'driver': 'doca3.4.0-26.04-0.8.6.0-0', 'telemetry': '1.25.5-doca3.4.0-host'}
-} %}
-{% set _nno_version = _nno.get('network_operator_version', 'v26.4.0') %}
-{# Extract major.minor version (e.g., '25.10' from 'v25.10.0' or 'v25.10.1') #}
-{% set _version_match = _nno_version | regex_search('^v([0-9]+\.[0-9]+)') %}
-{% set _version_key = _version_match.group(1) if _version_match else '26.4' %}
-{% set _doca_config = _doca_versions.get(_version_key, _doca_versions['26.4']) %}
 {% set _intfs = _nno.get('mac_vlan', [
   {'master_interface': 'ens201f0np0'},
   {'master_interface': 'ens202f0np0'},
@@ -23,7 +8,7 @@
   {'master_interface': 'ens207f0np0'},
   {'master_interface': 'ens208f0np0'}
 ]) %}
-
+{% set _nai = nvidia_ai_enterprise %}
 ---
 apiVersion: mellanox.com/v1alpha1
 kind: NicClusterPolicy
@@ -36,7 +21,7 @@ spec:
   docaTelemetryService:
     image: doca_telemetry
     repository: nvcr.io/nvidia/doca
-    version: {{ _doca_config.telemetry }}
+    version: {{ _nai.infrastructure_software["DOCA Telemetry Service"] | default("1.25.5-doca3.4.0-host") }}
   ofedDriver:
     env:
       - name: CREATE_IFNAMES_UDEV
@@ -49,7 +34,7 @@ spec:
         value: 'true'
     image: doca-driver
     repository: nvcr.io/nvidia/mellanox
-    version: {{ _doca_config.driver }}
+    version: {{ _nai.infrastructure_software["DOCA OFED Driver Container"] | default("doca3.4.0-26.04-0.8.6.0-0") }}
     startupProbe:
       initialDelaySeconds: 10
       periodSeconds: 20
@@ -88,4 +73,4 @@ spec:
       }
     image: k8s-rdma-shared-dev-plugin
     repository: nvcr.io/nvidia/mellanox
-    version: network-operator-{{ _nno.network_operator_version | default('v26.4.0') }}
+    version: network-operator-v{{ _nai.infrastructure_software["NVIDIA Network Operator"] | default("26.4.0") }}

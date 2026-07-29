@@ -36714,7 +36714,7 @@
                         },
                         "nvidia_ai_enterprise_version": {
                             "default": "8.1",
-                            "description": "The version of NVIDIA AI Enterprise installed in the OpenShift cluster.",
+                            "description": "The version of NVIDIA AI Enterprise installed in the OpenShift cluster.\n\nSupport matrix: https://docs.nvidia.com/ai-enterprise/support-matrix/latest/index.html",
                             "enum": [
                                 "7.0",
                                 "7.1",
@@ -36724,7 +36724,7 @@
                                 "7.5",
                                 "7.6",
                                 "7.7",
-                                "8.1",
+                                "8.0",
                                 "8.1"
                             ],
                             "title": "NVIDIA AI Enterprise Version",
@@ -37968,6 +37968,23 @@
             "title": "Gitea Operator Configuration",
             "type": "object"
         },
+        "openshift.operators.nvidia_gpu_operator": {
+            "additionalProperties": false,
+            "description": "This dictionary defines the NVIDIA GPU Operator configuration.\n\nRequired fields are:\n  * `enable_rdma`",
+            "properties": {
+                "enable_rdma": {
+                    "default": true,
+                    "description": "Default value is `true`.  Flag to enable RDMA for the NVIDIA GPU Operator.",
+                    "title": "Enable RDMA for NVIDIA GPU Operator",
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "enable_rdma"
+            ],
+            "title": "NVIDIA GPU Operator Configuration",
+            "type": "object"
+        },
         "openshift.operators.nvidia_network_operator": {
             "additionalProperties": false,
             "description": "This dictionary defines the NVIDIA Network Operator configuration.\n\nRequired fields are:\n  * `mac_vlan`\n  * `network_operator_version`\n  * `persistent_net_rules`",
@@ -38163,6 +38180,23 @@
                 "enabled"
             ],
             "title": "Portworx Operator Configuration",
+            "type": "object"
+        },
+        "openshift.operators.redhat_ods_operator": {
+            "additionalProperties": false,
+            "description": "This dictionary defines the Red Hat OpenShift Data Science (ODS) Operator configuration.\n\nRequired fields are:\n  * `enable_distributed_workloads`",
+            "properties": {
+                "enable_distributed_workloads": {
+                    "default": true,
+                    "description": "Default value is `true`.  Flag to enable distributed workloads for the Red Hat OpenShift Data Science (ODS) Operator.",
+                    "title": "Enable Distributed Workloads for Red Hat ODS Operator",
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "enable_distributed_workloads"
+            ],
+            "title": "Red Hat ODS Operator Configuration",
             "type": "object"
         },
         "shared_services": {

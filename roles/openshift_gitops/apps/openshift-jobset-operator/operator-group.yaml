@@ -8,5 +8,5 @@ metadata:
   name: openshift-jobset-operator-group
   namespace: openshift-jobset-operator
 spec:
-  targetNamespaces: 
+  targetNamespaces:
     - openshift-jobset-operator

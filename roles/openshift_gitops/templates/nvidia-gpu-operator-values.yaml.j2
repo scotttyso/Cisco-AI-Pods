@@ -1,7 +1,6 @@
-{% set _gpu_versions = {
-  '25.10': {'driver': 'doca3.2.0-25.10-1.2.8.0-2', 'telemetry': '1.23.4-doca3.2.0-host'},
-  '26.1': {'driver': 'doca3.3.0-26.01-1.0.0.0-0', 'telemetry': '1.23.4-doca3.2.0-host'},
-  '26.4': {'driver': 'doca3.4.0-26.04-0.8.6.0-0', 'telemetry': '1.25.5-doca3.4.0-host'},
-  '26.7': {'driver': 'doca3.4.0-26.04-0.8.6.0-0', 'telemetry': '1.25.5-doca3.4.0-host'}
-} %}
-{% set _nno = openshift.operators.nvidia_network_operator | default({}) %}
+{% set _ngo = openshift.operators.nvidia_gpu_operator | default({}) %}
+{% set _nai = nvidia_ai_enterprise %}
+---
+enableRdma: {{ _ngo.enable_rdma | default(false) }}
+nvidiaGpuVersion: 'gpu-operator-certified.v{{ _nai.infrastructure_software["NVIDIA GPU Operator"] | default("26.3.3") }}'
+nvidiaGpuDriverVersion: {{ _nai.infrastructure_software["NVIDIA Data Center GPU Driver"] | default("595.71.05") }}

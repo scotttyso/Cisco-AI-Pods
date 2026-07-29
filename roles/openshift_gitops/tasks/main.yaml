@@ -25,89 +25,169 @@
     mac_vlan_list: "{{ openshift.operators.nvidia_network_operator.mac_vlan | default([]) }}"
     operator_list: "{{ openshift.operators.operators_to_install | default([]) }}"
 
+- name: Add LLDP DaemonSet and NMState to Operator List
+  ansible.builtin.set_fact:
+    operator_list: >-
+      {{
+        operator_list | union([
+          'lldpd',
+          'openshift-nmstate'
+        ])
+      }}
+
+- name: Add Required Operators When Red Hat OpenShift AI Is in Operator List
+  ansible.builtin.set_fact:
+    operator_list: >-
+      {{
+        operator_list | union([
+          'cert-manager-operator',
+          'external-secrets-operator',
+          'nvidia-gpu-operator',
+          'nvidia-network-operator',
+          'openshift-cluster-observability-operator',
+          'openshift-connectivity-link',
+          'openshift-jobset-operator',
+          'openshift-keda',
+          'openshift-kmm',
+          'openshift-kueue-operator',
+          'openshift-lws-operator',
+          'openshift-nfd',
+          'openshift-opentelemetry-operator',
+          'openshift-sriov-network-operator',
+          'openshift-tempo-operator'
+        ])
+      }}
+  when: "'redhat-ods-operator' in operator_list"
+
+- name: If NVIDIA GPU or Network Operator is in Operator List, Add Node Feature Discovery Operator to Operator List
+  ansible.builtin.set_fact:
+    operator_list: >-
+      {{
+        operator_list | union([
+          'openshift-nfd'
+        ])
+      }}
+  when: "'nvidia-gpu-operator' in operator_list or 'nvidia-network-operator' in operator_list"
+
+- name: Generate NVIDIA AI Enterprise Support Matrix JSON
+  ansible.builtin.command:
+    cmd: >-
+      python3 {{ role_path | regex_replace('/roles/[^/]+$', '') }}/scripts/nvidia_support_matrix.py
+      --format json
+      --version {{ openshift.nvidia_ai_enterprise_version | default('8.1') }}
+      --output-file /tmp/nvidia_ai_enterprise_matrix.json
+  changed_when: false
+  when: "'nvidia-gpu-operator' in operator_list or 'nvidia-network-operator' in operator_list"
+
+- name: Read NVIDIA AI Enterprise Support Matrix JSON
+  ansible.builtin.slurp:
+    src: /tmp/nvidia_ai_enterprise_matrix.json
+  register: nvidia_matrix_file
+  when: "'nvidia-gpu-operator' in operator_list or 'nvidia-network-operator' in operator_list"
+
+- name: Set NVIDIA AI Enterprise Fact
+  ansible.builtin.set_fact:
+    nvidia_ai_enterprise: "{{ nvidia_matrix_file.content | b64decode | from_json }}"
+  when: "'nvidia-gpu-operator' in operator_list or 'nvidia-network-operator' in operator_list"
+
+- name: Remove Temporary NVIDIA AI Enterprise Matrix JSON File
+  ansible.builtin.file:
+    path: /tmp/nvidia_ai_enterprise_matrix.json
+    state: absent
+  when: "'nvidia-gpu-operator' in operator_list or 'nvidia-network-operator' in operator_list"
+
 - name: Ensure the Destination Directory Exists
   ansible.builtin.file:
+    mode: '0755'
     path: "{{ destination_directory }}"
     state: directory
-    mode: '0755'
 
-- name: Copy `olm-catalog` to Destination Directory
-  ansible.builtin.copy:
-    src: "{{ role_path }}/olm-catalog"
-    dest: "{{ destination_directory }}"
-    mode: '0755'
-    remote_src: true
-
-- name: Copy `helm` to Destination Directory when RHOAI Application is in Operator List
-  ansible.builtin.copy:
-    src: "{{ role_path }}/helm"
-    dest: "{{ destination_directory }}"
-    mode: '0755'
-    remote_src: true
-  when: "'rhoai-application' in operator_list"
-
-- name: Ensure the Operators Directory Exists
+- name: Ensure that the `apps` and `helm` Directories Exist
   ansible.builtin.file:
-    path: "{{ destination_directory }}/olm-catalog/operators"
+    mode: '0755'
+    path: "{{ destination_directory }}/{{ item }}"
     state: directory
-    mode: '0755'
+  loop:
+    - apps
+    - helm
 
-- name: Create the Ansible Automation Platform - AnsibleAutomationPlatform from Template
+- name: Copy Operator Apps Directories to Destination Directory
   ansible.builtin.copy:
-    content: "{{ lookup('template', 'ansible_automation_platform.yaml.j2') }}"
-    dest: "{{ destination_directory }}/olm-catalog/ansible-automation-platform/04-ansible-automation-platform.yaml"
+    dest: "{{ destination_directory }}/apps/{{ item }}"
+    src: "{{ role_path }}/apps/{{ item }}"
     mode: '0755'
-  when: "'ansible-automation-platform' in operator_list"
+    remote_src: true
+  loop: "{{ operator_list }}"
+  when: item not in ['nvidia-gpu-operator', 'redhat-ods-operator']
 
-- name: Create the Ansible Automation Platform - ConsoleLink from Template
+- name: Copy Operator Helm Directories to Destination Directory
   ansible.builtin.copy:
-    content: "{{ lookup('template', 'console-link-aap.yaml.j2') }}"
-    dest: "{{ destination_directory }}/olm-catalog/ansible-automation-platform/04-console-link-aap.yaml"
+    dest: "{{ destination_directory }}/helm/{{ item }}"
+    src: "{{ role_path }}/helm/{{ item }}"
     mode: '0755'
-  when: "'ansible-automation-platform' in operator_list"
+    remote_src: true
+  loop: "{{ operator_list }}"
+  when: item in ['nvidia-gpu-operator', 'redhat-ods-operator']
 
-- name: Create the OpenShift GitOps (ArgoCD) Application YAML Files for LLDP DaemonSet from Template
-  ansible.builtin.copy:
-    content: "{{ lookup('template', 'lldpd-daemonset.yaml.j2') }}"
-    dest: "{{ destination_directory }}/olm-catalog/operators/lldpd-daemonset.yaml"
+- name: Create Destination Directories for NVIDIA GPU Operator & Red Hat OpenShift AI
+  ansible.builtin.file:
+    path: "{{ destination_directory }}/apps/{{ item }}"
     mode: '0755'
+    state: directory
+  loop: "{{ operator_list }}"
+  when: item in ['nvidia-gpu-operator', 'redhat-ods-operator']
 
-- name: Remove Standalone Operators from Operator List if Red Hat OpenShift AI is Present
-  ansible.builtin.set_fact:
-    operator_list: "{{ operator_list | difference(['node-feature-discovery-operator', 'nvidia-gpu-operator', 'nvidia-network-operator']) }}"
-  when: "'rhoai-application' in operator_list"
-
-- name: Create the OpenShift GitOps (ArgoCD) Application YAML Files from Templates
+- name: Create the Ansible Automation Platform - AnsibleAutomationPlatform and ConsoleLink from Template
   ansible.builtin.copy:
     content: "{{ lookup('template', item + '.yaml.j2') }}"
-    dest: "{{ destination_directory }}/olm-catalog/operators/{{ item }}.yaml"
+    dest: "{{ destination_directory }}/apps/aap/{{ item }}.yaml"
+    mode: '0755'
+  loop:
+    - ansible-automation-platform
+    - console-link-app
+  when: "'aap' in operator_list"
+
+- name: Create the OpenShift GitOps (ArgoCD) ApplicationSet Template
+  ansible.builtin.copy:
+    content: "{{ lookup('template', 'cisco-ai-pods-apps.yaml.j2') }}"
+    dest: "{{ destination_directory }}/cisco-ai-pods-apps.yaml"
+    mode: '0755'
+
+- name: Create the Application Manifest for the NVIDIA GPU Operator & Red Hat OpenShift AI from Template
+  ansible.builtin.copy:
+    content: "{{ lookup('template', item + '.yaml.j2') }}"
+    dest: "{{ destination_directory }}/apps/{{ item }}/{{ item }}.yaml"
     mode: '0755'
   loop: "{{ operator_list }}"
+  when: item in ['nvidia-gpu-operator', 'redhat-ods-operator']
 
-- name: Create the Red Hat OpenShift AI - RHOAI OpenShift GitOps (ArgoCD) Application YAML Files from Templates
-  ansible.builtin.copy:
-    content: "{{ lookup('template', item + '.yaml.j2') }}"
-    dest: "{{ destination_directory }}/olm-catalog/operators/{{ item }}.yaml"
-    mode: '0755'
-  loop: ['gpu-operator', 'infrastructure-operators', 'observability-operators', 'scaling-operators']
-  when: "'rhoai-application' in operator_list"
-
-- name: Create the NVIDIA Network Operator - MAC VLAN YAML Files from Template for RHOAI Application
+- name: Create the NVIDIA Network Operator - MAC VLAN YAML Files from Template
   ansible.builtin.copy:
     content: "{{ lookup('template', 'mac-vlan.yaml.j2') }}"
-    dest: "{{ destination_directory }}/helm/gpu-operator-installation/templates/configs/05-mac-vlan-policy-{{ item.master_interface }}.yaml"
+    dest: "{{ destination_directory }}/apps/nvidia-network-operator/mac-vlan-policy-{{ item.master_interface }}.yaml"
     mode: '0755'
   loop: "{{ mac_vlan_list }}"
   loop_control:
     index_var: item_index
-  when: "'rhoai-application' in operator_list and (mac_vlan_list | length > 0)"
+  when: "'nvidia-network-operator' in operator_list and (mac_vlan_list | length > 0)"
 
-- name: Create the NVIDIA Network Operator - MAC VLAN YAML Files from Template for non-RHOAI Application
+- name: Create the NVIDIA GPU Operator Helm Values file from Template
   ansible.builtin.copy:
-    content: "{{ lookup('template', 'mac-vlan.yaml.j2') }}"
-    dest: "{{ destination_directory }}/olm-catalog/nvidia-network-operator/05-mac-vlan-policy-{{ item.master_interface }}.yaml"
+    content: "{{ lookup('template', 'nvidia-gpu-operator-values.yaml.j2') }}"
+    dest: "{{ destination_directory }}/helm/nvidia-gpu-operator/values.yaml"
     mode: '0755'
-  loop: "{{ mac_vlan_list }}"
-  loop_control:
-    index_var: item_index
-  when: "'rhoai-application' not in operator_list and (mac_vlan_list | length > 0)"
+  when: "'nvidia-gpu-operator' in operator_list"
+
+- name: Create the NVIDIA Network Operator - NIC Cluster Policy from Template
+  ansible.builtin.copy:
+    content: "{{ lookup('template', 'nic-cluster-policy.yaml.j2') }}"
+    dest: "{{ destination_directory }}/apps/nvidia-network-operator/nic-cluster-policy.yaml"
+    mode: '0755'
+  when: "'nvidia-network-operator' in operator_list and (mac_vlan_list | length > 0)"
+
+- name: Create the SRIOV Operator Config file from Template
+  ansible.builtin.copy:
+    content: "{{ lookup('template', 'sriov-operator-config.yaml.j2') }}"
+    dest: "{{ destination_directory }}/apps/openshift-sriov-network-operator/sriov-operator-config.yaml"
+    mode: '0755'
+  when: "'openshift-sriov-network-operator' in operator_list"

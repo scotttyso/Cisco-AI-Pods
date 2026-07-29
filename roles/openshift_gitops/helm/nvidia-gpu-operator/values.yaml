@@ -1,4 +1,4 @@
 ---
 enableRdma: true
 nvidiaGpuVersion: gpu-operator-certified.v26.3.3
-nvidiaGpuDriverVersion: 580.126.20
+nvidiaGpuDriverVersion: 595.71.05
