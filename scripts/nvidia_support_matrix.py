@@ -648,7 +648,7 @@ class NVIDIASupportMatrix:
                 f"   Add them to NVIDIA_SUPPORT_MATRIX, then run --fetch-live --version X.Y"
             )
         else:
-            print(f"✓ Online version check         : up to date")
+            print("✓ Online version check         : up to date")
 
         print(f"✓ GPU models found             : {gpu_models}")
 
@@ -743,11 +743,11 @@ class NVIDIASupportMatrix:
         # Table 1: Infrastructure software versions
         output += "\nInfrastructure Software Versions:\n"
         sw_table = [
-            ["NVIDIA Data Center GPU Driver",    sw.get("NVIDIA Data Center GPU Driver", "N/A")],
+            ["NVIDIA Data Center GPU Driver", sw.get("NVIDIA Data Center GPU Driver", "N/A")],
             ["NVIDIA DOCA Driver for Networking", sw.get("NVIDIA DOCA Driver for Networking", "N/A")],
-            ["NVIDIA GPU Operator",               sw.get("NVIDIA GPU Operator", "N/A")],
-            ["NVIDIA Network Operator",           sw.get("NVIDIA Network Operator", "N/A")],
-            ["NVIDIA Run:ai",                     sw.get("NVIDIA Run:ai", "N/A")],
+            ["NVIDIA GPU Operator", sw.get("NVIDIA GPU Operator", "N/A")],
+            ["NVIDIA Network Operator", sw.get("NVIDIA Network Operator", "N/A")],
+            ["NVIDIA Run:ai", sw.get("NVIDIA Run:ai", "N/A")],
             ["DOCA OFED Driver Container",
              doca_components.get("DOCA OFED Driver Container") or "run --fetch-live"],
             ["DOCA Telemetry Service",
@@ -1001,7 +1001,7 @@ def main():
         print("Checking NVIDIA AI Enterprise release notes for new versions...")
         new_versions = check_for_new_versions()
         if new_versions:
-            print(f"\n⚠️  New AI Enterprise versions found that are not in the local matrix:")
+            print("\n⚠️  New AI Enterprise versions found that are not in the local matrix:")
             for v in new_versions:
                 print(f"  - {v}")
             print(
