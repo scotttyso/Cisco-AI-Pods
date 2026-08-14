@@ -2203,6 +2203,32 @@ class configure:
                 ikeys = list(item.keys())
                 if 'reservations' in ikeys:
                     reservations = True
+        def assign_uuid_type(api_body, item, kwargs):
+            if item.get('ucs_server_profile_template') and item.get('attach_template', False) is True:
+                template_name = item.ucs_server_profile_template
+                org, tname = self.determine_resource_organization(
+                    add_prefix_suffix=False, resource=template_name, kwargs=kwargs)
+                template_data = kwargs.intersight_api[org].templates.server[tname].result
+                if template_data and template_data.get('UuidAddressType'):
+                    api_body['UuidAddressType'] = template_data['UuidAddressType']
+                    if template_data['UuidAddressType'] == 'POOL':
+                        api_body['UuidPool'] = template_data['UuidPool'][0].get('Moid')
+                    elif template_data['UuidAddressType'] == 'STATIC' and len(item.get('static_uuid_address', '')) > 0:
+                        api_body['StaticUuidAddress'] = item.get('static_uuid_address', '')
+            elif item.get('static_uuid_address') and len(item.static_uuid_address) > 0:
+                api_body['UuidAddressType'] = 'STATIC'
+                api_body['StaticUuidAddress'] = item.static_uuid_address
+            elif item.get('uuid_pool'):
+                pool_name = item.uuid_pool
+                org, pname = self.determine_resource_organization(
+                    add_prefix_suffix=False, resource=pool_name, kwargs=kwargs)
+                pool_data = kwargs.intersight_api[org].policies.server.uuid_pool[pname].result
+                if pool_data:
+                    api_body['UuidAddressType'] = 'POOL'
+                    api_body['UuidPool'] = pool_data.get('Moid')
+            else:
+                api_body['UuidAddressType'] = 'NONE'
+            return api_body
         if reservations:
             kwargs = self.profiles_server_identity_reservations(kwargs)
             kwargs.bulk_list = []
@@ -2215,7 +2241,9 @@ class configure:
                     api_body = {
                         'Name': name,
                         'ObjectType': ezdata.object_type,
-                        'TargetPlatform': 'FIAttached'}
+                        'ServerFamily': item.get('server_family', 'All'),
+                        'TargetPlatform': item.get('target_platform','FIAttached')}
+                    api_body = assign_uuid_type(api_body, item, kwargs)
                     api_body = self.profiles_org_map(
                         api_body, kwargs.org_moids[kwargs.org].moid)
                     api_body = self.profiles_server_reservations(
@@ -2231,14 +2259,17 @@ class configure:
                 if kwargs.intersight_api[kwargs.org].profiles[self.type].get(
                         name):
                     continue
-                api_body = {
-                    'Name': name,
-                    'ObjectType': ezdata.object_type,
-                    'TargetPlatform': item.get(
-                        'target_platform',
-                        'FIAttached')}
+                if self.type == 'server':
+                    api_body = {
+                        'Name': name,
+                        'ObjectType': ezdata.object_type,
+                        'ServerFamily': item.get('server_family', 'All'),
+                        'TargetPlatform': item.get('target_platform','FIAttached')}
+                    api_body = assign_uuid_type(api_body, item, kwargs)
+                else:
+                    api_body = {'Name': name, 'ObjectType': ezdata.object_type}
                 api_body = self.profiles_org_map(
-                    api_body, kwargs.org_moids[kwargs.org].moid)
+                api_body, kwargs.org_moids[kwargs.org].moid)
                 kwargs.bulk_list.append(api_body)
         # =================================================================
         # POST bulk/Requests if Bulk List > 0 - Initial Profile
@@ -2818,146 +2849,6 @@ class configure:
         return api_body
 
     # =========================================================================
-    # Function - Server Profiles/Templates Updates
-    # =========================================================================
-    def profiles_templates_create_policy_bucket(self, item, kwargs):
-        ikeys = list(item.keys())
-
-        chassis_ = [
-            'imc_access_policy',
-            'power_policy',
-            'snmp_policy',
-            'thermal_policy']
-        domain_ = [
-            'auditd_policy',
-            'certificate_management_policy',
-            'ldap_policy',
-            'netflow_configuration_policy',
-            'network_connectivity_policy',
-            'ntp_policy',
-            'port_policy',
-            'snmp_policy',
-            'switch_control_policy',
-            'syslog_policy',
-            'system_qos_policy',
-            'vlan_policy',
-            'vsan_policy']
-        fi_only = [
-            'drive_security_policy',
-            'pcie_connectivity_policy',
-            'san_connectivity_policy',
-            'sd_card_policy',
-            'thermal_policy']
-        fi_unified_common = [
-            'bios_policy',
-            'boot_order_policy',
-            'certificate_management_policy',
-            'firmware_policy',
-            'imc_access_policy',
-            'ipmi_over_lan_policy',
-            'lan_connectivity_policy',
-            'local_user_policy',
-            'memory_policy',
-            'power_policy',
-            'scrub_policy',
-            'serial_over_lan_policy',
-            'snmp_policy',
-            'storage_policy',
-            'syslog_policy',
-            'virtual_kvm_policy',
-            'virtual_media_policy']
-        standalone_common = [
-            'bios_policy',
-            'certificate_management_policy',
-            'firmware_policy',
-            'ipmi_over_lan_policy',
-            'local_user_policy',
-            'power_policy',
-            'serial_over_lan_policy',
-            'smtp_policy',
-            'ssh_policy',
-            'virtual_kvm_policy',
-            'virtual_media_policy',
-        ]
-        standalone_2xx_4xx_only = [
-            'boot_order_policy',
-            'memory_policy',
-            'persistent_memory_policy',
-            'thermal_policy',
-            'device_connector_policy',
-            'ldap_policy',
-            'network_connectivity_policy',
-            'ntp_policy',
-            'snmp_policy',
-            'syslog_policy',
-            'drive_security_policy',
-            'sd_card_policy',
-            'storage_policy',
-            'adapter_configuration_policy',
-            'lan_connectivity_policy',
-            'san_connectivity_policy']
-        unified_edge_ = [
-            'power_policy',
-            'thermal_policy',
-            'port_policy',
-            'switch_control_policy',
-            'system_qos_policy',
-            'vlan_policy',
-            'local_user_policy',
-            'network_connectivity_policy',
-            'ntp_policy',
-            'syslog_policy']
-        target_platform = item.get('target_platform', 'FIAttached')
-        server_family = item.get('server_family', 'All')
-
-        if self.type == 'chassis' or target_platform == 'Chassis':
-            allowed_policies = chassis_
-        elif self.type == 'domain' or target_platform == 'UCS Domain':
-            allowed_policies = domain_
-        elif self.type == 'unified_edge' or target_platform == 'Unified Edge':
-            allowed_policies = unified_edge_
-        elif target_platform == 'FIAttached':
-            allowed_policies = fi_unified_common + fi_only
-        elif target_platform == 'UnifiedEdgeServer':
-            allowed_policies = fi_unified_common
-        elif target_platform == 'Standalone':
-            if server_family == 'UCSC845A':
-                allowed_policies = standalone_common
-            elif server_family == 'UCSC2XX/4XX':
-                allowed_policies = standalone_common + standalone_2xx_4xx_only
-            else:
-                allowed_policies = standalone_common + standalone_2xx_4xx_only
-        else:
-            allowed_policies = fi_unified_common + fi_only
-        item.allowed_policies = list(dict.fromkeys(allowed_policies))
-        item.policy_bucket = DotMap()
-
-        # Find policy keys from input item, excluding internal control
-        # attributes
-        internal_keys = {
-            'allowed_policies',
-            'policy_bucket',
-            'object_map',
-            'target_platform',
-            'server_family'}
-        policy_like_keys = [k for k in ikeys if k.endswith(
-            '_policy') and item.get(k) and k not in internal_keys]
-        allowed_input_keys = set(item.allowed_policies)
-        skipped = [k for k in policy_like_keys if k not in allowed_input_keys]
-        if len(skipped) > 0:
-            message_title = f'{target_platform}/{server_family}' if self.type == 'server' else f'{target_platform.title()}'
-            pcolor.Yellow(
-                f"  * Skipping unsupported template policies for `{item.name}` ({message_title}): "
-                f"{', '.join(sorted(skipped))}")
-        # Attach Allowed Policies to policy_bucket for downstream processing
-        # and API body construction.
-        for key in item.allowed_policies:
-            if key in ikeys and item.get(key):
-                item.policy_bucket[key] = item[key]
-        item.object_map = kwargs.intersight_object_map
-        return item
-
-    # =========================================================================
     # Function - Profiles Merge Defined Templates
     # =========================================================================
     def profiles_template_lookup(self, template_type, kwargs):
@@ -3108,6 +2999,146 @@ class configure:
             raise ValueError(
                 f'{ptitle} template "{template_name}" was not found')
         return DotMap(merged)
+
+    # =========================================================================
+    # Function - Server Profiles/Templates Updates
+    # =========================================================================
+    def profiles_templates_create_policy_bucket(self, item, kwargs):
+        ikeys = list(item.keys())
+
+        chassis_ = [
+            'imc_access_policy',
+            'power_policy',
+            'snmp_policy',
+            'thermal_policy']
+        domain_ = [
+            'auditd_policy',
+            'certificate_management_policy',
+            'ldap_policy',
+            'netflow_configuration_policy',
+            'network_connectivity_policy',
+            'ntp_policy',
+            'port_policy',
+            'snmp_policy',
+            'switch_control_policy',
+            'syslog_policy',
+            'system_qos_policy',
+            'vlan_policy',
+            'vsan_policy']
+        fi_only = [
+            'drive_security_policy',
+            'pcie_connectivity_policy',
+            'san_connectivity_policy',
+            'sd_card_policy',
+            'thermal_policy']
+        fi_unified_common = [
+            'bios_policy',
+            'boot_order_policy',
+            'certificate_management_policy',
+            'firmware_policy',
+            'imc_access_policy',
+            'ipmi_over_lan_policy',
+            'lan_connectivity_policy',
+            'local_user_policy',
+            'memory_policy',
+            'power_policy',
+            'scrub_policy',
+            'serial_over_lan_policy',
+            'snmp_policy',
+            'storage_policy',
+            'syslog_policy',
+            'virtual_kvm_policy',
+            'virtual_media_policy']
+        standalone_common = [
+            'bios_policy',
+            'certificate_management_policy',
+            'firmware_policy',
+            'ipmi_over_lan_policy',
+            'local_user_policy',
+            'power_policy',
+            'serial_over_lan_policy',
+            'smtp_policy',
+            'ssh_policy',
+            'virtual_kvm_policy',
+            'virtual_media_policy',
+        ]
+        standalone_2xx_4xx_only = [
+            'boot_order_policy',
+            'memory_policy',
+            'persistent_memory_policy',
+            'thermal_policy',
+            'device_connector_policy',
+            'ldap_policy',
+            'network_connectivity_policy',
+            'ntp_policy',
+            'snmp_policy',
+            'syslog_policy',
+            'drive_security_policy',
+            'sd_card_policy',
+            'storage_policy',
+            'adapter_configuration_policy',
+            'lan_connectivity_policy',
+            'san_connectivity_policy']
+        unified_edge_ = [
+            'power_policy',
+            'thermal_policy',
+            'port_policy',
+            'switch_control_policy',
+            'system_qos_policy',
+            'vlan_policy',
+            'local_user_policy',
+            'network_connectivity_policy',
+            'ntp_policy',
+            'syslog_policy']
+        target_platform = item.get('target_platform', 'FIAttached')
+        server_family = item.get('server_family', 'All')
+
+        if self.type == 'chassis' or target_platform == 'Chassis':
+            allowed_policies = chassis_
+        elif self.type == 'domain' or target_platform == 'UCS Domain':
+            allowed_policies = domain_
+        elif self.type == 'unified_edge' or target_platform == 'Unified Edge':
+            allowed_policies = unified_edge_
+        elif target_platform == 'FIAttached':
+            allowed_policies = fi_unified_common + fi_only
+        elif target_platform == 'UnifiedEdgeServer':
+            allowed_policies = fi_unified_common
+        elif target_platform == 'Standalone':
+            if server_family == 'UCSC845A':
+                allowed_policies = standalone_common
+            elif server_family == 'UCSC2XX/4XX':
+                allowed_policies = standalone_common + standalone_2xx_4xx_only
+            else:
+                allowed_policies = standalone_common + standalone_2xx_4xx_only
+        else:
+            allowed_policies = fi_unified_common + fi_only
+        item.allowed_policies = list(dict.fromkeys(allowed_policies))
+        item.policy_bucket = DotMap()
+
+        # Find policy keys from input item, excluding internal control
+        # attributes
+        internal_keys = {
+            'allowed_policies',
+            'policy_bucket',
+            'object_map',
+            'target_platform',
+            'server_family'}
+        policy_like_keys = [k for k in ikeys if k.endswith(
+            '_policy') and item.get(k) and k not in internal_keys]
+        allowed_input_keys = set(item.allowed_policies)
+        skipped = [k for k in policy_like_keys if k not in allowed_input_keys]
+        if len(skipped) > 0:
+            message_title = f'{target_platform}/{server_family}' if self.type == 'server' else f'{target_platform.title()}'
+            pcolor.Yellow(
+                f"  * Skipping unsupported template policies for `{item.name}` ({message_title}): "
+                f"{', '.join(sorted(skipped))}")
+        # Attach Allowed Policies to policy_bucket for downstream processing
+        # and API body construction.
+        for key in item.allowed_policies:
+            if key in ikeys and item.get(key):
+                item.policy_bucket[key] = item[key]
+        item.object_map = kwargs.intersight_object_map
+        return item
 
     # =========================================================================
     # Function - Domain/Unified Edge Profiles/Templates Updates
