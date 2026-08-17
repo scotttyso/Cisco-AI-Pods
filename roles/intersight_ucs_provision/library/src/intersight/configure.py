@@ -2203,6 +2203,7 @@ class configure:
                 ikeys = list(item.keys())
                 if 'reservations' in ikeys:
                     reservations = True
+
         def assign_uuid_type(api_body, item, kwargs):
             if item.get('ucs_server_profile_template') and item.get('attach_template', False) is True:
                 template_name = item.ucs_server_profile_template
@@ -2242,12 +2243,10 @@ class configure:
                         'Name': name,
                         'ObjectType': ezdata.object_type,
                         'ServerFamily': item.get('server_family', 'All'),
-                        'TargetPlatform': item.get('target_platform','FIAttached')}
+                        'TargetPlatform': item.get('target_platform', 'FIAttached')}
                     api_body = assign_uuid_type(api_body, item, kwargs)
-                    api_body = self.profiles_org_map(
-                        api_body, kwargs.org_moids[kwargs.org].moid)
-                    api_body = self.profiles_server_reservations(
-                        item, api_body, kwargs)
+                    api_body = self.profiles_org_map(api_body, kwargs.org_moids[kwargs.org].moid)
+                    api_body = self.profiles_server_reservations(item, api_body, kwargs)
                     if api_body.get('ReservationReferences'):
                         kwargs.bulk_list.append(api_body)
                     else:
@@ -2256,20 +2255,18 @@ class configure:
             kwargs.bulk_list = []
             for item in kwargs.resources:
                 name = f'{np}{item.name}{ns}'
-                if kwargs.intersight_api[kwargs.org].profiles[self.type].get(
-                        name):
+                if kwargs.intersight_api[kwargs.org].profiles[self.type].get(name):
                     continue
                 if self.type == 'server':
                     api_body = {
                         'Name': name,
                         'ObjectType': ezdata.object_type,
                         'ServerFamily': item.get('server_family', 'All'),
-                        'TargetPlatform': item.get('target_platform','FIAttached')}
+                        'TargetPlatform': item.get('target_platform', 'FIAttached')}
                     api_body = assign_uuid_type(api_body, item, kwargs)
                 else:
                     api_body = {'Name': name, 'ObjectType': ezdata.object_type}
-                api_body = self.profiles_org_map(
-                api_body, kwargs.org_moids[kwargs.org].moid)
+                api_body = self.profiles_org_map(api_body, kwargs.org_moids[kwargs.org].moid)
                 kwargs.bulk_list.append(api_body)
         # =================================================================
         # POST bulk/Requests if Bulk List > 0 - Initial Profile
